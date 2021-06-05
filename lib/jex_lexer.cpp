@@ -1,13 +1,31 @@
 #include <jex_lexer.hpp>
 
-#include <algorithm>
 #include <cctype>
 #include <iostream>
 
 namespace jex {
 
-std::ostream& operator<<(std::ostream& str, const Location& loc) {
-    return str << loc.lineBegin << '.' << loc.colBegin << '-' << loc.lineEnd << '.' << loc.colEnd;
+std::ostream& operator<<(std::ostream& str, const Token& token) {
+    switch (token.kind) {
+        case Token::Kind::Comma:
+            return str << "','";
+        case Token::Kind::Eof:
+            return str << "end of file";
+        case Token::Kind::Ident:
+            return str << "identifier '" << token.text << '\'';
+        case Token::Kind::Invalid:
+            return str << "invalid token";
+        case Token::Kind::LiteralInt:
+            return str << "integer literal '" << token.text << '\'';
+        case Token::Kind::OpAdd:
+            return str << "operator '+'";
+        case Token::Kind::OpMul:
+            return str << "operator '*'";
+        case Token::Kind::ParensL:
+            return str << "'('";
+        case Token::Kind::ParensR:
+            return str << "')'";
+    }
 }
 
 char Lexer::advance() {

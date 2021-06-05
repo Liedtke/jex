@@ -1,27 +1,12 @@
 #pragma once
 
+#include <jex_location.hpp>
+
 #include <cassert>
 #include <iosfwd>
 #include <string_view>
 
 namespace jex {
-
-struct Location {
-    int lineBegin = 1;
-    int colBegin = 1;
-    int lineEnd = 1;
-    int colEnd = 1;
-
-    // TODO: use spaceship operator instead
-    bool operator==(const Location& other) const {
-        return lineBegin == other.lineBegin
-            && colBegin == other.colBegin
-            && lineEnd == other.lineEnd
-            && colEnd == other.colEnd;
-    }
-};
-
-std::ostream& operator<<(std::ostream& str, const Location& loc);
 
 class Token {
 public:
@@ -39,6 +24,8 @@ public:
     Location location;
     std::string_view text;
 };
+
+std::ostream& operator<<(std::ostream& str, const Token& token);
 
 class Lexer {
     const char *d_source;
