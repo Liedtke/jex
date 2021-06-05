@@ -41,6 +41,7 @@ TEST_P(TestParserSuccess, test) {
     Parser parser(env, GetParam());
     parser.parse(); // no error
     ASSERT_EQ(0, env.messages().size());
+    // TODO: Check AST
 }
 
 static const char* successTests[] = {
