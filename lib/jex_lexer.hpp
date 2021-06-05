@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <iosfwd>
 #include <string_view>
 
@@ -52,6 +53,7 @@ public:
     , d_cursor(source)
     , d_tokenBegin(source)
     , d_currToken() {
+        assert(d_source != nullptr);
     }
 
     Token getNext();

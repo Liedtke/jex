@@ -50,4 +50,33 @@ TEST(Lexer, identifiers) {
     EXPECT_EQ("t35t_123", token.text);
 }
 
+TEST(Lexer, functionCall) {
+    Lexer lexer("fct(1, 23)");
+    Token token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::Ident, token.kind);
+    EXPECT_EQ((Location{1, 1, 1, 3}), token.location);
+    EXPECT_EQ("fct", token.text);
+    token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::ParensL, token.kind);
+    EXPECT_EQ((Location{1, 4, 1, 4}), token.location);
+    EXPECT_EQ("(", token.text);
+    token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::LiteralInt, token.kind);
+    EXPECT_EQ((Location{1, 5, 1, 5}), token.location);
+    EXPECT_EQ("1", token.text);
+    token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::Comma, token.kind);
+    EXPECT_EQ((Location{1, 6, 1, 6}), token.location);
+    EXPECT_EQ(",", token.text);
+    token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::LiteralInt, token.kind);
+    EXPECT_EQ((Location{1, 8, 1, 9}), token.location);
+    EXPECT_EQ("23", token.text);
+    token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::ParensR, token.kind);
+    EXPECT_EQ((Location{1, 10, 1, 10}), token.location);
+    EXPECT_EQ(")", token.text);
+}
+
+
 } // namespace jex

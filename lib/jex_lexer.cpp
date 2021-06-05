@@ -66,6 +66,13 @@ Token Lexer::getNext() {
             return setToken(Token::Kind::Comma);
     }
 
+    // parse numeric literals
+    if (std::isdigit(*d_cursor)) {
+        while (std::isdigit(advance())) {
+        }
+        return setToken(Token::Kind::LiteralInt);
+    }
+
     // parse identifier: [A-Za-z][A-Za-z0-9_]
     if (std::isalpha(*d_cursor)) {
         while(std::isalnum(*d_cursor) || *d_cursor == '_') {
