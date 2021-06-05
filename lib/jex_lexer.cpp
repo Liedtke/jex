@@ -2,8 +2,13 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iostream>
 
 namespace jex {
+
+std::ostream& operator<<(std::ostream& str, const Location& loc) {
+    return str << loc.lineBegin << '.' << loc.colBegin << '-' << loc.lineEnd << '.' << loc.colEnd;
+}
 
 char Lexer::advance() {
     d_currToken.location.lineEnd = d_line;
@@ -46,9 +51,19 @@ Token Lexer::getNext() {
     skipWhiteSpaces();
     resetToken();
 
-    // parse eof
-    if (*d_cursor == '\0') {
-        return setToken(Token::Kind::Eof);
+    // parse one character tokens
+    switch(*d_cursor) {
+        case '\0':
+            return setToken(Token::Kind::Eof);
+        case '(':
+            advance();
+            return setToken(Token::Kind::ParensL);
+        case ')':
+            advance();
+            return setToken(Token::Kind::ParensR);
+        case ',':
+            advance();
+            return setToken(Token::Kind::Comma);
     }
 
     // parse identifier: [A-Za-z][A-Za-z0-9_]

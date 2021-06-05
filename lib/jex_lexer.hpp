@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iosfwd>
 #include <string_view>
 
 namespace jex {
@@ -10,6 +11,7 @@ struct Location {
     int lineEnd = 1;
     int colEnd = 1;
 
+    // TODO: use spaceship operator instead
     bool operator==(const Location& other) const {
         return lineBegin == other.lineBegin
             && colBegin == other.colBegin
@@ -17,6 +19,8 @@ struct Location {
             && colEnd == other.colEnd;
     }
 };
+
+std::ostream& operator<<(std::ostream& str, const Location& loc);
 
 class Token {
 public:
@@ -29,6 +33,7 @@ public:
         ParensR,
         OpAdd,
         OpMul,
+        Comma,
     } kind = Kind::Invalid;
     Location location;
     std::string_view text;

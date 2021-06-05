@@ -4,6 +4,20 @@
 
 namespace jex {
 
+TEST(Location, strRep) {
+    std::stringstream str;
+    str << Location{1, 2, 3, 4};
+    EXPECT_EQ("1.2-3.4", str.str());
+}
+
+TEST(Location, equals) {
+    EXPECT_TRUE((Location{1, 2, 3, 4} == Location{1, 2, 3, 4}));
+    EXPECT_FALSE((Location{1, 2, 3, 4} == Location{0, 2, 3, 4}));
+    EXPECT_FALSE((Location{1, 2, 3, 4} == Location{1, 0, 3, 4}));
+    EXPECT_FALSE((Location{1, 2, 3, 4} == Location{1, 2, 0, 4}));
+    EXPECT_FALSE((Location{1, 2, 3, 4} == Location{1, 2, 3, 0}));
+}
+
 TEST(Lexer, eof) {
     Token token = Lexer("").getNext();
     EXPECT_EQ(Token::Kind::Eof, token.kind);
