@@ -64,6 +64,12 @@ Token Lexer::getNext() {
         case ',':
             advance();
             return setToken(Token::Kind::Comma);
+        case '+':
+            advance();
+            return setToken(Token::Kind::OpAdd);
+        case '*':
+            advance();
+            return setToken(Token::Kind::OpMul);
     }
 
     // parse numeric literals

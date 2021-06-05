@@ -47,6 +47,7 @@ class Lexer {
     Token d_currToken;
     int d_line = 1;
     int d_col = 1;
+
 public:
     Lexer(const char* source)
     : d_source(source)
@@ -57,7 +58,6 @@ public:
     }
 
     Token getNext();
-
     Token setToken(Token::Kind kind);
 
 private:

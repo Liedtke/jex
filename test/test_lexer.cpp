@@ -78,5 +78,18 @@ TEST(Lexer, functionCall) {
     EXPECT_EQ(")", token.text);
 }
 
+TEST(Lexer, add) {
+    Lexer lexer(" + ");
+    Token token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::OpAdd, token.kind);
+    EXPECT_EQ((Location{1, 2, 1, 2}), token.location);
+}
+
+TEST(Lexer, mul) {
+    Lexer lexer(" * ");
+    Token token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::OpMul, token.kind);
+    EXPECT_EQ((Location{1, 2, 1, 2}), token.location);
+}
 
 } // namespace jex
