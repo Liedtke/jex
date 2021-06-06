@@ -17,7 +17,7 @@ const MsgInfo& CompileEnv::createError(const Location& loc, std::string msg) {
 }
 
 [[noreturn]] void CompileEnv::throwError(const Location& loc, std::string msg) {
-    const MsgInfo& msgInfo = createError(loc, msg);
+    const MsgInfo& msgInfo = createError(loc, std::move(msg));
     std::stringstream error;
     error << msgInfo;
     throw CompileError(error.str());
