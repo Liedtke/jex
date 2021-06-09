@@ -30,7 +30,7 @@ static ErrorTest errorTests[] = {
     {"92233720368547758070", "1.1-1.20: Invalid integer literal"},
 };
 
-INSTANTIATE_TEST_CASE_P(SuiteParserError,
+INSTANTIATE_TEST_SUITE_P(SuiteParserError,
                         TestParserError,
                         testing::ValuesIn(errorTests));
 
@@ -50,7 +50,7 @@ static const char* successTests[] = {
     "9223372036854775807"
 };
 
-INSTANTIATE_TEST_CASE_P(SuiteParserSuccess,
+INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,
                         TestParserSuccess,
                         testing::ValuesIn(successTests));
 
