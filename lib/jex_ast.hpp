@@ -17,7 +17,10 @@ enum class Type {
 
 enum class OpType {
     Add,
-    Mul
+    Sub,
+    Mul,
+    Div,
+    Mod
 };
 
 class IAstNode {

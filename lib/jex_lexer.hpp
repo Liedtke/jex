@@ -18,7 +18,10 @@ public:
         ParensL,
         ParensR,
         OpAdd,
+        OpSub,
         OpMul,
+        OpDiv,
+        OpMod,
         Comma,
     } kind = Kind::Invalid;
     Location location;

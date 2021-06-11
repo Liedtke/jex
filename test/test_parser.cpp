@@ -7,21 +7,18 @@
 
 namespace jex {
 
-struct TestExp {
-    const char* in;
-    const char* exp;
-};
+using TestExp = std::pair<const char*, const char*>;
 
 class TestParserError : public testing::TestWithParam<TestExp> {};
 
 TEST_P(TestParserError, test) {
     CompileEnv env;
-    Parser parser(env, GetParam().in);
+    Parser parser(env, GetParam().first);
     try {
         parser.parse();
         ASSERT_TRUE(false) << "expected CompileError";
     } catch (CompileError& err) {
-        ASSERT_STREQ(GetParam().exp, err.what());
+        ASSERT_STREQ(GetParam().second, err.what());
     }
 }
 
@@ -39,14 +36,14 @@ class TestParserSuccess : public testing::TestWithParam<TestExp> {};
 
 TEST_P(TestParserSuccess, test) {
     CompileEnv env;
-    Parser parser(env, GetParam().in);
+    Parser parser(env, GetParam().first);
     parser.parse(); // no error
     ASSERT_EQ(0, env.messages().size());
     // check generated ast
     std::stringstream str;
     PrettyPrinter printer(str);
     env.getRoot()->accept(printer);
-    ASSERT_EQ(GetParam().exp, str.str());
+    ASSERT_EQ(GetParam().second, str.str());
 }
 
 static TestExp successTests[] = {
@@ -55,7 +52,8 @@ static TestExp successTests[] = {
     {"9223372036854775807", "9223372036854775807"},
     {"1+1", "(1 + 1)"},
     {"10 + 11 + 12", "((10 + 11) + 12)"},
-    {"1+2*3*4+5", "((1 + ((2 * 3) * 4)) + 5)"}
+    {"1+2*3*4+5", "((1 + ((2 * 3) * 4)) + 5)"},
+    {"1+1-2*3/4%2", "((1 + 1) - (((2 * 3) / 4) % 2))"}
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

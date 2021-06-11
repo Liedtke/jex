@@ -27,8 +27,17 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
         case OpType::Add:
             d_str << " + ";
             break;
+        case OpType::Sub:
+            d_str << " - ";
+            break;
         case OpType::Mul:
             d_str << " * ";
+            break;
+        case OpType::Div:
+            d_str << " / ";
+            break;
+        case OpType::Mod:
+            d_str << " % ";
             break;
     }
     node.d_rhs->accept(*this);

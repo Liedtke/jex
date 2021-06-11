@@ -91,6 +91,15 @@ TEST(Lexer, add) {
     Token token = lexer.getNext();
     EXPECT_EQ(Token::Kind::OpAdd, token.kind);
     EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
+    EXPECT_EQ("+", token.text);
+}
+
+TEST(Lexer, sub) {
+    Lexer lexer(" - ");
+    Token token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::OpSub, token.kind);
+    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
+    EXPECT_EQ("-", token.text);
 }
 
 TEST(Lexer, mul) {
@@ -98,6 +107,23 @@ TEST(Lexer, mul) {
     Token token = lexer.getNext();
     EXPECT_EQ(Token::Kind::OpMul, token.kind);
     EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
+    EXPECT_EQ("*", token.text);
+}
+
+TEST(Lexer, div) {
+    Lexer lexer(" / ");
+    Token token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::OpDiv, token.kind);
+    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
+    EXPECT_EQ("/", token.text);
+}
+
+TEST(Lexer, mod) {
+    Lexer lexer(" % ");
+    Token token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::OpMod, token.kind);
+    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
+    EXPECT_EQ("%", token.text);
 }
 
 } // namespace jex

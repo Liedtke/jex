@@ -14,18 +14,29 @@ OpType getOp(const Token& op, CompileEnv& env) {
     switch (op.kind) {
         case Token::Kind::OpAdd:
             return OpType::Add;
+        case Token::Kind::OpSub:
+            return OpType::Sub;
         case Token::Kind::OpMul:
             return OpType::Mul;
+        case Token::Kind::OpDiv:
+            return OpType::Div;
+        case Token::Kind::OpMod:
+            return OpType::Mod;
         default:
-            env.throwError(op.location, std::string("Invalid operator '") + op.text.data() + "'");
+            env.throwError(op.location, "Invalid operator '" + std::string(op.text) + "'");
     }
 }
 
-}
+} // anonymous namespace
 
 void Parser::initPrecs() {
+    // + -
     d_precs[Token::Kind::OpAdd] = 10;
+    d_precs[Token::Kind::OpSub] = 10;
+    // * / %
     d_precs[Token::Kind::OpMul] = 20;
+    d_precs[Token::Kind::OpDiv] = 20;
+    d_precs[Token::Kind::OpMod] = 20;
 }
 
 int Parser::getPrec() const {

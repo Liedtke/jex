@@ -19,8 +19,14 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "integer literal '" << token.text << '\'';
         case Token::Kind::OpAdd:
             return str << "operator '+'";
+        case Token::Kind::OpSub:
+            return str << "operator '-'";
         case Token::Kind::OpMul:
             return str << "operator '*'";
+        case Token::Kind::OpDiv:
+            return str << "operator '/'";
+        case Token::Kind::OpMod:
+            return str << "operator '%'";
         case Token::Kind::ParensL:
             return str << "'('";
         case Token::Kind::ParensR:
@@ -85,9 +91,18 @@ Token Lexer::getNext() {
         case '+':
             advance();
             return setToken(Token::Kind::OpAdd);
+        case '-':
+            advance();
+            return setToken(Token::Kind::OpSub);
         case '*':
             advance();
             return setToken(Token::Kind::OpMul);
+        case '/':
+            advance();
+            return setToken(Token::Kind::OpDiv);
+        case '%':
+            advance();
+            return setToken(Token::Kind::OpMod);
     }
 
     // parse numeric literals
