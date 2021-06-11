@@ -26,11 +26,11 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
         case Token::Kind::ParensR:
             return str << "')'";
     }
+    return str;
 }
 
 char Lexer::advance() {
-    d_currToken.location.lineEnd = d_line;
-    d_currToken.location.colEnd = d_col;
+    d_currToken.location.end = {d_line, d_col};
 
     switch(*d_cursor) {
         case '\n':
@@ -54,7 +54,7 @@ void Lexer::skipWhiteSpaces() {
 }
 
 void Lexer::resetToken() {
-    d_currToken.location = {d_line, d_col, d_line, d_col};
+    d_currToken.location = {{d_line, d_col}, {d_line, d_col}};
     d_tokenBegin = d_cursor;
 }
 

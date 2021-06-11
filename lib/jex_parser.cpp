@@ -8,16 +8,41 @@
 
 namespace jex {
 
+namespace {
+
+OpType getOp(const Token& op, CompileEnv& env) {
+    switch (op.kind) {
+        case Token::Kind::OpAdd:
+            return OpType::Add;
+        case Token::Kind::OpMul:
+            return OpType::Mul;
+        default:
+            env.throwError(op.location, std::string("Invalid operator '") + op.text.data() + "'");
+    }
+}
+
+}
+
+void Parser::initPrecs() {
+    d_precs[Token::Kind::OpAdd] = 10;
+    d_precs[Token::Kind::OpMul] = 20;
+}
+
+int Parser::getPrec() const {
+    auto found = d_precs.find(d_currToken.kind);
+    return found != d_precs.end() ? found->second : -1;
+};
+
 Token& Parser::getNextToken() {
     d_currToken = d_lexer.getNext();
     return d_currToken;
 }
 
 void Parser::parse() {
-    parseExpression();
+    d_env.setRoot(parseExpression());
 }
 
-IAstExpression* Parser::parseExpression() {
+IAstExpression* Parser::parsePrimary() {
     switch (d_currToken.kind) {
         case Token::Kind::LiteralInt:
             return parseLiteralInt();
@@ -29,12 +54,40 @@ IAstExpression* Parser::parseExpression() {
     }
 }
 
+IAstExpression* Parser::parseBinOpRhs(int prec, IAstExpression* lhs) {
+    while (true) {
+        int tokPrec = getPrec();
+        // token has lesser precedence
+        if (tokPrec < prec) {
+            return lhs;
+        }
+        Token binOp = d_currToken;
+        getNextToken(); // consume binary operator
+        IAstExpression* rhs = parsePrimary();
+
+        int nextPrec = getPrec();
+        if (tokPrec < nextPrec) {
+            rhs = parseBinOpRhs(tokPrec + 1, rhs);
+        }
+        Location loc = Location::combine(lhs->d_loc, rhs->d_loc);
+        lhs = d_env.createNode<AstBinaryExpr>(loc, getOp(binOp, d_env), lhs, rhs);
+    }
+}
+
+IAstExpression* Parser::parseExpression() {
+    IAstExpression* lhs = parsePrimary();
+    return parseBinOpRhs(0, lhs);
+}
+
 AstLiteralExpr* Parser::parseLiteralInt() {
     assert(d_currToken.kind == Token::Kind::LiteralInt);
     try {
         std::size_t pos;
         const int64_t value = std::stoll(std::string(d_currToken.text), &pos);
-        return d_env.createNode<AstLiteralExpr>(d_currToken.location, value);
+        assert(pos == d_currToken.text.size());
+        AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, value);
+        getNextToken(); // consume literal
+        return res;
     } catch (std::logic_error&) {
         d_env.throwError(d_currToken.location, "Invalid integer literal");
     }

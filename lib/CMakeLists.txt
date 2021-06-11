@@ -5,6 +5,7 @@ set(jex_sources
     jex_location.cpp
     jex_lexer.cpp
     jex_parser.cpp
+    jex_prettyprinter.cpp
 )
 
 add_library(jex ${jex_sources})

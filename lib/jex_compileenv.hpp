@@ -13,11 +13,12 @@ namespace jex {
 struct Location;
 struct MsgInfo;
 class IAstNode;
+class IAstExpression;
 
 class CompileEnv {
     std::set<MsgInfo> d_messages;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
-
+    IAstExpression* d_root = nullptr;
 public:
     ~CompileEnv();
 
@@ -34,6 +35,13 @@ public:
 
     const std::set<MsgInfo>& messages() const {
         return d_messages;
+    }
+
+    void setRoot(IAstExpression* root) {
+        d_root = root;
+    }
+    IAstExpression* getRoot() const {
+        return d_root;
     }
 };
 

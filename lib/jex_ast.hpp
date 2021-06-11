@@ -48,8 +48,9 @@ public:
     IAstExpression* d_lhs;
     IAstExpression* d_rhs;
 
-    AstBinaryExpr(const Location& loc, IAstExpression* lhs, IAstExpression* rhs)
+    AstBinaryExpr(const Location& loc, OpType op, IAstExpression* lhs, IAstExpression* rhs)
     : IAstExpression(loc)
+    , d_op(op)
     , d_lhs(lhs)
     , d_rhs(rhs) {
     }
