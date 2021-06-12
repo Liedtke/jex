@@ -33,6 +33,7 @@ private:
     IAstExpression* parsePrimary();
     IAstExpression* parseBinOpRhs(int prec, IAstExpression* lhs);
     AstLiteralExpr* parseLiteralInt();
+    IAstExpression* parseParensExpr();
 };
 
 } // namespace jex

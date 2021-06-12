@@ -53,14 +53,29 @@ void Parser::parse() {
     d_env.setRoot(parseExpression());
 }
 
+IAstExpression* Parser::parseParensExpr() {
+    assert(d_currToken.kind == Token::Kind::ParensL);
+    getNextToken();
+    IAstExpression* expr = parseExpression();
+    if (d_currToken.kind != Token::Kind::ParensR) {
+        std::stringstream msg;
+        msg << "Unexpected " << d_currToken << ", expecting ')'";
+        d_env.throwError(d_currToken.location, msg.str());
+    }
+    getNextToken();
+    return expr;
+}
+
 IAstExpression* Parser::parsePrimary() {
     switch (d_currToken.kind) {
         case Token::Kind::LiteralInt:
             return parseLiteralInt();
+        case Token::Kind::ParensL:
+            return parseParensExpr();
         default:
             std::stringstream msg;
             // TODO: extend expectation list
-            msg << "Unexpected " << d_currToken << ", expecting literal";
+            msg << "Unexpected " << d_currToken << ", expecting literal or '('";
             d_env.throwError(d_currToken.location, msg.str());
     }
 }

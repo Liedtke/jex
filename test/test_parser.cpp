@@ -23,9 +23,11 @@ TEST_P(TestParserError, test) {
 }
 
 static TestExp errorTests[] = {
-    {"", "1.1-1.1: Unexpected end of file, expecting literal"},
+    {"", "1.1-1.1: Unexpected end of file, expecting literal or '('"},
     {"9223372036854775808", "1.1-1.19: Invalid integer literal"},
     {"92233720368547758070", "1.1-1.20: Invalid integer literal"},
+    {"(", "1.2-1.2: Unexpected end of file, expecting literal or '('"},
+    {"(1", "1.3-1.3: Unexpected end of file, expecting ')'"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,
@@ -53,7 +55,11 @@ static TestExp successTests[] = {
     {"1+1", "(1 + 1)"},
     {"10 + 11 + 12", "((10 + 11) + 12)"},
     {"1+2*3*4+5", "((1 + ((2 * 3) * 4)) + 5)"},
-    {"1+1-2*3/4%2", "((1 + 1) - (((2 * 3) / 4) % 2))"}
+    {"1+1-2*3/4%2", "((1 + 1) - (((2 * 3) / 4) % 2))"},
+    {"((1))", "1"},
+    {"((1) + (1+2))", "(1 + (1 + 2))"},
+    {"2 * (1 + 3)", "(2 * (1 + 3))"},
+    {"(1 + 3) * (2)", "((1 + 3) * 2)"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

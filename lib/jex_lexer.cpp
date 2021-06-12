@@ -107,8 +107,10 @@ Token Lexer::getNext() {
 
     // parse numeric literals
     if (std::isdigit(*d_cursor)) {
+        // TODO: Handle hex, binary, octal formats
         while (std::isdigit(advance())) {
         }
+        // TODO: parse floating point
         return setToken(Token::Kind::LiteralInt);
     }
 
