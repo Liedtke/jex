@@ -51,6 +51,11 @@ Token& Parser::getNextToken() {
 
 void Parser::parse() {
     d_env.setRoot(parseExpression());
+    if (d_currToken.kind != Token::Kind::Eof) {
+        std::stringstream msg;
+        msg << "Unexpected " << d_currToken << ", expecting an operator or end of file";
+        d_env.throwError(d_currToken.location, msg.str());
+    }
 }
 
 IAstExpression* Parser::parseParensExpr() {

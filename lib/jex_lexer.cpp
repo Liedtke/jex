@@ -14,7 +14,7 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
         case Token::Kind::Ident:
             return str << "identifier '" << token.text << '\'';
         case Token::Kind::Invalid:
-            return str << "invalid token";
+            return str << "invalid token '" << token.text << "'";
         case Token::Kind::LiteralInt:
             return str << "integer literal '" << token.text << '\'';
         case Token::Kind::OpAdd:

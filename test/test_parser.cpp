@@ -28,6 +28,16 @@ static TestExp errorTests[] = {
     {"92233720368547758070", "1.1-1.20: Invalid integer literal"},
     {"(", "1.2-1.2: Unexpected end of file, expecting literal or '('"},
     {"(1", "1.3-1.3: Unexpected end of file, expecting ')'"},
+    {"1++", "1.3-1.3: Unexpected operator '+', expecting literal or '('"},
+    {"1+*", "1.3-1.3: Unexpected operator '*', expecting literal or '('"},
+    {"1*/", "1.3-1.3: Unexpected operator '/', expecting literal or '('"},
+    {"(%", "1.2-1.2: Unexpected operator '%', expecting literal or '('"},
+    {"1*-", "1.3-1.3: Unexpected operator '-', expecting literal or '('"},
+    {"()", "1.2-1.2: Unexpected ')', expecting literal or '('"},
+    {"1(", "1.2-1.2: Unexpected '(', expecting an operator or end of file"},
+    {"1 + _", "1.5-1.5: Unexpected invalid token '_', expecting literal or '('"},
+    {"1,", "1.2-1.2: Unexpected ',', expecting an operator or end of file"},
+    {"1a", "1.2-1.2: Unexpected identifier 'a', expecting an operator or end of file"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,
