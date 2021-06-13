@@ -38,6 +38,12 @@ static TestExp errorTests[] = {
     {"1 + _", "1.5-1.5: Unexpected invalid token '_', expecting literal or '('"},
     {"1,", "1.2-1.2: Unexpected ',', expecting an operator or end of file"},
     {"1a", "1.2-1.2: Unexpected identifier 'a', expecting an operator or end of file"},
+    {"1..1", "1.3-1.3: Unexpected invalid token '.', expecting an operator or end of file"},
+    {"1.e", "1.1-1.3: Invalid floating point literal"},
+    {".1", "1.1-1.1: Unexpected invalid token '.', expecting literal or '('"}, // TODO: Shall this be allowed?
+    {"1e310", "1.1-1.5: Invalid floating point literal"},
+    {"1e+310", "1.1-1.6: Invalid floating point literal"},
+    {"1e-310", "1.1-1.6: Invalid floating point literal"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,
@@ -62,6 +68,12 @@ static TestExp successTests[] = {
     {"1", "1"},
     {"123", "123"},
     {"9223372036854775807", "9223372036854775807"},
+    {"1.23", "1.23"},
+    {"10.123e-45", "1.0123e-44"},
+    {"1e0", "1"},
+    {"1e1", "10"},
+    {"11", "11"},
+    {"1.23e4", "12300"},
     {"1+1", "(1 + 1)"},
     {"10 + 11 + 12", "((10 + 11) + 12)"},
     {"1+2*3*4+5", "((1 + ((2 * 3) * 4)) + 5)"},

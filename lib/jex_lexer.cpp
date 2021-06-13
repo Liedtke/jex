@@ -17,6 +17,8 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "invalid token '" << token.text << "'";
         case Token::Kind::LiteralInt:
             return str << "integer literal '" << token.text << '\'';
+        case Token::Kind::LiteralFloat:
+            return str << "floating point literal '" << token.text << '\'';
         case Token::Kind::OpAdd:
             return str << "operator '+'";
         case Token::Kind::OpSub:
@@ -110,8 +112,14 @@ Token Lexer::getNext() {
         // TODO: Handle hex, binary, octal formats
         while (std::isdigit(advance())) {
         }
-        // TODO: parse floating point
-        return setToken(Token::Kind::LiteralInt);
+        switch(*d_cursor) {
+            case '.':
+            case 'e':
+            case 'E':
+                return parseFloatingPoint();
+            default:
+                return setToken(Token::Kind::LiteralInt);
+        }
     }
 
     // parse identifier: [A-Za-z][A-Za-z0-9_]
@@ -125,6 +133,25 @@ Token Lexer::getNext() {
     // invalid: consume single character
     advance();
     return setToken(Token::Kind::Invalid);
+}
+
+Token Lexer::parseFloatingPoint() {
+    // parse fractional digits
+    if (*d_cursor == '.') {
+        while (std::isdigit(advance())) {
+        }
+    }
+    // parse exponential notation
+    if (*d_cursor == 'e' || *d_cursor == 'E') {
+        advance();
+        if (*d_cursor == '+' || *d_cursor == '-') {
+            advance();
+        }
+        while (std::isdigit(*d_cursor)) {
+            advance();
+        }
+    }
+    return setToken(Token::Kind::LiteralFloat);
 }
 
 } // namespace jex

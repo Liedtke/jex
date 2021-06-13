@@ -26,38 +26,6 @@ TEST(Location, defaultConstruction) {
     EXPECT_EQ(1, loc.end.col);
 }
 
-TEST(Lexer, eof) {
-    Token token = Lexer("").getNext();
-    EXPECT_EQ(Token::Kind::Eof, token.kind);
-    EXPECT_EQ(Location(), token.location);
-    EXPECT_EQ("", token.text);
-}
-
-TEST(Lexer, spaces) {
-    Token token = Lexer(" \t\r\n   ").getNext();
-    EXPECT_EQ(Token::Kind::Eof, token.kind);
-    EXPECT_EQ((Location{{2, 4}, {2, 4}}), token.location);
-    EXPECT_EQ("", token.text);
-}
-
-TEST(Lexer, invalid) {
-    Token token = Lexer(" @").getNext();
-    EXPECT_EQ(Token::Kind::Invalid, token.kind);
-    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
-    EXPECT_EQ("@", token.text);
-}
-
-TEST(Lexer, identifiers) {
-    Token token = Lexer("  test").getNext();
-    EXPECT_EQ(Token::Kind::Ident, token.kind);
-    EXPECT_EQ((Location{{1, 3}, {1, 6}}), token.location);
-    EXPECT_EQ("test", token.text);
-    token = Lexer("t35t_123\n").getNext();
-    EXPECT_EQ(Token::Kind::Ident, token.kind);
-    EXPECT_EQ((Location{{1, 1}, {1, 8}}), token.location);
-    EXPECT_EQ("t35t_123", token.text);
-}
-
 TEST(Lexer, functionCall) {
     Lexer lexer("fct(1, 23)");
     Token token = lexer.getNext();
@@ -86,44 +54,47 @@ TEST(Lexer, functionCall) {
     EXPECT_EQ(")", token.text);
 }
 
-TEST(Lexer, add) {
-    Lexer lexer(" + ");
-    Token token = lexer.getNext();
-    EXPECT_EQ(Token::Kind::OpAdd, token.kind);
-    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
-    EXPECT_EQ("+", token.text);
-}
+using TestSingleToken = std::pair<const char*, Token>;
 
-TEST(Lexer, sub) {
-    Lexer lexer(" - ");
-    Token token = lexer.getNext();
-    EXPECT_EQ(Token::Kind::OpSub, token.kind);
-    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
-    EXPECT_EQ("-", token.text);
-}
+class TestToken : public testing::TestWithParam<TestSingleToken> {};
 
-TEST(Lexer, mul) {
-    Lexer lexer(" * ");
-    Token token = lexer.getNext();
-    EXPECT_EQ(Token::Kind::OpMul, token.kind);
-    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
-    EXPECT_EQ("*", token.text);
-}
+static TestSingleToken tokenTests[] = {
+    {"", Token{Token::Kind::Eof, Location{{1, 1}, {1, 1}}, ""}},
+    {" \t\r\n   ", Token{Token::Kind::Eof, Location{{2, 4}, {2, 4}}, ""}},
+    {" @ ", Token{Token::Kind::Invalid, Location{{1, 2}, {1, 2}}, "@"}},
+    {" + ", Token{Token::Kind::OpAdd, Location{{1, 2}, {1, 2}}, "+"}},
+    {" - ", Token{Token::Kind::OpSub, Location{{1, 2}, {1, 2}}, "-"}},
+    {" * ", Token{Token::Kind::OpMul, Location{{1, 2}, {1, 2}}, "*"}},
+    {" / ", Token{Token::Kind::OpDiv, Location{{1, 2}, {1, 2}}, "/"}},
+    {" % ", Token{Token::Kind::OpMod, Location{{1, 2}, {1, 2}}, "%"}},
+    {"  test", Token{Token::Kind::Ident, Location{{1, 3}, {1, 6}}, "test"}},
+    {"t35t_123\n", Token{Token::Kind::Ident, Location{{1, 1}, {1, 8}}, "t35t_123"}},
+    {"1.1 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 3}}, "1.1"}},
+    {"1e3 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 3}}, "1e3"}},
+    {"11e20 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 5}}, "11e20"}},
+    {"1.1.1 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 3}}, "1.1"}},
+    {"1e1.1 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 3}}, "1e1"}},
+    {"1e10e1 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 4}}, "1e10"}},
+    {"1.123e10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 8}}, "1.123e10"}},
+    {"1.123e-10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 9}}, "1.123e-10"}},
+    {"1234567.123e+100 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 16}}, "1234567.123e+100"}},
+    // The lexer treats everything that is a valid start of a floating point literal as a floating point literal
+    // even if the result might be malformed. This way the error message can be clarer, e.g. the parser reporting
+    // "invalid floating point literal '1.123e+'".
+    {"1.123e+-10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 7}}, "1.123e+"}},
+};
 
-TEST(Lexer, div) {
-    Lexer lexer(" / ");
-    Token token = lexer.getNext();
-    EXPECT_EQ(Token::Kind::OpDiv, token.kind);
-    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
-    EXPECT_EQ("/", token.text);
-}
+INSTANTIATE_TEST_SUITE_P(SuiteTokens,
+                        TestToken,
+                        testing::ValuesIn(tokenTests));
 
-TEST(Lexer, mod) {
-    Lexer lexer(" % ");
+TEST_P(TestToken, lex) {
+    Lexer lexer(GetParam().first);
     Token token = lexer.getNext();
-    EXPECT_EQ(Token::Kind::OpMod, token.kind);
-    EXPECT_EQ((Location{{1, 2}, {1, 2}}), token.location);
-    EXPECT_EQ("%", token.text);
+    const Token& exp = GetParam().second;
+    EXPECT_EQ(exp.kind, token.kind);
+    EXPECT_EQ(exp.location, token.location);
+    EXPECT_EQ(exp.text, token.text);
 }
 
 } // namespace jex

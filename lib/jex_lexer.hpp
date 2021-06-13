@@ -15,6 +15,7 @@ public:
         Eof,
         Ident,
         LiteralInt,
+        LiteralFloat,
         ParensL,
         ParensR,
         OpAdd,
@@ -54,6 +55,7 @@ private:
     char advance();
     void skipWhiteSpaces();
     void resetToken();
+    Token parseFloatingPoint();
 };
 
 } // namespace jex

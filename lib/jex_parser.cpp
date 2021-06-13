@@ -75,6 +75,8 @@ IAstExpression* Parser::parsePrimary() {
     switch (d_currToken.kind) {
         case Token::Kind::LiteralInt:
             return parseLiteralInt();
+        case Token::Kind::LiteralFloat:
+            return parseLiteralFloat();
         case Token::Kind::ParensL:
             return parseParensExpr();
         default:
@@ -121,6 +123,22 @@ AstLiteralExpr* Parser::parseLiteralInt() {
         return res;
     } catch (std::logic_error&) {
         d_env.throwError(d_currToken.location, "Invalid integer literal");
+    }
+}
+
+AstLiteralExpr* Parser::parseLiteralFloat() {
+    assert(d_currToken.kind == Token::Kind::LiteralFloat);
+    try {
+        std::size_t pos;
+        const double value = std::stod(std::string(d_currToken.text), &pos);
+        if (pos != d_currToken.text.size()) {
+            d_env.throwError(d_currToken.location, "Invalid floating point literal");
+        }
+        AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, value);
+        getNextToken(); // consume literal
+        return res;
+    } catch (std::logic_error&) {
+        d_env.throwError(d_currToken.location, "Invalid floating point literal");
     }
 }
 
