@@ -9,6 +9,7 @@ namespace jex {
 class CompileEnv;
 class AstLiteralExpr;
 class IAstExpression;
+class AstArgList;
 
 class Parser {
     CompileEnv& d_env;
@@ -35,6 +36,8 @@ private:
     AstLiteralExpr* parseLiteralInt();
     AstLiteralExpr* parseLiteralFloat();
     IAstExpression* parseParensExpr();
+    IAstExpression* parseIdentOrCall();
+    AstArgList* parseArgList();
 };
 
 } // namespace jex

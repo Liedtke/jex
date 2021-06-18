@@ -2,10 +2,15 @@
 
 #include <jex_ast.hpp>
 #include <jex_errorhandling.hpp>
+#include <jex_symboltable.hpp>
 
 #include <sstream>
 
 namespace jex {
+
+CompileEnv::CompileEnv()
+: d_symbolTable(std::make_unique<SymbolTable>(*this)) {
+};
 
 CompileEnv::~CompileEnv() {
 }

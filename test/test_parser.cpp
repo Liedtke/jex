@@ -23,27 +23,30 @@ TEST_P(TestParserError, test) {
 }
 
 static TestExp errorTests[] = {
-    {"", "1.1-1.1: Unexpected end of file, expecting literal or '('"},
+    {"", "1.1-1.1: Unexpected end of file, expecting literal, identifier or '('"},
     {"9223372036854775808", "1.1-1.19: Invalid integer literal"},
     {"92233720368547758070", "1.1-1.20: Invalid integer literal"},
-    {"(", "1.2-1.2: Unexpected end of file, expecting literal or '('"},
+    {"(", "1.2-1.2: Unexpected end of file, expecting literal, identifier or '('"},
     {"(1", "1.3-1.3: Unexpected end of file, expecting ')'"},
-    {"1++", "1.3-1.3: Unexpected operator '+', expecting literal or '('"},
-    {"1+*", "1.3-1.3: Unexpected operator '*', expecting literal or '('"},
-    {"1*/", "1.3-1.3: Unexpected operator '/', expecting literal or '('"},
-    {"(%", "1.2-1.2: Unexpected operator '%', expecting literal or '('"},
-    {"1*-", "1.3-1.3: Unexpected operator '-', expecting literal or '('"},
-    {"()", "1.2-1.2: Unexpected ')', expecting literal or '('"},
+    {"1++", "1.3-1.3: Unexpected operator '+', expecting literal, identifier or '('"},
+    {"1+*", "1.3-1.3: Unexpected operator '*', expecting literal, identifier or '('"},
+    {"1*/", "1.3-1.3: Unexpected operator '/', expecting literal, identifier or '('"},
+    {"(%", "1.2-1.2: Unexpected operator '%', expecting literal, identifier or '('"},
+    {"1*-", "1.3-1.3: Unexpected operator '-', expecting literal, identifier or '('"},
+    {"()", "1.2-1.2: Unexpected ')', expecting literal, identifier or '('"},
     {"1(", "1.2-1.2: Unexpected '(', expecting an operator or end of file"},
-    {"1 + _", "1.5-1.5: Unexpected invalid token '_', expecting literal or '('"},
+    {"1 + _", "1.5-1.5: Unexpected invalid token '_', expecting literal, identifier or '('"},
     {"1,", "1.2-1.2: Unexpected ',', expecting an operator or end of file"},
     {"1a", "1.2-1.2: Unexpected identifier 'a', expecting an operator or end of file"},
     {"1..1", "1.3-1.3: Unexpected invalid token '.', expecting an operator or end of file"},
     {"1.e", "1.1-1.3: Invalid floating point literal"},
-    {".1", "1.1-1.1: Unexpected invalid token '.', expecting literal or '('"}, // TODO: Shall this be allowed?
+    {".1", "1.1-1.1: Unexpected invalid token '.', expecting literal, identifier or '('"}, // TODO: Shall this be allowed?
     {"1e310", "1.1-1.5: Invalid floating point literal"},
     {"1e+310", "1.1-1.6: Invalid floating point literal"},
     {"1e-310", "1.1-1.6: Invalid floating point literal"},
+    {"a(,2)", "1.3-1.3: Unexpected ',', expecting literal, identifier or '('"},
+    {"a(1 23)", "1.5-1.6: Unexpected integer literal '23', expecting ',' or ')'"},
+    {"a(1,2,)", "1.7-1.7: Unexpected ')', expecting literal, identifier or '('"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,
@@ -81,7 +84,7 @@ static TestExp successTests[] = {
     {"((1))", "1"},
     {"((1) + (1+2))", "(1 + (1 + 2))"},
     {"2 * (1 + 3)", "(2 * (1 + 3))"},
-    {"(1 + 3) * (2)", "((1 + 3) * 2)"},
+    {"(1 + 3) * (2)", "((1 + 3) * 2)"}
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

@@ -14,12 +14,15 @@ struct Location;
 struct MsgInfo;
 class IAstNode;
 class IAstExpression;
+class SymbolTable;
 
 class CompileEnv {
     std::set<MsgInfo> d_messages;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     IAstExpression* d_root = nullptr;
+    std::unique_ptr<SymbolTable> d_symbolTable;
 public:
+    CompileEnv();
     ~CompileEnv();
 
     const MsgInfo& createError(const Location& loc, std::string msg);
@@ -42,6 +45,10 @@ public:
     }
     IAstExpression* getRoot() const {
         return d_root;
+    }
+
+    SymbolTable& symbols() {
+        return *d_symbolTable;
     }
 };
 

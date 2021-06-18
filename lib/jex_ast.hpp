@@ -2,18 +2,15 @@
 
 #include <jex_astvisitor.hpp>
 #include <jex_location.hpp>
+#include <jex_typesystem.hpp>
 
 #include <cstdint>
+#include <string_view>
+#include <vector>
 
 namespace jex {
 
-enum class Type {
-    Unresolved,
-    Integer,
-    Float,
-    Bool,
-    String
-};
+struct Symbol;
 
 enum class OpType {
     Add,
@@ -89,10 +86,45 @@ public:
     }
 };
 
+class AstIdentifier : public IAstExpression  {
+public:
+    std::string_view d_name;
+    Symbol *d_symbol = nullptr;
+
+    AstIdentifier(const Location& loc, std::string_view name)
+    : IAstExpression(loc)
+    , d_name(name) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+};
+
+class AstArgList : public IAstNode {
+public:
+    std::vector<IAstExpression*> d_args;
+
+    AstArgList(const Location& loc)
+    : IAstNode(loc) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+
+    void addArg(IAstExpression* arg);
+};
+
 class AstFctCall : public IAstExpression {
 public:
-    AstFctCall(const Location& loc)
-    : IAstExpression(loc) {
+    AstIdentifier* d_fct;
+    AstArgList* d_args;
+
+    AstFctCall(const Location& loc, AstIdentifier* fct, AstArgList* args)
+    : IAstExpression(loc)
+    , d_fct(fct)
+    , d_args(args) {
     }
 
     void accept(IAstVisitor& visitor) override {

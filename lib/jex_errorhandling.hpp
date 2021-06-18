@@ -3,6 +3,7 @@
 #include <jex_location.hpp>
 
 #include <iosfwd>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -17,6 +18,7 @@ struct MsgInfo {
     } kind;
     Location loc;
     std::string msg;
+    mutable std::unique_ptr<MsgInfo> d_note;
 
     bool operator<(const MsgInfo& other) const;
 
@@ -25,6 +27,8 @@ struct MsgInfo {
     , loc(loc)
     , msg(std::move(msg)) {
     }
+
+    const MsgInfo& addNote(const Location& loc, std::string msg) const;
 };
 
 std::ostream& operator<<(std::ostream& str, const MsgInfo& info);

@@ -48,4 +48,12 @@ void PrettyPrinter::visit(AstFctCall& node) {
     // FIXME: implement
 }
 
+void PrettyPrinter::visit(AstIdentifier& node) {
+    // FIXME: implement
+}
+
+void PrettyPrinter::visit(AstArgList& node) {
+    // FIXME: implement
+}
+
 } // namespace jex

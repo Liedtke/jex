@@ -2,6 +2,7 @@
 
 #include <jex_ast.hpp>
 #include <jex_compileenv.hpp>
+#include <jex_symboltable.hpp>
 
 #include <sstream>
 #include <string>
@@ -71,6 +72,50 @@ IAstExpression* Parser::parseParensExpr() {
     return expr;
 }
 
+AstArgList* Parser::parseArgList() {
+    assert(d_currToken.kind == Token::Kind::ParensL);
+    getNextToken(); // consume '('
+    AstArgList* argList = d_env.createNode<AstArgList>(d_currToken.location);
+    if (d_currToken.kind == Token::Kind::ParensR) {
+        // empty argument list
+        getNextToken(); // consume ')'
+        return argList;
+    }
+    while (true) {
+        IAstExpression* arg = parsePrimary();
+        argList->addArg(arg);
+        switch (d_currToken.kind) {
+            case Token::Kind::Comma:
+                getNextToken(); // consume ','
+                break;
+            case Token::Kind::ParensR:
+                getNextToken(); // consume ')'
+                return argList;
+            default: {
+                std::stringstream msg;
+                msg << "Unexpected " << d_currToken << ", expecting ',' or ')'";
+                d_env.throwError(d_currToken.location, msg.str());
+            }
+        }
+    }
+}
+
+IAstExpression* Parser::parseIdentOrCall() {
+    assert(d_currToken.kind == Token::Kind::Ident);
+    AstIdentifier *ident = d_env.createNode<AstIdentifier>(d_currToken.location, d_currToken.text);
+    d_env.symbols().resolveSymbol(ident);
+    assert(ident->d_symbol != nullptr);
+    getNextToken(); // consume identifier
+
+    // parse function call
+    if (d_currToken.kind == Token::Kind::ParensL) {
+        AstArgList* args = parseArgList();
+        return d_env.createNode<AstFctCall>(Location::combine(ident->d_loc, args->d_loc), ident, args);
+    }
+    // regular identifier
+    return ident;
+}
+
 IAstExpression* Parser::parsePrimary() {
     switch (d_currToken.kind) {
         case Token::Kind::LiteralInt:
@@ -79,10 +124,12 @@ IAstExpression* Parser::parsePrimary() {
             return parseLiteralFloat();
         case Token::Kind::ParensL:
             return parseParensExpr();
+        case Token::Kind::Ident:
+            return parseIdentOrCall();
         default:
             std::stringstream msg;
             // TODO: extend expectation list
-            msg << "Unexpected " << d_currToken << ", expecting literal or '('";
+            msg << "Unexpected " << d_currToken << ", expecting literal, identifier or '('";
             d_env.throwError(d_currToken.location, msg.str());
     }
 }
