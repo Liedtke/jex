@@ -28,7 +28,7 @@ Symbol* SymbolTable::addSymbol(const Location& loc, Symbol::Kind kind, std::stri
     auto [iter, inserted] = d_symbols.emplace(name, std::make_unique<Symbol>(kind, name));
     if (!inserted) {
         const MsgInfo& msg = d_env.createError(loc, "Duplicate identifier '" + std::string(name) + "'");
-        msg.addNote(loc, "Previously defined here");
+        msg.addNote(loc, "Previously defined here"); // TODO: store location in symbol and use it here
         return d_symbols.at(s_unresolved).get();
     }
     return iter->second.get();
