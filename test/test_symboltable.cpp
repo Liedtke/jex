@@ -17,7 +17,7 @@ TEST(SymbolTable, resolveUnknownSymbol) {
     ASSERT_EQ(1, env.messages().size());
     std::stringstream errMsg;
     errMsg << *env.messages().begin();
-    ASSERT_EQ("1.1-1.7: Unknown identifier 'unknown'", errMsg.str());
+    ASSERT_EQ("1.1-1.7: Error: Unknown identifier 'unknown'", errMsg.str());
     ASSERT_TRUE(ident.d_symbol != nullptr);
     ASSERT_EQ(Symbol::Kind::Unresolved, ident.d_symbol->kind);
 }
@@ -38,8 +38,9 @@ TEST(SymbolTable, addAndResolveSymbol) {
 TEST(SymbolTable, testDuplicateAdd) {
     CompileEnv env;
     SymbolTable& symbols = env.symbols();
+    AstIdentifier defNode({{1, 1}, {1, 4}}, "duplicate");
 
-    symbols.addSymbol({{1, 1}, {1, 4}}, Symbol::Kind::Variable, "duplicate");
+    symbols.addSymbol({{1, 1}, {1, 4}}, Symbol::Kind::Variable, "duplicate", &defNode);
     Symbol* symbol = symbols.addSymbol({{2, 1}, {2, 4}}, Symbol::Kind::Function, "duplicate");
     ASSERT_EQ(Symbol::Kind::Unresolved, symbol->kind);
     // expect an error to be reported
