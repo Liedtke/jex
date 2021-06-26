@@ -31,6 +31,7 @@ struct MsgInfo {
     const MsgInfo& addNote(const Location& loc, std::string msg) const;
 };
 
+std::ostream& operator<<(std::ostream& str, const MsgInfo::Kind& info);
 std::ostream& operator<<(std::ostream& str, const MsgInfo& info);
 
 class CompileError : public std::runtime_error {

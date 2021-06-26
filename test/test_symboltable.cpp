@@ -47,8 +47,8 @@ TEST(SymbolTable, testDuplicateAdd) {
     std::stringstream errMsg;
     errMsg << *env.messages().begin();
     ASSERT_EQ(
-        "2.1-2.4: Duplicate identifier 'unknown'\n"
-        "1.1-1.4: Previously defined here", errMsg.str());
+        "2.1-2.4: Error: Duplicate identifier 'duplicate'\n"
+        "1.1-1.4: Note: Previously defined here", errMsg.str());
 }
 
 

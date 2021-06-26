@@ -84,7 +84,7 @@ static TestSingleToken tokenTests[] = {
     {"1.123e+-10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 7}}, "1.123e+"}},
 };
 
-INSTANTIATE_TEST_SUITE_P(SuiteTokens,
+INSTANTIATE_TEST_CASE_P(SuiteTokens,
                         TestToken,
                         testing::ValuesIn(tokenTests));
 
