@@ -2,6 +2,7 @@
 #include <jex_errorhandling.hpp>
 #include <jex_parser.hpp>
 #include <jex_prettyprinter.hpp>
+#include <jex_symboltable.hpp>
 
 #include <gtest/gtest.h>
 
@@ -58,8 +59,10 @@ class TestParserSuccess : public testing::TestWithParam<TestExp> {};
 TEST_P(TestParserSuccess, test) {
     CompileEnv env;
     Parser parser(env, GetParam().first);
+    env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x");
+    env.symbols().addSymbol(Location(), Symbol::Kind::Function, "f");
     parser.parse(); // no error
-    ASSERT_EQ(0, env.messages().size());
+    ASSERT_EQ(0, env.messages().size()) << *env.messages().begin();
     // check generated ast
     std::stringstream str;
     PrettyPrinter printer(str);
@@ -84,7 +87,14 @@ static TestExp successTests[] = {
     {"((1))", "1"},
     {"((1) + (1+2))", "(1 + (1 + 2))"},
     {"2 * (1 + 3)", "(2 * (1 + 3))"},
-    {"(1 + 3) * (2)", "((1 + 3) * 2)"}
+    {"(1 + 3) * (2)", "((1 + 3) * 2)"},
+    {"x", "x"},
+    {"x * 2 + x", "((x * 2) + x)"},
+    {"f()", "f()"},
+    {"f(1)", "f(1)"},
+    {"f(1 + 1)", "f((1 + 1))"},
+    {"f(1,x,(2))", "f(1, x, 2)"},
+    {"f(1 + 2, f(f()))", "f((1 + 2), f(f()))"},
 };
 
 INSTANTIATE_TEST_CASE_P(SuiteParserSuccess,

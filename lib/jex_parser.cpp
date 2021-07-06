@@ -82,7 +82,7 @@ AstArgList* Parser::parseArgList() {
         return argList;
     }
     while (true) {
-        IAstExpression* arg = parsePrimary();
+        IAstExpression* arg = parseExpression();
         argList->addArg(arg);
         switch (d_currToken.kind) {
             case Token::Kind::Comma:

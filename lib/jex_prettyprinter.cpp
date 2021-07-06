@@ -45,15 +45,26 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
 }
 
 void PrettyPrinter::visit(AstFctCall& node) {
-    // FIXME: implement
+    node.d_fct->accept(*this);
+    d_str << "(";
+    node.d_args->accept(*this);
+    d_str << ")";
 }
 
 void PrettyPrinter::visit(AstIdentifier& node) {
-    // FIXME: implement
+    d_str << node.d_name;
 }
 
 void PrettyPrinter::visit(AstArgList& node) {
-    // FIXME: implement
+    bool first = true;
+    for (IAstExpression* expr : node.d_args) {
+        if (first) {
+            first = false;
+        } else {
+            d_str << ", ";
+        }
+        expr->accept(*this);
+    }
 }
 
 } // namespace jex
