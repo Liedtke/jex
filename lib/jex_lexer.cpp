@@ -101,6 +101,9 @@ Token Lexer::getNext() {
             return setToken(Token::Kind::OpMul);
         case '/':
             advance();
+            if (*d_cursor == '/') {
+                return skipLineCommentgetNext();
+            }
             return setToken(Token::Kind::OpDiv);
         case '%':
             advance();
@@ -133,6 +136,14 @@ Token Lexer::getNext() {
     // invalid: consume single character
     advance();
     return setToken(Token::Kind::Invalid);
+}
+
+Token Lexer::skipLineCommentgetNext() {
+    advance(); // consume '/'
+    while (*d_cursor != '\n' && *d_cursor != '\0') {
+        advance();
+    }
+    return getNext();
 }
 
 Token Lexer::parseFloatingPoint() {

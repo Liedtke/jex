@@ -69,6 +69,7 @@ static TestSingleToken tokenTests[] = {
     {" % ", Token{Token::Kind::OpMod, Location{{1, 2}, {1, 2}}, "%"}},
     {"  test", Token{Token::Kind::Ident, Location{{1, 3}, {1, 6}}, "test"}},
     {"t35t_123\n", Token{Token::Kind::Ident, Location{{1, 1}, {1, 8}}, "t35t_123"}},
+    {"1234567", Token{Token::Kind::LiteralInt, Location{{1, 1}, {1, 7}}, "1234567"}},
     {"1.1 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 3}}, "1.1"}},
     {"1e3 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 3}}, "1e3"}},
     {"11e20 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 5}}, "11e20"}},
@@ -82,6 +83,9 @@ static TestSingleToken tokenTests[] = {
     // even if the result might be malformed. This way the error message can be clarer, e.g. the parser reporting
     // "invalid floating point literal '1.123e+'".
     {"1.123e+-10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 7}}, "1.123e+"}},
+    {"// unterminated line comment", Token{Token::Kind::Eof, Location{{1, 29}, {1, 29}}, ""}},
+    {"// unterminated line comment\n123", Token{Token::Kind::LiteralInt, Location{{2, 1}, {2, 3}}, "123"}},
+    {"////\n///\n//\n/", Token{Token::Kind::OpDiv, Location{{4, 1}, {4, 1}}, "/"}},
 };
 
 INSTANTIATE_TEST_CASE_P(SuiteTokens,
