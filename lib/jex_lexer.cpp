@@ -1,5 +1,7 @@
 #include <jex_lexer.hpp>
 
+#include <jex_compileenv.hpp>
+
 #include <cctype>
 #include <iostream>
 
@@ -73,6 +75,14 @@ Token Lexer::setToken(Token::Kind kind) {
     return d_currToken;
 }
 
+template <class ... Char>
+void Lexer::advanceUntil(Char ... args) {
+    static_assert((... && std::is_same_v<char, Char>));
+    while ((... && (*d_cursor != args))) {
+        advance();
+    }
+}
+
 Token Lexer::getNext() {
     while (true) {
         skipWhiteSpaces();
@@ -102,12 +112,26 @@ Token Lexer::getNext() {
                 return setToken(Token::Kind::OpMul);
             case '/':
                 advance();
+                // handle line comments //
                 if (*d_cursor == '/') {
                     advance(); // consume '/'
-                    while (*d_cursor != '\n' && *d_cursor != '\0') {
-                        advance();
-                    }
+                    advanceUntil('\n', '\0');
                     continue;
+                }
+                // handle block comment /* */
+                if (*d_cursor == '*') {
+                    advance(); // consume '*;
+                    while (true) {
+                        advanceUntil('*', '\0');
+                        if (*d_cursor == '*' && advance() == '/') {
+                            advance(); // consume '/'
+                            break;
+                        }
+                        if (*d_cursor == '\0') {
+                            d_env.throwError(d_currToken.location, "Unterminated comment");
+                        }
+                    }
+                    continue; // comment finished
                 }
                 return setToken(Token::Kind::OpDiv);
             case '%':

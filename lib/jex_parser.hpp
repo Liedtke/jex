@@ -19,7 +19,7 @@ class Parser {
 public:
     Parser(CompileEnv& env, const char* source)
     : d_env(env)
-    , d_lexer(source) {
+    , d_lexer(env, source) {
         initPrecs();
         getNextToken();
     }

@@ -1,5 +1,8 @@
 #include <jex_lexer.hpp>
 
+#include <jex_compileenv.hpp>
+#include <jex_errorhandling.hpp>
+
 #include <gtest/gtest.h>
 
 namespace jex {
@@ -27,7 +30,8 @@ TEST(Location, defaultConstruction) {
 }
 
 TEST(Lexer, functionCall) {
-    Lexer lexer("fct(1, 23)");
+    CompileEnv env;
+    Lexer lexer(env, "fct(1, 23)");
     Token token = lexer.getNext();
     EXPECT_EQ(Token::Kind::Ident, token.kind);
     EXPECT_EQ((Location{{1, 1}, {1, 3}}), token.location);
@@ -83,9 +87,16 @@ static TestSingleToken tokenTests[] = {
     // even if the result might be malformed. This way the error message can be clarer, e.g. the parser reporting
     // "invalid floating point literal '1.123e+'".
     {"1.123e+-10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 7}}, "1.123e+"}},
+    // test comment parsing
     {"// unterminated line comment", Token{Token::Kind::Eof, Location{{1, 29}, {1, 29}}, ""}},
     {"// unterminated line comment\n123", Token{Token::Kind::LiteralInt, Location{{2, 1}, {2, 3}}, "123"}},
     {"////\n///\n//\n/", Token{Token::Kind::OpDiv, Location{{4, 1}, {4, 1}}, "/"}},
+    {"/**/", Token{Token::Kind::Eof, Location{{1, 5}, {1, 5}}, ""}},
+    {"/***/", Token{Token::Kind::Eof, Location{{1, 6}, {1, 6}}, ""}},
+    {"/* /*/", Token{Token::Kind::Eof, Location{{1, 7}, {1, 7}}, ""}},
+    {"/* /**//", Token{Token::Kind::OpDiv, Location{{1, 8}, {1, 8}}, "/"}},
+    {"/*Comment\nspanning\nmultiple\nlines\n*/", Token{Token::Kind::Eof, Location{{5, 3}, {5, 3}}, ""}},
+    {"/*@$-_\\\t&|^% */", Token{Token::Kind::Eof, Location{{1, 16}, {1, 16}}, ""}},
 };
 
 INSTANTIATE_TEST_CASE_P(SuiteTokens,
@@ -93,12 +104,38 @@ INSTANTIATE_TEST_CASE_P(SuiteTokens,
                         testing::ValuesIn(tokenTests));
 
 TEST_P(TestToken, lex) {
-    Lexer lexer(GetParam().first);
+    CompileEnv env;
+    Lexer lexer(env, GetParam().first);
     Token token = lexer.getNext();
     const Token& exp = GetParam().second;
     EXPECT_EQ(exp.kind, token.kind);
     EXPECT_EQ(exp.location, token.location);
     EXPECT_EQ(exp.text, token.text);
+}
+
+using TestException = std::pair<const char*, const char*>;
+class TestLexerException : public testing::TestWithParam<TestException> {};
+
+static TestException exceptionTests[] = {
+    {"/* hello", "1.1-1.8: Error: Unterminated comment"},
+    {"/*/", "1.1-1.3: Error: Unterminated comment"},
+    {"/** /", "1.1-1.5: Error: Unterminated comment"},
+};
+
+INSTANTIATE_TEST_CASE_P(SuiteLexerExceptions,
+                        TestLexerException,
+                        testing::ValuesIn(exceptionTests));
+
+TEST_P(TestLexerException, lex) {
+    CompileEnv env;
+    Lexer lexer(env, GetParam().first);
+    try {
+        Token token = lexer.getNext();
+        ASSERT_TRUE(false) << "Expected exception, got token " << token; // LCOV_EXCL_LINE
+    } catch (const CompileError& e) {
+        ASSERT_LT(0, env.messages().size()) << "Exception must also be stored in messages";
+        ASSERT_STREQ(e.what(), GetParam().second);
+    }
 }
 
 } // namespace jex

@@ -8,6 +8,8 @@
 
 namespace jex {
 
+class CompileEnv;
+
 class Token {
 public:
     enum class Kind {
@@ -32,6 +34,7 @@ public:
 std::ostream& operator<<(std::ostream& str, const Token& token);
 
 class Lexer {
+    CompileEnv& d_env;
     const char *d_source;
     const char *d_cursor;
     const char *d_tokenBegin;
@@ -40,8 +43,9 @@ class Lexer {
     int d_col = 1;
 
 public:
-    Lexer(const char* source)
-    : d_source(source)
+    Lexer(CompileEnv& env, const char* source)
+    : d_env(env)
+    , d_source(source)
     , d_cursor(source)
     , d_tokenBegin(source)
     , d_currToken() {
@@ -56,6 +60,8 @@ private:
     void skipWhiteSpaces();
     void resetToken();
     Token parseFloatingPoint();
+    template <class ... Char>
+    void advanceUntil(Char ... args);
 };
 
 } // namespace jex
