@@ -17,7 +17,7 @@ TEST_P(TestParserError, test) {
     Parser parser(env, GetParam().first);
     try {
         parser.parse();
-        ASSERT_TRUE(false) << "expected CompileError";
+        ASSERT_TRUE(false) << "expected CompileError"; // LCOV_EXCL_LINE
     } catch (CompileError& err) {
         ASSERT_STREQ(GetParam().second, err.what());
     }

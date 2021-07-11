@@ -58,6 +58,20 @@ TEST(Lexer, functionCall) {
     EXPECT_EQ(")", token.text);
 }
 
+TEST(Lexer, eofGetNext) {
+    // test calling next when eof already reached.
+    CompileEnv env;
+    Lexer lexer(env, "");
+    Token token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::Eof, token.kind);
+    EXPECT_EQ((Location{{1, 1}, {1, 1}}), token.location);
+    EXPECT_EQ("", token.text);
+    token = lexer.getNext();
+    EXPECT_EQ(Token::Kind::Eof, token.kind);
+    EXPECT_EQ((Location{{1, 1}, {1, 1}}), token.location);
+    EXPECT_EQ("", token.text);
+}
+
 using TestSingleToken = std::pair<const char*, Token>;
 
 class TestToken : public testing::TestWithParam<TestSingleToken> {};
