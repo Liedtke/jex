@@ -56,7 +56,6 @@ private:
     void skipWhiteSpaces();
     void resetToken();
     Token parseFloatingPoint();
-    Token skipLineCommentgetNext();
 };
 
 } // namespace jex

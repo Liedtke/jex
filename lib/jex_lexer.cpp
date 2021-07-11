@@ -74,76 +74,74 @@ Token Lexer::setToken(Token::Kind kind) {
 }
 
 Token Lexer::getNext() {
-    skipWhiteSpaces();
-    resetToken();
+    while (true) {
+        skipWhiteSpaces();
+        resetToken();
 
-    // parse one character tokens
-    switch(*d_cursor) {
-        case '\0':
-            return setToken(Token::Kind::Eof);
-        case '(':
-            advance();
-            return setToken(Token::Kind::ParensL);
-        case ')':
-            advance();
-            return setToken(Token::Kind::ParensR);
-        case ',':
-            advance();
-            return setToken(Token::Kind::Comma);
-        case '+':
-            advance();
-            return setToken(Token::Kind::OpAdd);
-        case '-':
-            advance();
-            return setToken(Token::Kind::OpSub);
-        case '*':
-            advance();
-            return setToken(Token::Kind::OpMul);
-        case '/':
-            advance();
-            if (*d_cursor == '/') {
-                return skipLineCommentgetNext();
-            }
-            return setToken(Token::Kind::OpDiv);
-        case '%':
-            advance();
-            return setToken(Token::Kind::OpMod);
-    }
-
-    // parse numeric literals
-    if (std::isdigit(*d_cursor)) {
-        // TODO: Handle hex, binary, octal formats
-        while (std::isdigit(advance())) {
-        }
+        // parse one character tokens
         switch(*d_cursor) {
-            case '.':
-            case 'e':
-            case 'E':
-                return parseFloatingPoint();
-            default:
-                return setToken(Token::Kind::LiteralInt);
+            case '\0':
+                return setToken(Token::Kind::Eof);
+            case '(':
+                advance();
+                return setToken(Token::Kind::ParensL);
+            case ')':
+                advance();
+                return setToken(Token::Kind::ParensR);
+            case ',':
+                advance();
+                return setToken(Token::Kind::Comma);
+            case '+':
+                advance();
+                return setToken(Token::Kind::OpAdd);
+            case '-':
+                advance();
+                return setToken(Token::Kind::OpSub);
+            case '*':
+                advance();
+                return setToken(Token::Kind::OpMul);
+            case '/':
+                advance();
+                if (*d_cursor == '/') {
+                    advance(); // consume '/'
+                    while (*d_cursor != '\n' && *d_cursor != '\0') {
+                        advance();
+                    }
+                    continue;
+                }
+                return setToken(Token::Kind::OpDiv);
+            case '%':
+                advance();
+                return setToken(Token::Kind::OpMod);
         }
-    }
 
-    // parse identifier: [A-Za-z][A-Za-z0-9_]
-    if (std::isalpha(*d_cursor)) {
-        while(std::isalnum(*d_cursor) || *d_cursor == '_') {
-            advance();
+        // parse numeric literals
+        if (std::isdigit(*d_cursor)) {
+            // TODO: Handle hex, binary, octal formats
+            while (std::isdigit(advance())) {
+            }
+            switch(*d_cursor) {
+                case '.':
+                case 'e':
+                case 'E':
+                    return parseFloatingPoint();
+                default:
+                    return setToken(Token::Kind::LiteralInt);
+            }
         }
-        return setToken(Token::Kind::Ident);
-    }
 
-    // invalid: consume single character
-    advance();
-    return setToken(Token::Kind::Invalid);
-}
+        // parse identifier: [A-Za-z][A-Za-z0-9_]
+        if (std::isalpha(*d_cursor)) {
+            while(std::isalnum(*d_cursor) || *d_cursor == '_') {
+                advance();
+            }
+            return setToken(Token::Kind::Ident);
+        }
 
-Token Lexer::skipLineCommentgetNext() {
-    advance(); // consume '/'
-    while (*d_cursor != '\n' && *d_cursor != '\0') {
+        // invalid: consume single character
         advance();
+        return setToken(Token::Kind::Invalid);
     }
-    return getNext();
 }
 
 Token Lexer::parseFloatingPoint() {
