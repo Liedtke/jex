@@ -28,4 +28,8 @@ const MsgInfo& CompileEnv::createError(const Location& loc, std::string msg) {
     throw CompileError(error.str());
 }
 
+std::string_view CompileEnv::createStringLiteral(std::string_view str) {
+    return d_stringLiterals.emplace_back(str);
+}
+
 } // namespace jex

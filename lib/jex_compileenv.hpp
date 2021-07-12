@@ -21,6 +21,7 @@ class CompileEnv {
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     IAstExpression* d_root = nullptr;
     std::unique_ptr<SymbolTable> d_symbolTable;
+    std::deque<std::string> d_stringLiterals;
 public:
     CompileEnv();
     ~CompileEnv();
@@ -50,6 +51,8 @@ public:
     SymbolTable& symbols() {
         return *d_symbolTable;
     }
+
+    std::string_view createStringLiteral(std::string_view str);
 };
 
 } // namespace jex

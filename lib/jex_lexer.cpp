@@ -21,6 +21,8 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "integer literal '" << token.text << '\'';
         case Token::Kind::LiteralFloat:
             return str << "floating point literal '" << token.text << '\'';
+        case Token::Kind::LiteralString:
+            return str << "string literal '" << token.text << '\'';
         case Token::Kind::OpAdd:
             return str << "operator '+'";
         case Token::Kind::OpSub:
@@ -36,7 +38,7 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
         case Token::Kind::ParensR:
             return str << "')'";
     }
-    return str;
+    return str; // LCOV_EXCL_LINE unreachable
 }
 
 char Lexer::advance() {
@@ -75,7 +77,7 @@ Token Lexer::setToken(Token::Kind kind) {
     return d_currToken;
 }
 
-template <class ... Char>
+template <typename ... Char>
 void Lexer::advanceUntil(Char ... args) {
     static_assert((... && std::is_same_v<char, Char>));
     while ((... && (*d_cursor != args))) {
@@ -110,6 +112,8 @@ Token Lexer::getNext() {
             case '*':
                 advance();
                 return setToken(Token::Kind::OpMul);
+            case '"':
+                return parseStringLiteral();
             case '/':
                 advance();
                 // handle line comments //
@@ -166,6 +170,75 @@ Token Lexer::getNext() {
         advance();
         return setToken(Token::Kind::Invalid);
     }
+}
+
+Token Lexer::parseStringLiteral() {
+    advance(); // consume '"'
+    while (true) {
+        switch (*d_cursor) {
+            case '\0':
+                d_env.throwError(d_currToken.location, "Unterminated string literal");
+            case '\\':
+                parseEscapedChar();
+                break;
+            case '"':
+                advance(); // consume '"'
+                d_currToken.kind = Token::Kind::LiteralString;
+                d_currToken.text = d_env.createStringLiteral({d_strBuffer.data(), d_strBuffer.size()});
+                d_strBuffer.clear();
+                return d_currToken;
+            default:
+                d_strBuffer.push_back(*d_cursor);
+                advance();
+        }
+    }
+}
+
+void Lexer::parseEscapedChar() {
+    advance(); // consume '\'
+    // TODO: add support for numeric and unicode escape sequences
+    switch(*d_cursor) {
+        case '\\':
+            d_strBuffer.push_back('\\');
+            break;
+        case '\'':
+            d_strBuffer.push_back('\'');
+            break;
+        case '?':
+            d_strBuffer.push_back('?');
+            break;
+        case '"':
+            d_strBuffer.push_back('"');
+            break;
+        case 'a':
+            d_strBuffer.push_back('\a');
+            break;
+        case 'b':
+            d_strBuffer.push_back('\b');
+            break;
+        case 'f':
+            d_strBuffer.push_back('\f');
+            break;
+        case 'n':
+            d_strBuffer.push_back('\n');
+            break;
+        case 'r':
+            d_strBuffer.push_back('\r');
+            break;
+        case 't':
+            d_strBuffer.push_back('\t');
+            break;
+        case 'v':
+            d_strBuffer.push_back('\v');
+            break;
+        case '\0':
+            break; // don't do anything, will be handled by caller
+        default:
+            d_env.throwError(
+                {{d_currToken.location.end.line, d_currToken.location.end.col - 1}, d_currToken.location.end},
+                std::string("Invalid escape sequence '") + d_cursor[-1] + d_cursor[0] + '\'');
+    }
+    advance();
 }
 
 Token Lexer::parseFloatingPoint() {

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iosfwd>
 #include <string_view>
+#include <vector>
 
 namespace jex {
 
@@ -18,6 +19,7 @@ public:
         Ident,
         LiteralInt,
         LiteralFloat,
+        LiteralString,
         ParensL,
         ParensR,
         OpAdd,
@@ -41,6 +43,7 @@ class Lexer {
     Token d_currToken;
     int d_line = 1;
     int d_col = 1;
+    std::vector<char> d_strBuffer;
 
 public:
     Lexer(CompileEnv& env, const char* source)
@@ -60,6 +63,8 @@ private:
     void skipWhiteSpaces();
     void resetToken();
     Token parseFloatingPoint();
+    Token parseStringLiteral();
+    void parseEscapedChar();
     template <class ... Char>
     void advanceUntil(Char ... args);
 };

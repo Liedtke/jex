@@ -111,6 +111,11 @@ static TestSingleToken tokenTests[] = {
     {"/* /**//", Token{Token::Kind::OpDiv, Location{{1, 8}, {1, 8}}, "/"}},
     {"/*Comment\nspanning\nmultiple\nlines\n*/", Token{Token::Kind::Eof, Location{{5, 3}, {5, 3}}, ""}},
     {"/*@$-_\\\t&|^% */", Token{Token::Kind::Eof, Location{{1, 16}, {1, 16}}, ""}},
+    // string literals
+    {"\"\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 2}}, ""}},
+    {"\"Hello!\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 8}}, "Hello!"}},
+    {"\"\\n\\t\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 6}}, "\n\t"}},
+    {R"jex("'\'\"\?\\\a\b\f\n\r\t\v")jex", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 25}}, "'\'\"\?\\\a\b\f\n\r\t\v"}},
 };
 
 INSTANTIATE_TEST_CASE_P(SuiteTokens,
@@ -134,6 +139,9 @@ static TestException exceptionTests[] = {
     {"/* hello", "1.1-1.8: Error: Unterminated comment"},
     {"/*/", "1.1-1.3: Error: Unterminated comment"},
     {"/** /", "1.1-1.5: Error: Unterminated comment"},
+    {"\"t\\&\"", "1.2-1.3: Error: Invalid escape sequence '\\&'"},
+    {"\"hello", "1.1-1.6: Error: Unterminated string literal"},
+    {"\"\\", "1.1-1.3: Error: Unterminated string literal"},
 };
 
 INSTANTIATE_TEST_CASE_P(SuiteLexerExceptions,
