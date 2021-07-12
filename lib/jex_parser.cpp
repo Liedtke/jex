@@ -122,6 +122,8 @@ IAstExpression* Parser::parsePrimary() {
             return parseLiteralInt();
         case Token::Kind::LiteralFloat:
             return parseLiteralFloat();
+        case Token::Kind::LiteralString:
+            return parseLiteralString();
         case Token::Kind::ParensL:
             return parseParensExpr();
         case Token::Kind::Ident:
@@ -187,6 +189,12 @@ AstLiteralExpr* Parser::parseLiteralFloat() {
     } catch (std::logic_error&) {
         d_env.throwError(d_currToken.location, "Invalid floating point literal");
     }
+}
+
+AstLiteralExpr* Parser::parseLiteralString() {
+    AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, d_currToken.text);
+    getNextToken(); // consume literal
+    return res;
 }
 
 } // namespace jex

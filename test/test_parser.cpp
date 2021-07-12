@@ -95,6 +95,9 @@ static TestExp successTests[] = {
     {"f(1 + 1)", "f((1 + 1))"},
     {"f(1,x,(2))", "f(1, x, 2)"},
     {"f(1 + 2, f(f()))", "f((1 + 2), f(f()))"},
+    {"\"\"", "\"\""},
+    // Note: The pretty printer doesn't escape currently.
+    {"\"Hello\\nWorld!\"", "\"Hello\nWorld!\""},
 };
 
 INSTANTIATE_TEST_CASE_P(SuiteParserSuccess,

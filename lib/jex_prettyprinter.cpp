@@ -15,6 +15,10 @@ void PrettyPrinter::visit(AstLiteralExpr& node) {
         case Type::Integer:
             d_str << node.d_value.d_int;
             break;
+        case Type::String:
+            // TODO: Should the pretty printer escape the string again?
+            d_str << '"' << node.d_value.d_str << '"';
+            break;
         default:
             throw CompileError::create(node.d_loc, "Literal type unsupported by PrettyPrinter");
     }

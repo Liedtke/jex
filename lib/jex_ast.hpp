@@ -65,6 +65,9 @@ public:
     union Value {
         double d_float;
         int64_t d_int;
+        std::string_view d_str;
+
+        Value() {}
     } d_value;
 
     AstLiteralExpr(const Location& loc)
@@ -79,6 +82,11 @@ public:
     AstLiteralExpr(const Location& loc, double value)
     : IAstExpression(loc, Type::Float) {
         d_value.d_float = value;
+    }
+
+    AstLiteralExpr(const Location& loc, std::string_view value)
+    : IAstExpression(loc, Type::String) {
+        new (&d_value.d_str) std::string_view(value);
     }
 
     void accept(IAstVisitor& visitor) override {

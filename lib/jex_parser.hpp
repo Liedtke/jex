@@ -35,6 +35,7 @@ private:
     IAstExpression* parseBinOpRhs(int prec, IAstExpression* lhs);
     AstLiteralExpr* parseLiteralInt();
     AstLiteralExpr* parseLiteralFloat();
+    AstLiteralExpr* parseLiteralString();
     IAstExpression* parseParensExpr();
     IAstExpression* parseIdentOrCall();
     AstArgList* parseArgList();
