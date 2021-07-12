@@ -12,8 +12,8 @@ namespace jex {
 struct MsgInfo {
     enum class Kind {
         Error,
-        Warning,
-        Info,
+        // Warning,
+        // Info,
         Note
     } kind;
     Location loc;

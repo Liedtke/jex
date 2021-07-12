@@ -23,8 +23,8 @@ OpType getOp(const Token& op, CompileEnv& env) {
             return OpType::Div;
         case Token::Kind::OpMod:
             return OpType::Mod;
-        default:
-            env.throwError(op.location, "Invalid operator '" + std::string(op.text) + "'");
+        default: // LCOV_EXCL_LINE
+            env.throwError(op.location, "Invalid operator '" + std::string(op.text) + "'"); // LCOV_EXCL_LINE
     }
 }
 

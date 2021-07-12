@@ -3,10 +3,18 @@
 #include <jex_parser.hpp>
 #include <jex_prettyprinter.hpp>
 #include <jex_symboltable.hpp>
+#include <jex_ast.hpp>
 
 #include <gtest/gtest.h>
 
 namespace jex {
+
+TEST(PrettyPrinter, unsupportedLiteral) {
+    AstLiteralExpr node(Location{});
+    node.d_resultType = Type::Unresolved;
+    PrettyPrinter prettyPrint(std::cerr);
+    ASSERT_THROW(node.accept(prettyPrint), CompileError);
+}
 
 using TestExp = std::pair<const char*, const char*>;
 

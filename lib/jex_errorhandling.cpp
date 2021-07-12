@@ -15,10 +15,6 @@ std::ostream& operator<<(std::ostream& str, const MsgInfo::Kind& info) {
     switch (info) {
         case MsgInfo::Kind::Note:
             return str << "Note";
-        case MsgInfo::Kind::Info:
-            return str << "Info";
-        case MsgInfo::Kind::Warning:
-            return str << "Warning";
         case MsgInfo::Kind::Error:
             return str << "Error";
     }
