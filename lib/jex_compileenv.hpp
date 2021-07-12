@@ -5,9 +5,6 @@
 #include <set>
 #include <memory>
 
-// FIXME: Why is this required?
-#include <jex_ast.hpp>
-
 namespace jex {
 
 struct Location;

@@ -118,9 +118,9 @@ static TestSingleToken tokenTests[] = {
     {R"jex("'\'\"\?\\\a\b\f\n\r\t\v")jex", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 25}}, "'\'\"\?\\\a\b\f\n\r\t\v"}},
 };
 
-INSTANTIATE_TEST_CASE_P(SuiteTokens,
-                        TestToken,
-                        testing::ValuesIn(tokenTests));
+INSTANTIATE_TEST_SUITE_P(SuiteTokens,
+                         TestToken,
+                         testing::ValuesIn(tokenTests));
 
 TEST_P(TestToken, lex) {
     CompileEnv env;
@@ -144,9 +144,9 @@ static TestException exceptionTests[] = {
     {"\"\\", "1.1-1.3: Error: Unterminated string literal"},
 };
 
-INSTANTIATE_TEST_CASE_P(SuiteLexerExceptions,
-                        TestLexerException,
-                        testing::ValuesIn(exceptionTests));
+INSTANTIATE_TEST_SUITE_P(SuiteLexerExceptions,
+                         TestLexerException,
+                         testing::ValuesIn(exceptionTests));
 
 TEST_P(TestLexerException, lex) {
     CompileEnv env;

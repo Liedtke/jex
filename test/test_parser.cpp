@@ -58,9 +58,9 @@ static TestExp errorTests[] = {
     {"a(1,2,)", "1.7-1.7: Error: Unexpected ')', expecting literal, identifier or '('"},
 };
 
-INSTANTIATE_TEST_CASE_P(SuiteParserError,
-                        TestParserError,
-                        testing::ValuesIn(errorTests));
+INSTANTIATE_TEST_SUITE_P(SuiteParserError,
+                         TestParserError,
+                         testing::ValuesIn(errorTests));
 
 class TestParserSuccess : public testing::TestWithParam<TestExp> {};
 
@@ -108,8 +108,8 @@ static TestExp successTests[] = {
     {"\"Hello\\nWorld!\"", "\"Hello\nWorld!\""},
 };
 
-INSTANTIATE_TEST_CASE_P(SuiteParserSuccess,
-                        TestParserSuccess,
-                        testing::ValuesIn(successTests));
+INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,
+                         TestParserSuccess,
+                         testing::ValuesIn(successTests));
 
 } // namespace jex
