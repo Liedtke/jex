@@ -8,7 +8,7 @@
 namespace jex {
 
 void PrettyPrinter::visit(AstLiteralExpr& node) {
-    switch (node.d_resultType) {
+    switch (node.d_resultType->kind()) {
         case TypeId::Float:
             d_str << node.d_value.d_float;
             break;

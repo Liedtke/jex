@@ -32,6 +32,10 @@ public:
         return *d_ptr;
     }
 
+    const TypeInfo* operator->() const {
+        return d_ptr;
+    }
+
     bool operator==(const TypeInfoId& other) const {
         return d_ptr == other.d_ptr;
     }
@@ -58,6 +62,10 @@ public:
 
     std::string_view name() const {
         return d_name;
+    }
+
+    TypeId kind() const {
+        return d_typeId;
     }
 };
 

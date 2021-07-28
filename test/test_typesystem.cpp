@@ -19,6 +19,7 @@ TEST(TypeInfo, idEquals) {
 TEST(TypeInfo, getTypeInfoFromId) {
     TypeInfo ti(TypeId::Bool, "Bool");
     EXPECT_EQ(&ti, &ti.id().get());
+    EXPECT_EQ("Bool", ti.id()->name());
 }
 
 TEST(TypeSystem, getBuiltIns) {

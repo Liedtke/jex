@@ -12,8 +12,8 @@
 namespace jex {
 
 TEST(PrettyPrinter, unsupportedLiteral) {
-    AstLiteralExpr node(Location{});
-    node.d_resultType = TypeId::Unresolved;
+    CompileEnv env;
+    AstLiteralExpr node(Location{}, env.typeSystem().unresolved(), "test");
     std::stringstream err;
     PrettyPrinter prettyPrint(err);
     ASSERT_THROW(node.accept(prettyPrint), CompileError);

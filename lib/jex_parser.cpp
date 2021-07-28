@@ -102,7 +102,8 @@ AstArgList* Parser::parseArgList() {
 
 IAstExpression* Parser::parseIdentOrCall() {
     assert(d_currToken.kind == Token::Kind::Ident);
-    AstIdentifier *ident = d_env.createNode<AstIdentifier>(d_currToken.location, d_currToken.text);
+    TypeInfoId unresolved = d_env.typeSystem().unresolved();
+    AstIdentifier *ident = d_env.createNode<AstIdentifier>(d_currToken.location, unresolved, d_currToken.text);
     d_env.symbols().resolveSymbol(ident);
     assert(ident->d_symbol != nullptr);
     getNextToken(); // consume identifier
@@ -110,7 +111,7 @@ IAstExpression* Parser::parseIdentOrCall() {
     // parse function call
     if (d_currToken.kind == Token::Kind::ParensL) {
         AstArgList* args = parseArgList();
-        return d_env.createNode<AstFctCall>(Location::combine(ident->d_loc, args->d_loc), ident, args);
+        return d_env.createNode<AstFctCall>(Location::combine(ident->d_loc, args->d_loc), unresolved, ident, args);
     }
     // regular identifier
     return ident;
@@ -152,7 +153,8 @@ IAstExpression* Parser::parseBinOpRhs(int prec, IAstExpression* lhs) {
             rhs = parseBinOpRhs(tokPrec + 1, rhs);
         }
         Location loc = Location::combine(lhs->d_loc, rhs->d_loc);
-        lhs = d_env.createNode<AstBinaryExpr>(loc, getOp(binOp, d_env), lhs, rhs);
+        TypeInfoId unresolved = d_env.typeSystem().unresolved();
+        lhs = d_env.createNode<AstBinaryExpr>(loc, unresolved, getOp(binOp, d_env), lhs, rhs);
     }
 }
 
@@ -167,7 +169,8 @@ AstLiteralExpr* Parser::parseLiteralInt() {
         std::size_t pos;
         const int64_t value = std::stoll(std::string(d_currToken.text), &pos);
         assert(pos == d_currToken.text.size());
-        AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, value);
+        TypeInfoId type = d_env.typeSystem().getType("Integer");
+        AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, type, value);
         getNextToken(); // consume literal
         return res;
     } catch (std::logic_error&) {
@@ -183,7 +186,8 @@ AstLiteralExpr* Parser::parseLiteralFloat() {
         if (pos != d_currToken.text.size()) {
             d_env.throwError(d_currToken.location, "Invalid floating point literal");
         }
-        AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, value);
+        TypeInfoId type = d_env.typeSystem().getType("Float");
+        AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, type, value);
         getNextToken(); // consume literal
         return res;
     } catch (std::logic_error&) {
@@ -192,7 +196,8 @@ AstLiteralExpr* Parser::parseLiteralFloat() {
 }
 
 AstLiteralExpr* Parser::parseLiteralString() {
-    AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, d_currToken.text);
+    TypeInfoId type = d_env.typeSystem().getType("String");
+    AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, type, d_currToken.text);
     getNextToken(); // consume literal
     return res;
 }

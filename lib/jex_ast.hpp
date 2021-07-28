@@ -3,7 +3,7 @@
 #include <jex_astvisitor.hpp>
 #include <jex_base.hpp>
 #include <jex_location.hpp>
-#include <jex_typesystem.hpp>
+#include <jex_typeinfo.hpp>
 
 #include <cstdint>
 #include <string_view>
@@ -35,9 +35,9 @@ public:
 
 class IAstExpression : public IAstNode {
 public:
-    TypeId d_resultType;
+    TypeInfoId d_resultType;
 
-    IAstExpression(const Location& loc, TypeId type = TypeId::Unresolved)
+    IAstExpression(const Location& loc, TypeInfoId type)
     : IAstNode(loc)
     , d_resultType(type) {
     }
@@ -49,8 +49,8 @@ public:
     IAstExpression* d_lhs;
     IAstExpression* d_rhs;
 
-    AstBinaryExpr(const Location& loc, OpType op, IAstExpression* lhs, IAstExpression* rhs)
-    : IAstExpression(loc)
+    AstBinaryExpr(const Location& loc, TypeInfoId resultType, OpType op, IAstExpression* lhs, IAstExpression* rhs)
+    : IAstExpression(loc, resultType)
     , d_op(op)
     , d_lhs(lhs)
     , d_rhs(rhs) {
@@ -71,22 +71,18 @@ public:
         Value() {}
     } d_value;
 
-    AstLiteralExpr(const Location& loc)
-    : IAstExpression(loc) {
-    }
-
-    AstLiteralExpr(const Location& loc, int64_t value)
-    : IAstExpression(loc, TypeId::Integer) {
+    AstLiteralExpr(const Location& loc, TypeInfoId type, int64_t value)
+    : IAstExpression(loc, type) {
         d_value.d_int = value;
     }
 
-    AstLiteralExpr(const Location& loc, double value)
-    : IAstExpression(loc, TypeId::Float) {
+    AstLiteralExpr(const Location& loc, TypeInfoId type, double value)
+    : IAstExpression(loc, type) {
         d_value.d_float = value;
     }
 
-    AstLiteralExpr(const Location& loc, std::string_view value)
-    : IAstExpression(loc, TypeId::String) {
+    AstLiteralExpr(const Location& loc, TypeInfoId type, std::string_view value)
+    : IAstExpression(loc, type) {
         new (&d_value.d_str) std::string_view(value);
     }
 
@@ -100,8 +96,8 @@ public:
     std::string_view d_name;
     Symbol *d_symbol = nullptr;
 
-    AstIdentifier(const Location& loc, std::string_view name)
-    : IAstExpression(loc)
+    AstIdentifier(const Location& loc, TypeInfoId type, std::string_view name)
+    : IAstExpression(loc, type)
     , d_name(name) {
     }
 
@@ -130,8 +126,8 @@ public:
     AstIdentifier* d_fct;
     AstArgList* d_args;
 
-    AstFctCall(const Location& loc, AstIdentifier* fct, AstArgList* args)
-    : IAstExpression(loc)
+    AstFctCall(const Location& loc, TypeInfoId resultType, AstIdentifier* fct, AstArgList* args)
+    : IAstExpression(loc, resultType)
     , d_fct(fct)
     , d_args(args) {
     }

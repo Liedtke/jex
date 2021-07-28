@@ -11,7 +11,8 @@ namespace jex {
 TEST(SymbolTable, resolveUnknownSymbol) {
     CompileEnv env;
     SymbolTable& symbols = env.symbols();
-    AstIdentifier ident({{1, 1}, {1, 7}}, "unknown");
+    TypeInfoId unresolved = env.typeSystem().unresolved();
+    AstIdentifier ident({{1, 1}, {1, 7}}, unresolved, "unknown");
 
     ASSERT_FALSE(symbols.resolveSymbol(&ident));
     ASSERT_EQ(1, env.messages().size());
@@ -29,7 +30,8 @@ TEST(SymbolTable, addAndResolveSymbol) {
     Symbol* symbol = symbols.addSymbol({{1, 1}, {1, 4}}, Symbol::Kind::Variable, "test");
     ASSERT_EQ(Symbol::Kind::Variable, symbol->kind);
 
-    AstIdentifier ident({{2, 1}, {2, 1}}, "test");
+    TypeInfoId unresolved = env.typeSystem().unresolved();
+    AstIdentifier ident({{2, 1}, {2, 1}}, unresolved, "test");
     ASSERT_TRUE(symbols.resolveSymbol(&ident));
     ASSERT_EQ(symbol, ident.d_symbol);
     ASSERT_TRUE(env.messages().empty());
@@ -38,7 +40,8 @@ TEST(SymbolTable, addAndResolveSymbol) {
 TEST(SymbolTable, testDuplicateAdd) {
     CompileEnv env;
     SymbolTable& symbols = env.symbols();
-    AstIdentifier defNode({{1, 1}, {1, 4}}, "duplicate");
+    TypeInfoId unresolved = env.typeSystem().unresolved();
+    AstIdentifier defNode({{1, 1}, {1, 4}}, unresolved, "duplicate");
 
     symbols.addSymbol({{1, 1}, {1, 4}}, Symbol::Kind::Variable, "duplicate", &defNode);
     Symbol* symbol = symbols.addSymbol({{2, 1}, {2, 4}}, Symbol::Kind::Function, "duplicate");
@@ -51,7 +54,5 @@ TEST(SymbolTable, testDuplicateAdd) {
         "2.1-2.4: Error: Duplicate identifier 'duplicate'\n"
         "1.1-1.4: Note: Previously defined here", errMsg.str());
 }
-
-
 
 } // namespace jex
