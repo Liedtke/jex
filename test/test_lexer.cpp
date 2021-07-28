@@ -1,7 +1,8 @@
-#include <jex_lexer.hpp>
+#include <test_base.hpp>
 
 #include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
+#include <jex_lexer.hpp>
 
 #include <gtest/gtest.h>
 

@@ -1,3 +1,5 @@
+#include <test_base.hpp>
+
 #include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_parser.hpp>

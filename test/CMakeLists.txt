@@ -11,6 +11,7 @@ add_executable(unit_test
 )
 
 target_include_directories(unit_test
+    PRIVATE .
     PRIVATE ../include
     PRIVATE ../lib
     PRIVATE ${GTEST_INCLUDE_DIRS}
