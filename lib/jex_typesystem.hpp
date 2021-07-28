@@ -38,6 +38,10 @@ public:
     TypeInfoId unresolved() const {
         return d_unresolved;
     }
+
+    bool isResolved(TypeInfoId id) const {
+        return id != d_unresolved;
+    }
 };
 
 } // namespace jex

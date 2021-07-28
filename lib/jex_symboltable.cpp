@@ -10,7 +10,9 @@ const char* const SymbolTable::s_unresolved = "_unresolved";
 
 SymbolTable::SymbolTable(CompileEnv& env)
 : d_env(env) {
-    d_symbols[s_unresolved] = std::make_unique<Symbol>(Symbol::Kind::Unresolved, s_unresolved, nullptr, TypeId::Unresolved);
+    const TypeInfoId typeUnresolved = d_env.typeSystem().unresolved();
+    d_symbols[s_unresolved] = std::make_unique<Symbol>(
+        Symbol::Kind::Unresolved, s_unresolved, typeUnresolved, nullptr);
 }
 
 bool SymbolTable::resolveSymbol(AstIdentifier* ident) const {
@@ -21,11 +23,12 @@ bool SymbolTable::resolveSymbol(AstIdentifier* ident) const {
         return false;
     }
     ident->d_symbol = iter->second.get();
+    ident->d_resultType = ident->d_symbol->type;
     return true;
 }
 
-Symbol* SymbolTable::addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, IAstNode* defNode) {
-    auto [iter, inserted] = d_symbols.emplace(name, std::make_unique<Symbol>(kind, name, defNode));
+Symbol* SymbolTable::addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, TypeInfoId type, IAstNode* defNode) {
+    auto [iter, inserted] = d_symbols.emplace(name, std::make_unique<Symbol>(kind, name, type, defNode));
     if (!inserted) {
         const MsgInfo& msg = d_env.createError(loc, "Duplicate identifier '" + std::string(name) + "'");
         if (iter->second->defNode != nullptr) {

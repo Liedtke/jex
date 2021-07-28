@@ -10,8 +10,8 @@
 namespace jex {
 
 CompileEnv::CompileEnv()
-: d_symbolTable(std::make_unique<SymbolTable>(*this))
-, d_typeSystem(std::make_unique<TypeSystem>(*this)) {
+: d_typeSystem(std::make_unique<TypeSystem>(*this))
+, d_symbolTable(std::make_unique<SymbolTable>(*this)) {
 };
 
 CompileEnv::~CompileEnv() {

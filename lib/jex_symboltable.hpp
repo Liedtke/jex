@@ -19,11 +19,11 @@ struct Symbol {
         Function,
         Unresolved
     } kind;
-    TypeId type;
+    TypeInfoId type;
     std::string_view name;
     IAstNode* defNode;
 
-    Symbol(Kind kind, std::string_view name, IAstNode* defNode, TypeId type = TypeId::Unresolved)
+    Symbol(Kind kind, std::string_view name, TypeInfoId type, IAstNode* defNode)
     : kind(kind)
     , type(type)
     , name(name)
@@ -40,7 +40,7 @@ public:
     SymbolTable(CompileEnv& env);
 
     bool resolveSymbol(AstIdentifier* ident) const;
-    Symbol* addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, IAstNode* defNode = nullptr);
+    Symbol* addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, TypeInfoId type, IAstNode* defNode = nullptr);
 };
 
 } // namespace jex

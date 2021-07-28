@@ -18,9 +18,9 @@ class CompileEnv {
     std::set<MsgInfo> d_messages;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     IAstExpression* d_root = nullptr;
+    std::unique_ptr<TypeSystem> d_typeSystem;
     std::unique_ptr<SymbolTable> d_symbolTable;
     std::deque<std::string> d_stringLiterals;
-    std::unique_ptr<TypeSystem> d_typeSystem;
 public:
     CompileEnv();
     ~CompileEnv();

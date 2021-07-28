@@ -70,8 +70,9 @@ class TestParserSuccess : public testing::TestWithParam<TestExp> {};
 TEST_P(TestParserSuccess, test) {
     CompileEnv env;
     Parser parser(env, GetParam().first);
-    env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x");
-    env.symbols().addSymbol(Location(), Symbol::Kind::Function, "f");
+    TypeInfoId unresolved = env.typeSystem().unresolved();
+    env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);
+    env.symbols().addSymbol(Location(), Symbol::Kind::Function, "f", unresolved);
     parser.parse(); // no error
     ASSERT_EQ(0, env.messages().size()) << *env.messages().begin();
     // check generated ast
