@@ -1,4 +1,3 @@
-enable_testing()
 find_package(GTest REQUIRED)
 
 include(GoogleTest)
@@ -22,3 +21,8 @@ target_link_libraries(unit_test PRIVATE
     gtest_main
     pthread # for gtest
 )
+
+# Instead of discovering tests, add single tests per test executable.
+# This speeds up test execution significantly.
+# gtest_discover_tests(unit_test)
+add_test(NAME unit_test COMMAND unit_test)

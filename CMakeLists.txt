@@ -17,5 +17,7 @@ if(ASAN)
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 endif()
 
+enable_testing()
+
 add_subdirectory(lib)
 add_subdirectory(test)
