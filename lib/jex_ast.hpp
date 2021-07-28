@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jex_astvisitor.hpp>
+#include <jex_base.hpp>
 #include <jex_location.hpp>
 #include <jex_typesystem.hpp>
 
@@ -20,7 +21,7 @@ enum class OpType {
     Mod
 };
 
-class IAstNode {
+class IAstNode : NoCopy {
 public:
     Location d_loc;
 

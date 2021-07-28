@@ -43,4 +43,11 @@ public:
     static CompileError create(const Location& loc, std::string msg);
 };
 
+class InternalError : public std::runtime_error {
+public:
+    InternalError(const std::string& error)
+    : std::runtime_error(error) {
+    }
+};
+
 } // namespace jex

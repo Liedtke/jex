@@ -6,6 +6,7 @@ add_executable(unit_test
     test_lexer.cpp
     test_parser.cpp
     test_symboltable.cpp
+    test_typesystem.cpp
 )
 
 target_include_directories(unit_test

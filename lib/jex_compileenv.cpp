@@ -3,13 +3,15 @@
 #include <jex_ast.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_symboltable.hpp>
+#include <jex_typesystem.hpp>
 
 #include <sstream>
 
 namespace jex {
 
 CompileEnv::CompileEnv()
-: d_symbolTable(std::make_unique<SymbolTable>(*this)) {
+: d_symbolTable(std::make_unique<SymbolTable>(*this))
+, d_typeSystem(std::make_unique<TypeSystem>(*this)) {
 };
 
 CompileEnv::~CompileEnv() {

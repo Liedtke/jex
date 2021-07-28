@@ -12,6 +12,7 @@ struct MsgInfo;
 class IAstNode;
 class IAstExpression;
 class SymbolTable;
+class TypeSystem;
 
 class CompileEnv {
     std::set<MsgInfo> d_messages;
@@ -19,6 +20,7 @@ class CompileEnv {
     IAstExpression* d_root = nullptr;
     std::unique_ptr<SymbolTable> d_symbolTable;
     std::deque<std::string> d_stringLiterals;
+    std::unique_ptr<TypeSystem> d_typeSystem;
 public:
     CompileEnv();
     ~CompileEnv();
@@ -47,6 +49,10 @@ public:
 
     SymbolTable& symbols() {
         return *d_symbolTable;
+    }
+
+    TypeSystem& typeSystem() {
+        return *d_typeSystem;
     }
 
     std::string_view createStringLiteral(std::string_view str);
