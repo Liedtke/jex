@@ -34,9 +34,9 @@ public:
 
 class IAstExpression : public IAstNode {
 public:
-    Type d_resultType;
+    TypeId d_resultType;
 
-    IAstExpression(const Location& loc, Type type = Type::Unresolved)
+    IAstExpression(const Location& loc, TypeId type = TypeId::Unresolved)
     : IAstNode(loc)
     , d_resultType(type) {
     }
@@ -75,17 +75,17 @@ public:
     }
 
     AstLiteralExpr(const Location& loc, int64_t value)
-    : IAstExpression(loc, Type::Integer) {
+    : IAstExpression(loc, TypeId::Integer) {
         d_value.d_int = value;
     }
 
     AstLiteralExpr(const Location& loc, double value)
-    : IAstExpression(loc, Type::Float) {
+    : IAstExpression(loc, TypeId::Float) {
         d_value.d_float = value;
     }
 
     AstLiteralExpr(const Location& loc, std::string_view value)
-    : IAstExpression(loc, Type::String) {
+    : IAstExpression(loc, TypeId::String) {
         new (&d_value.d_str) std::string_view(value);
     }
 

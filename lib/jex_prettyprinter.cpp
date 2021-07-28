@@ -9,13 +9,13 @@ namespace jex {
 
 void PrettyPrinter::visit(AstLiteralExpr& node) {
     switch (node.d_resultType) {
-        case Type::Float:
+        case TypeId::Float:
             d_str << node.d_value.d_float;
             break;
-        case Type::Integer:
+        case TypeId::Integer:
             d_str << node.d_value.d_int;
             break;
-        case Type::String:
+        case TypeId::String:
             // TODO: Should the pretty printer escape the string again?
             d_str << '"' << node.d_value.d_str << '"';
             break;

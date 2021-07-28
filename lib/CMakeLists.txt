@@ -8,6 +8,7 @@ set(jex_sources
     jex_parser.cpp
     jex_prettyprinter.cpp
     jex_symboltable.cpp
+    jex_typeinfo.cpp
     jex_typesystem.cpp
 )
 

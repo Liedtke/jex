@@ -10,7 +10,7 @@ const char* const SymbolTable::s_unresolved = "_unresolved";
 
 SymbolTable::SymbolTable(CompileEnv& env)
 : d_env(env) {
-    d_symbols[s_unresolved] = std::make_unique<Symbol>(Symbol::Kind::Unresolved, s_unresolved, nullptr, Type::Unresolved);
+    d_symbols[s_unresolved] = std::make_unique<Symbol>(Symbol::Kind::Unresolved, s_unresolved, nullptr, TypeId::Unresolved);
 }
 
 bool SymbolTable::resolveSymbol(AstIdentifier* ident) const {

@@ -19,11 +19,11 @@ struct Symbol {
         Function,
         Unresolved
     } kind;
-    Type type;
+    TypeId type;
     std::string_view name;
     IAstNode* defNode;
 
-    Symbol(Kind kind, std::string_view name, IAstNode* defNode, Type type = Type::Unresolved)
+    Symbol(Kind kind, std::string_view name, IAstNode* defNode, TypeId type = TypeId::Unresolved)
     : kind(kind)
     , type(type)
     , name(name)
