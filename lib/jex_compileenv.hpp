@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jex_base.hpp>
+
 #include <cassert>
 #include <deque>
 #include <set>
@@ -15,7 +17,12 @@ class SymbolTable;
 class TypeSystem;
 class FctLibrary;
 
-class CompileEnv {
+/**
+ * Stores and provides access to any object needed during compilation.
+ * The CompileEnv also handles the lifetime of the AST and other intermittent
+ * artifacts required for compilation.
+ */
+class CompileEnv : NoCopy {
     std::set<MsgInfo> d_messages;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     IAstExpression* d_root = nullptr;

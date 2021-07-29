@@ -18,6 +18,10 @@ enum class TypeId {
     Complex // Anything non-built-in
 };
 
+/**
+ * Represents a unique ID for a given type in the type system.
+ * The ID also provides direct access to the referenced TypeInfo.
+ */
 class TypeInfoId {
     friend class TypeInfo;
     friend class TypeSystem;
@@ -44,6 +48,10 @@ public:
     }
 };
 
+
+/**
+ * Represents a type in the type system and defines its properties.
+ */
 class TypeInfo : NoCopy {
     TypeId d_typeId;
     std::string d_name;
@@ -53,8 +61,6 @@ public:
     : d_typeId(typeId)
     , d_name(std::move(name)) {
     }
-
-    TypeInfo(const TypeInfo& other) = delete;
 
     TypeInfoId id() const {
         return TypeInfoId(this);

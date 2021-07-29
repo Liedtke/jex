@@ -51,11 +51,13 @@ public:
 
     template <typename FctDescT>
     void registerFct(FctDescT&& desc) {
+        // Resolve return and parameter types.
         TypeInfoId retTypeInfo = d_types.getType(desc.retTypeName);
         std::vector<TypeInfoId> paramTypeInfos;
         std::transform(desc.argTypeNames.begin(), desc.argTypeNames.end(),
             std::back_inserter(paramTypeInfos),
             [this](const std::string& name) { return d_types.getType(name); });
+        // Add function to function library.
         d_fcts.registerFct(FctInfo(desc.name, reinterpret_cast<void*>(desc.fctPtr), retTypeInfo, paramTypeInfos));
     }
 };
@@ -63,8 +65,8 @@ public:
 class Module {
 public:
     virtual ~Module() = default;
-    virtual void registerTypes(Registry& registry);
-    virtual void registerFcts(Registry& regitsry);
+    virtual void registerTypes(Registry& registry) = 0;
+    virtual void registerFcts(Registry& regitsry) = 0;
 };
 
 } // namespace jex

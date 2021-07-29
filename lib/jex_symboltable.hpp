@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_typesystem.hpp>
 
 #include <memory>
@@ -31,7 +32,7 @@ struct Symbol {
     }
 };
 
-class SymbolTable {
+class SymbolTable : NoCopy {
     CompileEnv& d_env;
     // TODO: Remove unique_ptr, the Symbol can be stored directly in the map.
     std::unordered_map<std::string_view, std::unique_ptr<Symbol>> d_symbols;

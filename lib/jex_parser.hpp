@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_lexer.hpp>
 
 #include <unordered_map>
@@ -11,7 +12,7 @@ class AstLiteralExpr;
 class IAstExpression;
 class AstArgList;
 
-class Parser {
+class Parser : NoCopy {
     CompileEnv& d_env;
     Lexer d_lexer;
     Token d_currToken;

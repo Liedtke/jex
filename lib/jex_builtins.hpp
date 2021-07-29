@@ -18,6 +18,9 @@ using ArgBool = Arg<bool, BoolName, TypeId::Bool>;
 // TODO: Come up with concept for strings which require some allocation / ownership /
 // call convention.
 
+/**
+ * Defines a module containing the built-in types and functions.
+ */
 class BuiltInsModule : public Module {
     void registerTypes(Registry& registry);
     void registerFcts(Registry& registry);

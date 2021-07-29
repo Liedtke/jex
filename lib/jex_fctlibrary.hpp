@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_typeinfo.hpp>
 
 #include <string>
@@ -11,7 +12,7 @@ namespace jex {
 class TypeSystem;
 class FctInfo;
 
-class FctLibrary {
+class FctLibrary : NoCopy {
     const TypeSystem& d_types;
     std::unordered_map<std::string, std::vector<FctInfo>> d_fcts;
 

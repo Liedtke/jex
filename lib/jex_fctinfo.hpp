@@ -8,6 +8,9 @@
 
 namespace jex {
 
+/**
+ * Represents a function in the function library and defines its properties and behavior.
+ */
 class FctInfo {
 public:
     std::string d_name;

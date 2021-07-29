@@ -9,6 +9,12 @@
 
 namespace jex {
 
+/**
+ * Defines a message created during compilation.
+ * This might be an error, warning or just an info.
+ * MsgInfos my furthermore have additional notes attached which itself
+ * are MsgInfos as well.
+ */
 struct MsgInfo {
     enum class Kind {
         Error,
@@ -34,6 +40,9 @@ struct MsgInfo {
 std::ostream& operator<<(std::ostream& str, const MsgInfo::Kind& info);
 std::ostream& operator<<(std::ostream& str, const MsgInfo& info);
 
+/**
+ * Defines a hard error during compilation.
+ */
 class CompileError : public std::runtime_error {
 public:
     CompileError(const std::string& error)
@@ -43,6 +52,12 @@ public:
     static CompileError create(const Location& loc, std::string msg);
 };
 
+/**
+ * Defines an internal error.
+ * Internal errors are caused by a misuse of the compilation interface or type / function
+ * registration mechanism. They might also be thrown as a result of a bug in the compiler but are
+ * not expected as a result of invalid source code.
+ */
 class InternalError : public std::runtime_error {
 public:
     InternalError(const std::string& error)
