@@ -1,10 +1,13 @@
 #include <jex_builtins.hpp>
 
+#include <cassert>
+
 namespace jex {
 
 namespace {
 
-void add(int64_t* res, int64_t a, int64_t b) {
+template <typename T>
+void add(T* res, T a, T b) {
     assert(res != nullptr);
     *res = a + b;
 }
@@ -19,6 +22,7 @@ void BuiltInsModule::registerTypes(Registry& registry) {
 
 void BuiltInsModule::registerFcts(Registry& registry) {
     registry.registerFct(FctDesc<ArgInteger, ArgInteger, ArgInteger>(add, "add"));
+    registry.registerFct(FctDesc<ArgFloat, ArgFloat, ArgFloat>(add, "add"));
 }
 
 } // namespace jex
