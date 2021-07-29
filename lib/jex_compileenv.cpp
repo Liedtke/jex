@@ -2,6 +2,7 @@
 
 #include <jex_ast.hpp>
 #include <jex_errorhandling.hpp>
+#include <jex_fctlibrary.hpp>
 #include <jex_symboltable.hpp>
 #include <jex_typesystem.hpp>
 
@@ -11,6 +12,7 @@ namespace jex {
 
 CompileEnv::CompileEnv()
 : d_typeSystem(std::make_unique<TypeSystem>(*this))
+, d_fctLibrary(std::make_unique<FctLibrary>(*d_typeSystem))
 , d_symbolTable(std::make_unique<SymbolTable>(*this)) {
 };
 

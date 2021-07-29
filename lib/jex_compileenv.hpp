@@ -13,12 +13,14 @@ class IAstNode;
 class IAstExpression;
 class SymbolTable;
 class TypeSystem;
+class FctLibrary;
 
 class CompileEnv {
     std::set<MsgInfo> d_messages;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     IAstExpression* d_root = nullptr;
     std::unique_ptr<TypeSystem> d_typeSystem;
+    std::unique_ptr<FctLibrary> d_fctLibrary;
     std::unique_ptr<SymbolTable> d_symbolTable;
     std::deque<std::string> d_stringLiterals;
 public:
@@ -53,6 +55,10 @@ public:
 
     TypeSystem& typeSystem() {
         return *d_typeSystem;
+    }
+
+    FctLibrary& fctLibrary() {
+        return *d_fctLibrary;
     }
 
     std::string_view createStringLiteral(std::string_view str);
