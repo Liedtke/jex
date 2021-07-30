@@ -16,15 +16,23 @@ FctLibrary::~FctLibrary() {
 }
 
 void FctLibrary::registerFct(FctInfo&& fctInfo) {
-    // TODO: Check for duplicates and throw.
-    d_fcts[fctInfo.d_name].push_back(fctInfo);
+    std::vector<FctInfo>& overloads = d_fcts[fctInfo.d_name];
+    for (const FctInfo& overload : overloads) {
+        // TODO: Adapt if implicit conversions support to check for equality.
+        if (overload.matches(fctInfo.d_paramTypes)) {
+            std::stringstream err;
+            err << "Duplicate function '" << fctInfo << "'";
+            throw InternalError(err.str());
+        }
+    }
+    overloads.push_back(fctInfo);
 }
 
 const FctInfo& FctLibrary::getFct(std::string name,
                                   const std::vector<TypeInfoId>& paramTypes) const {
     const auto iter = d_fcts.find(name);
     if (iter == d_fcts.end()) {
-        throw InternalError("Function '" + name + "' not registered");
+        throw InternalError("Invalid function name '" + name + "'");
     }
     for (const FctInfo& candidate : iter->second) {
         if (candidate.matches(paramTypes)) {
@@ -35,6 +43,7 @@ const FctInfo& FctLibrary::getFct(std::string name,
     err << "No matching candidate found for function '" + name + '(';
     FctInfo::printParamTypes(err, paramTypes);
     err << ")'";
+    // TODO: Print candidates.
     throw InternalError(err.str());
 }
 

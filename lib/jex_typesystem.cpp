@@ -51,7 +51,7 @@ TypeInfoId TypeSystem::registerType(TypeId typeId, std::string name) {
     }
     TypeInfoId id(&d_types.emplace_back(typeId, std::move(name)));
     auto res = d_typesByName.emplace(id.get().name(), id);
-    assert(res.second);
+    assert(res.second); (void) res;
     return id;
 }
 
