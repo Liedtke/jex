@@ -85,7 +85,7 @@ TEST(FctLibrary, getFctSignatureChecks) {
     // matching signature
     const jex::FctInfo& fct = fctLibrary.getFct("pass", {typeUInt32});
     ASSERT_EQ("pass", fct.d_name);
-    ASSERT_EQ(pass, fct.d_fctPtr);
+    ASSERT_EQ(reinterpret_cast<void*>(pass), fct.d_fctPtr);
     ASSERT_EQ(typeUInt32, fct.d_retType);
     ASSERT_EQ(std::vector{typeUInt32}, fct.d_paramTypes);
 }

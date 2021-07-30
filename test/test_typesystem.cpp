@@ -48,4 +48,12 @@ TEST(TypeSystem, repeatedGetType) {
     EXPECT_FALSE(id1 != id2);
 }
 
+TEST(TypeSystem, getUnresolved) {
+    TypeSystem ts;
+    TypeInfoId invalid = ts.getTypeOrUnresolved("invalid");
+    EXPECT_FALSE(ts.isResolved(invalid));
+    EXPECT_EQ(TypeId::Unresolved, invalid->kind());
+    EXPECT_EQ("_Unresolved", invalid->name());
+}
+
 } // namespace jex
