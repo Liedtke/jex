@@ -10,12 +10,11 @@ class CompileEnv;
 class TypeInfo;
 
 class TypeSystem {
-    CompileEnv& d_env;
     std::deque<TypeInfo> d_types;
     std::unordered_map<std::string_view, TypeInfoId> d_typesByName;
     const TypeInfoId d_unresolved;
 public:
-    TypeSystem(CompileEnv& env);
+    TypeSystem();
 
     /**
      * Returns TypeInfoId for given type name. If the type is not registered,

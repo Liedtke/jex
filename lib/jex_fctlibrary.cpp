@@ -7,9 +7,8 @@
 
 namespace jex {
 
-FctLibrary::FctLibrary(const TypeSystem& types)
-: d_types(types)
-, d_fcts() {
+FctLibrary::FctLibrary()
+: d_fcts() {
 }
 
 FctLibrary::~FctLibrary() {

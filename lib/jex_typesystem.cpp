@@ -18,9 +18,8 @@ static const struct {
 
 } // anonymous namespace
 
-TypeSystem::TypeSystem(CompileEnv& env)
-: d_env(env)
-, d_types()
+TypeSystem::TypeSystem()
+: d_types()
 , d_typesByName()
 , d_unresolved(TypeInfoId(&d_types.emplace_back(TypeId::Unresolved, "_Unresolved"))) {
     // Register built-ins.

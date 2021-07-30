@@ -11,8 +11,8 @@
 namespace jex {
 
 CompileEnv::CompileEnv()
-: d_typeSystem(std::make_unique<TypeSystem>(*this))
-, d_fctLibrary(std::make_unique<FctLibrary>(*d_typeSystem))
+: d_typeSystem(std::make_unique<TypeSystem>())
+, d_fctLibrary(std::make_unique<FctLibrary>())
 , d_symbolTable(std::make_unique<SymbolTable>(*this)) {
 };
 
