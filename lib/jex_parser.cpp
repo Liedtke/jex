@@ -2,6 +2,7 @@
 
 #include <jex_ast.hpp>
 #include <jex_compileenv.hpp>
+#include <jex_errorhandling.hpp>
 #include <jex_symboltable.hpp>
 
 #include <sstream>
@@ -57,6 +58,10 @@ void Parser::parse() {
         msg << "Unexpected " << d_currToken << ", expecting an operator or end of file";
         d_env.throwError(d_currToken.location, msg.str());
     }
+    if (d_env.messages().size() > 0) {
+        // Throw first error in list.
+        throw CompileError::create(*d_env.messages().begin());
+    }
 }
 
 IAstExpression* Parser::parseParensExpr() {
@@ -110,6 +115,10 @@ IAstExpression* Parser::parseIdentOrCall() {
 
     // parse function call
     if (d_currToken.kind == Token::Kind::ParensL) {
+        Symbol::Kind symKind = ident->d_symbol->kind;
+        if (symKind != Symbol::Kind::Function && symKind != Symbol::Kind::Unresolved) {
+            d_env.createError(ident->d_loc, "Invalid call: '" + std::string(ident->d_name) + "' is not a function");
+        }
         AstArgList* args = parseArgList();
         return d_env.createNode<AstFctCall>(Location::combine(ident->d_loc, args->d_loc), unresolved, ident, args);
     }

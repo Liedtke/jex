@@ -25,6 +25,8 @@ class TestParserError : public testing::TestWithParam<TestExp> {};
 
 TEST_P(TestParserError, test) {
     CompileEnv env;
+    TypeInfoId unresolved = env.typeSystem().unresolved();
+    env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);
     Parser parser(env, GetParam().first);
     try {
         parser.parse();
@@ -59,6 +61,7 @@ static TestExp errorTests[] = {
     {"a(,2)", "1.3-1.3: Error: Unexpected ',', expecting literal, identifier or '('"},
     {"a(1 23)", "1.5-1.6: Error: Unexpected integer literal '23', expecting ',' or ')'"},
     {"a(1,2,)", "1.7-1.7: Error: Unexpected ')', expecting literal, identifier or '('"},
+    {"x()", "1.1-1.1: Error: Invalid call: 'x' is not a function"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,

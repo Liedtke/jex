@@ -27,7 +27,7 @@ void FctLibrary::registerFct(FctInfo&& fctInfo) {
     overloads.push_back(fctInfo);
 }
 
-const FctInfo& FctLibrary::getFct(std::string name,
+const FctInfo& FctLibrary::getFct(const std::string& name,
                                   const std::vector<TypeInfoId>& paramTypes) const {
     const auto iter = d_fcts.find(name);
     if (iter == d_fcts.end()) {

@@ -19,7 +19,7 @@ public:
     FctLibrary();
     ~FctLibrary();
     void registerFct(FctInfo&& fctInfo);
-    const FctInfo& getFct(std::string name, const std::vector<TypeInfoId>& paramTypes) const;
+    const FctInfo& getFct(const std::string& name, const std::vector<TypeInfoId>& paramTypes) const;
 };
 
 } // namespace jex

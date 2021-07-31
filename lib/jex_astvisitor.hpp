@@ -2,6 +2,7 @@
 
 namespace jex {
 
+class IAstNode;
 class AstBinaryExpr;
 class AstLiteralExpr;
 class AstFctCall;

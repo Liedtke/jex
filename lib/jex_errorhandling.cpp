@@ -32,8 +32,12 @@ std::ostream& operator<<(std::ostream& str, const MsgInfo& info) {
 }
 
 CompileError CompileError::create(const Location& loc, std::string msg) {
+    return create(MsgInfo(MsgInfo::Kind::Error, loc, std::move(msg)));
+}
+
+CompileError CompileError::create(const MsgInfo& msgInfo) {
     std::stringstream str;
-    str << MsgInfo(MsgInfo::Kind::Error, loc, std::move(msg));
+    str << msgInfo;
     return CompileError(str.str());
 }
 

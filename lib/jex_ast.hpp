@@ -11,6 +11,7 @@
 
 namespace jex {
 
+class FctInfo;
 struct Symbol;
 
 enum class OpType {
@@ -125,6 +126,7 @@ class AstFctCall : public IAstExpression {
 public:
     AstIdentifier* d_fct;
     AstArgList* d_args;
+    const FctInfo* d_fctInfo = nullptr;
 
     AstFctCall(const Location& loc, TypeInfoId resultType, AstIdentifier* fct, AstArgList* args)
     : IAstExpression(loc, resultType)

@@ -7,6 +7,7 @@ add_executable(unit_test
     test_parser.cpp
     test_registry.cpp
     test_symboltable.cpp
+    test_typeinference.cpp
     test_typesystem.cpp
 )
 

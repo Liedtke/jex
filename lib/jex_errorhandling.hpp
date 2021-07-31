@@ -11,15 +11,13 @@ namespace jex {
 
 /**
  * Defines a message created during compilation.
- * This might be an error, warning or just an info.
+ * Currently these may only be errors.
  * MsgInfos my furthermore have additional notes attached which itself
  * are MsgInfos as well.
  */
 struct MsgInfo {
     enum class Kind {
         Error,
-        // Warning,
-        // Info,
         Note
     } kind;
     Location loc;
@@ -50,6 +48,7 @@ public:
     }
 
     static CompileError create(const Location& loc, std::string msg);
+    static CompileError create(const MsgInfo& msgInfo);
 };
 
 /**

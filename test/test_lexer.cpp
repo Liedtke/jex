@@ -96,7 +96,7 @@ static TestSingleToken tokenTests[] = {
     {"1e1.1 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 3}}, "1e1"}},
     {"1e10e1 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 4}}, "1e10"}},
     {"1.123e10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 8}}, "1.123e10"}},
-    {"1.123e-10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 9}}, "1.123e-10"}},
+    {"1.123E-10 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 9}}, "1.123E-10"}},
     {"1234567.123e+100 ", Token{Token::Kind::LiteralFloat, Location{{1, 1}, {1, 16}}, "1234567.123e+100"}},
     // The lexer treats everything that is a valid start of a floating point literal as a floating point literal
     // even if the result might be malformed. This way the error message can be clarer, e.g. the parser reporting
