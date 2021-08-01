@@ -1,26 +1,2 @@
-set(jex_sources
-    jex_ast.cpp
-    jex_astvisitor.cpp
-    jex_basicastvisitor.cpp
-    jex_builtins.cpp
-    jex_compileenv.cpp
-    jex_errorhandling.cpp
-    jex_fctinfo.cpp
-    jex_fctlibrary.cpp
-    jex_location.cpp
-    jex_lexer.cpp
-    jex_parser.cpp
-    jex_prettyprinter.cpp
-    jex_registry.cpp
-    jex_symboltable.cpp
-    jex_typeinference.cpp
-    jex_typeinfo.cpp
-    jex_typesystem.cpp
-)
-
-add_library(jex ${jex_sources})
-
-target_include_directories(jex
-    PUBLIC ../include
-    PRIVATE .
-)
+add_subdirectory(codegen)
+add_subdirectory(core)
