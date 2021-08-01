@@ -77,6 +77,7 @@ TEST_P(TestParserSuccess, test) {
     env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);
     env.symbols().addSymbol(Location(), Symbol::Kind::Function, "f", unresolved);
     parser.parse(); // no error
+    EXPECT_FALSE(env.hasErrors());
     ASSERT_EQ(0, env.messages().size()) << *env.messages().begin();
     // check generated ast
     std::stringstream str;

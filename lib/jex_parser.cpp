@@ -58,7 +58,7 @@ void Parser::parse() {
         msg << "Unexpected " << d_currToken << ", expecting an operator or end of file";
         d_env.throwError(d_currToken.location, msg.str());
     }
-    if (d_env.messages().size() > 0) {
+    if (d_env.hasErrors()) {
         // Throw first error in list.
         throw CompileError::create(*d_env.messages().begin());
     }

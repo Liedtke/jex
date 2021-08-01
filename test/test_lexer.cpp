@@ -156,6 +156,7 @@ TEST_P(TestLexerException, lex) {
         Token token = lexer.getNext();
         ASSERT_TRUE(false) << "Expected exception, got token " << token; // LCOV_EXCL_LINE
     } catch (const CompileError& e) {
+        ASSERT_TRUE(env.hasErrors());
         ASSERT_LT(0, env.messages().size()) << "Exception must also be stored in messages";
         ASSERT_STREQ(e.what(), GetParam().second);
     }

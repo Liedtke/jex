@@ -49,6 +49,7 @@ public:
     OpType d_op;
     IAstExpression* d_lhs;
     IAstExpression* d_rhs;
+    const FctInfo* d_fctInfo = nullptr;
 
     AstBinaryExpr(const Location& loc, TypeInfoId resultType, OpType op, IAstExpression* lhs, IAstExpression* rhs)
     : IAstExpression(loc, resultType)

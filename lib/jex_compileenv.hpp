@@ -24,6 +24,7 @@ class FctLibrary;
  */
 class CompileEnv : NoCopy {
     std::set<MsgInfo> d_messages;
+    bool d_hasErrors = false;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     IAstExpression* d_root = nullptr;
     std::unique_ptr<TypeSystem> d_typeSystem;
@@ -47,6 +48,10 @@ public:
 
     const std::set<MsgInfo>& messages() const {
         return d_messages;
+    }
+
+    bool hasErrors() const {
+        return d_hasErrors;
     }
 
     void setRoot(IAstExpression* root) {

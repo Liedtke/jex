@@ -33,11 +33,21 @@ public:
         registry.registerType<ArgUInt32>();
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "add"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator+"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator-"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator*"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator/"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator%"));
         // TODO: Add support for proper type inference of literals.
         d_env->symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", d_env->typeSystem().getType("UInt32"));
         // TODO: Entries in the function library shouldn't have to be added explicitly to it.
-        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "pass", d_env->typeSystem().getType("UInt32"));
-        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "add", d_env->typeSystem().getType("UInt32"));
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "pass", d_env->typeSystem().unresolved());
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "add", d_env->typeSystem().unresolved());
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator+", d_env->typeSystem().unresolved());
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator-", d_env->typeSystem().unresolved());
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator*", d_env->typeSystem().unresolved());
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator/", d_env->typeSystem().unresolved());
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator%", d_env->typeSystem().unresolved());
     }
 };
 
@@ -46,6 +56,7 @@ TEST_F(TestTypeInference, resolveFct) {
     parser.parse();
     TypeInference typeInference(*d_env);
     d_env->getRoot()->accept(typeInference);
+    ASSERT_FALSE(d_env->hasErrors());
 }
 
 TEST_F(TestTypeInference, resolveFctInvalidOverload) {
@@ -75,6 +86,52 @@ TEST_F(TestTypeInference, resolveFctInvalidOverloadRepeated) {
     ASSERT_EQ(
         "1.10-1.15: Error: No matching candidate found for function 'pass()'\n"
         "1.19-1.23: Error: No matching candidate found for function 'add()'",
+        err.str());
+}
+
+TEST_F(TestTypeInference, resolveOperator) {
+    Parser parser(*d_env, "x + x");
+    parser.parse();
+    TypeInference typeInference(*d_env);
+    d_env->getRoot()->accept(typeInference);
+    ASSERT_FALSE(d_env->hasErrors());
+}
+
+TEST_F(TestTypeInference, resolveOperatorAll) {
+    Parser parser(*d_env, "x + x - x * x / x % x");
+    parser.parse();
+    TypeInference typeInference(*d_env);
+    d_env->getRoot()->accept(typeInference);
+    ASSERT_FALSE(d_env->hasErrors());
+}
+
+TEST_F(TestTypeInference, resolveOperatorInvalidOverload) {
+    Parser parser(*d_env, "x + 1");
+    parser.parse();
+    TypeInference typeInference(*d_env);
+    // TODO: Should the type inference throw in case of errors?
+    d_env->getRoot()->accept(typeInference);
+    ASSERT_EQ(1, d_env->messages().size());
+    std::stringstream err;
+    err << *d_env->messages().begin();
+    ASSERT_EQ("1.1-1.5: Error: No matching candidate found for function 'operator+(UInt32, Integer)'", err.str());
+}
+
+TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
+    Parser parser(*d_env, "x + 1 + (1 + x)");
+    parser.parse();
+    TypeInference typeInference(*d_env);
+    d_env->getRoot()->accept(typeInference);
+    // Only the inner errors gets reported as the outer ones are only follow-up errors.
+    ASSERT_EQ(2, d_env->messages().size());
+    std::stringstream err;
+    auto iter = d_env->messages().begin();
+    err << *iter << '\n';
+    ++iter;
+    err << *iter;
+    ASSERT_EQ(
+        "1.1-1.5: Error: No matching candidate found for function 'operator+(UInt32, Integer)'\n"
+        "1.10-1.14: Error: No matching candidate found for function 'operator+(Integer, UInt32)'",
         err.str());
 }
 
