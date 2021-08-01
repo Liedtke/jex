@@ -5,6 +5,7 @@
 #include <cassert>
 #include <deque>
 #include <set>
+#include <string>
 #include <memory>
 
 namespace jex {
@@ -23,6 +24,7 @@ class FctLibrary;
  * artifacts required for compilation.
  */
 class CompileEnv : NoCopy {
+    std::string d_fileName;
     std::set<MsgInfo> d_messages;
     bool d_hasErrors = false;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
@@ -44,6 +46,10 @@ public:
         T* ptr = node.get();
         d_nodes.push_back(std::move(node));
         return ptr;
+    }
+
+    const std::string& fileName() const {
+        return d_fileName;
     }
 
     const std::set<MsgInfo>& messages() const {

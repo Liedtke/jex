@@ -7,6 +7,8 @@ llvm_map_components_to_libnames(
 
 set(codegen_sources
     jex_codegen.cpp
+    jex_codegenvisitor.cpp
+    jex_codemodule.cpp
 )
 
 add_library(jex_codegen ${codegen_sources})
@@ -18,5 +20,5 @@ target_link_libraries(jex_codegen
 
 target_include_directories(jex_codegen
     PUBLIC .
-    PRIVATE ${LLVM_INCLUDE_DIRS}
+    PUBLIC ${LLVM_INCLUDE_DIRS}
 )
