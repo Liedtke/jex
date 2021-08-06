@@ -13,12 +13,15 @@ namespace jex {
  */
 class FctInfo {
 public:
+    using FctWrapper = void(*)(void* fctPtr, void** args);
+
     std::string d_name;
     void* d_fctPtr;
+    FctWrapper d_fctWrapper;
     TypeInfoId d_retType;
     std::vector<TypeInfoId> d_paramTypes;
 public:
-    FctInfo(std::string name, void* fctPtr, TypeInfoId retType, std::vector<TypeInfoId> params);
+    FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType, std::vector<TypeInfoId> params);
 
     bool matches(const std::vector<TypeInfoId>& params) const;
 

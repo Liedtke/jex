@@ -13,7 +13,12 @@ using ArgUInt32 = Arg<uint32_t, typeName, jex::TypeId::Complex>;
 static constexpr char typeNameBool[] = "Boolean";
 using ArgBool = Arg<bool, typeNameBool, jex::TypeId::Complex>;
 
-void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
+void pass(uint32_t* res, uint32_t in) {
+    *res = in;
+}
+void add(uint32_t* res, uint32_t a, uint32_t b) {
+    *res = a + b;
+}
 void passBool(bool* res, bool in) {} // LCOV_EXCL_LINE
 
 }
@@ -88,6 +93,23 @@ TEST(FctLibrary, getFctSignatureChecks) {
     ASSERT_EQ(reinterpret_cast<void*>(pass), fct.d_fctPtr);
     ASSERT_EQ(typeUInt32, fct.d_retType);
     ASSERT_EQ(std::vector{typeUInt32}, fct.d_paramTypes);
+}
+
+TEST(Registry, wrapperSimple) {
+    uint32_t res = 0;
+    uint32_t in = 42;
+    void *args[] = {&res, &in};
+    FctDesc<ArgUInt32, ArgUInt32>::wrapper(reinterpret_cast<void*>(pass), args);
+    ASSERT_EQ(42, res);
+}
+
+TEST(Registry, wrapperMultipleArgs) {
+    uint32_t res = 0;
+    uint32_t a = 123;
+    uint32_t b = 321;
+    void *args[] = {&res, &a, &b};
+    FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>::wrapper(reinterpret_cast<void*>(add), args);
+    ASSERT_EQ(444, res);
 }
 
 } // namespace jex

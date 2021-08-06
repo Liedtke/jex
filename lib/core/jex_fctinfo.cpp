@@ -4,9 +4,10 @@
 
 namespace jex {
 
-FctInfo::FctInfo(std::string name, void* fctPtr, TypeInfoId retType, std::vector<TypeInfoId> params)
+FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType, std::vector<TypeInfoId> params)
 : d_name(std::move(name))
 , d_fctPtr(fctPtr)
+, d_fctWrapper(fctWrapper)
 , d_retType(retType)
 , d_paramTypes(std::move(params)) {
 }
