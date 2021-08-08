@@ -3,6 +3,8 @@
 #include <jex_ast.hpp>
 #include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
+#include <jex_fctinfo.hpp>
+#include <jex_fctlibrary.hpp>
 
 namespace jex {
 
@@ -13,6 +15,14 @@ SymbolTable::SymbolTable(CompileEnv& env)
     const TypeInfoId typeUnresolved = d_env.typeSystem().unresolved();
     d_symbols[s_unresolved] = std::make_unique<Symbol>(
         Symbol::Kind::Unresolved, s_unresolved, typeUnresolved, nullptr);
+    // add types
+    for (auto& typeEntry : d_env.typeSystem()) {
+        d_symbols[typeEntry.first] = std::make_unique<Symbol>(Symbol::Kind::Type, typeEntry.first, typeEntry.second, nullptr);
+    }
+    // add functions
+    for (auto& fctEntry : d_env.fctLibrary()) {
+        d_symbols[fctEntry.first] = std::make_unique<Symbol>(Symbol::Kind::Function, fctEntry.first, typeUnresolved, nullptr);
+    }
 }
 
 bool SymbolTable::resolveSymbol(AstIdentifier* ident) const {

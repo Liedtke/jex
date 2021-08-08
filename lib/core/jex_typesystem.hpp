@@ -11,8 +11,11 @@ class CompileEnv;
 class TypeInfo;
 
 class TypeSystem : NoCopy {
+public:
+    using TypesByName = std::unordered_map<std::string_view, TypeInfoId>;
+private:
     std::deque<TypeInfo> d_types;
-    std::unordered_map<std::string_view, TypeInfoId> d_typesByName;
+    TypesByName d_typesByName;
     const TypeInfoId d_unresolved;
 public:
     TypeSystem();
@@ -41,6 +44,14 @@ public:
 
     bool isResolved(TypeInfoId id) const {
         return id != d_unresolved;
+    }
+
+    TypesByName::const_iterator begin() const {
+        return d_typesByName.begin();
+    }
+
+    TypesByName::const_iterator end() const {
+        return d_typesByName.end();
     }
 };
 

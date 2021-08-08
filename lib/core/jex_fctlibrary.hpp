@@ -13,13 +13,24 @@ class TypeSystem;
 class FctInfo;
 
 class FctLibrary : NoCopy {
-    std::unordered_map<std::string, std::vector<FctInfo>> d_fcts;
+public:
+    using FctsByName = std::unordered_map<std::string, std::vector<FctInfo>>;
+private:
+    FctsByName d_fcts;
 
 public:
     FctLibrary();
     ~FctLibrary();
     void registerFct(FctInfo&& fctInfo);
     const FctInfo& getFct(const std::string& name, const std::vector<TypeInfoId>& paramTypes) const;
+
+    FctsByName::const_iterator begin() const {
+        return d_fcts.begin();
+    }
+
+    FctsByName::const_iterator end() const {
+        return d_fcts.end();
+    }
 };
 
 } // namespace jex

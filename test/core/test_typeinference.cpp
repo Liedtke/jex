@@ -28,8 +28,7 @@ protected:
     std::unique_ptr<CompileEnv> d_compileEnv;
 
 public:
-    void SetUp() override {
-        d_compileEnv = std::make_unique<CompileEnv>(d_env);
+    TestTypeInference() {
         Registry registry(d_env);
         registry.registerType<ArgUInt32>();
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));
@@ -39,18 +38,12 @@ public:
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator*"));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator/"));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator%"));
+    }
+
+    void SetUp() override {
+        d_compileEnv = std::make_unique<CompileEnv>(d_env);
         // TODO: Add support for proper type inference of literals.
         d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", d_env.types().getType("UInt32"));
-        // TODO: Types in the typesystem shouldn't have to be added explicitly to the SymbolTable.
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Type, "UInt32", d_env.types().unresolved());
-        // TODO: Entries in the function library shouldn't have to be added explicitly to it.
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Function, "pass", d_env.types().unresolved());
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Function, "add", d_env.types().unresolved());
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator+", d_env.types().unresolved());
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator-", d_env.types().unresolved());
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator*", d_env.types().unresolved());
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator/", d_env.types().unresolved());
-        d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Function, "operator%", d_env.types().unresolved());
     }
 };
 
