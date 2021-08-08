@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_basicastvisitor.hpp>
 
 #include <string_view>
@@ -11,7 +12,7 @@ class FctInfo;
 class IAstExpression;
 class TypeInfoId;
 
-class TypeInference : public BasicAstVisitor {
+class TypeInference : public BasicAstVisitor, NoCopy {
     CompileEnv& d_env;
 public:
     TypeInference(CompileEnv& env)

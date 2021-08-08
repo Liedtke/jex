@@ -1,11 +1,12 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_fctlibrary.hpp>
 #include <jex_typesystem.hpp>
 
 namespace jex {
 
-class Environment {
+class Environment : NoCopy {
     TypeSystem d_types;
     FctLibrary d_fctLib;
 

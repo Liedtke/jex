@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_compileenv.hpp>
 
 #include "llvm/IR/LLVMContext.h"
@@ -7,7 +8,7 @@
 
 namespace jex {
 
-class CodeModule {
+class CodeModule : NoCopy {
 public:
     llvm::LLVMContext d_llvmContext;
     llvm::Module d_llvmModule;

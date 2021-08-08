@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_typeinfo.hpp>
 
 #include <deque>
@@ -9,7 +10,7 @@ namespace jex {
 class CompileEnv;
 class TypeInfo;
 
-class TypeSystem {
+class TypeSystem : NoCopy {
     std::deque<TypeInfo> d_types;
     std::unordered_map<std::string_view, TypeInfoId> d_typesByName;
     const TypeInfoId d_unresolved;

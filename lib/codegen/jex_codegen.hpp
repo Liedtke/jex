@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jex_base.hpp>
+
 #include <memory>
 
 namespace llvm {
@@ -11,7 +13,7 @@ namespace jex {
 class CodeModule;
 class CompileEnv;
 
-class CodeGen {
+class CodeGen : NoCopy {
     CompileEnv& d_env;
     std::unique_ptr<CodeModule> d_module;
 public:

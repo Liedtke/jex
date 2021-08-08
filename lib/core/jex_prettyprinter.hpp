@@ -1,12 +1,13 @@
 #pragma once
 
 #include <jex_astvisitor.hpp>
+#include <jex_base.hpp>
 
 #include <iosfwd>
 
 namespace jex {
 
-class PrettyPrinter : public IAstVisitor {
+class PrettyPrinter : public IAstVisitor, NoCopy {
     std::ostream& d_str;
 public:
     PrettyPrinter(std::ostream& str)

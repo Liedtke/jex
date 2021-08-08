@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_base.hpp>
 #include <jex_location.hpp>
 
 #include <cassert>
@@ -39,7 +40,7 @@ public:
 
 std::ostream& operator<<(std::ostream& str, const Token& token);
 
-class Lexer {
+class Lexer : NoCopy {
     CompileEnv& d_env;
     const char *d_source;
     const char *d_cursor;
