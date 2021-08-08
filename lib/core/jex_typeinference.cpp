@@ -56,7 +56,7 @@ void TypeInference::visit(AstBinaryExpr& node) {
         node.d_lhs->d_resultType,
         node.d_rhs->d_resultType
     };
-    TypeSystem& typeSystem = d_env.typeSystem();
+    const TypeSystem& typeSystem = d_env.typeSystem();
     if (!typeSystem.isResolved(argTypes[0]) || !typeSystem.isResolved(argTypes[1])) {
         // There is already a type inference error, don't report errors resulting from that.
         assert(d_env.hasErrors());

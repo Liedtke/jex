@@ -2,6 +2,7 @@
 
 #include <jex_ast.hpp>
 #include <jex_compileenv.hpp>
+#include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 
 #include <gtest/gtest.h>
@@ -9,7 +10,8 @@
 namespace jex {
 
 TEST(SymbolTable, resolveUnknownSymbol) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     SymbolTable& symbols = env.symbols();
     TypeInfoId unresolved = env.typeSystem().unresolved();
     AstIdentifier ident({{1, 1}, {1, 7}}, unresolved, "unknown");
@@ -24,7 +26,8 @@ TEST(SymbolTable, resolveUnknownSymbol) {
 }
 
 TEST(SymbolTable, addAndResolveSymbol) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     SymbolTable& symbols = env.symbols();
 
     TypeInfoId typeInt = env.typeSystem().getType("Integer");
@@ -42,7 +45,8 @@ TEST(SymbolTable, addAndResolveSymbol) {
 }
 
 TEST(SymbolTable, testDuplicateAdd) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     SymbolTable& symbols = env.symbols();
     TypeInfoId unresolved = env.typeSystem().unresolved();
     AstIdentifier defNode({{1, 1}, {1, 4}}, unresolved, "duplicate");

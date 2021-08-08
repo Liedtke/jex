@@ -1,6 +1,7 @@
 #include <jex_compileenv.hpp>
 
 #include <jex_ast.hpp>
+#include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_fctlibrary.hpp>
 #include <jex_symboltable.hpp>
@@ -10,10 +11,10 @@
 
 namespace jex {
 
-CompileEnv::CompileEnv()
+CompileEnv::CompileEnv(const Environment& env)
 : d_fileName("test") // TODO: Provide real file name
-, d_typeSystem(std::make_unique<TypeSystem>())
-, d_fctLibrary(std::make_unique<FctLibrary>())
+, d_typeSystem(env.types())
+, d_fctLibrary(env.fctLib())
 , d_symbolTable(std::make_unique<SymbolTable>(*this)) {
 };
 

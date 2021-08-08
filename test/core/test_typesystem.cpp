@@ -23,8 +23,7 @@ TEST(TypeInfo, getTypeInfoFromId) {
 }
 
 TEST(TypeSystem, getBuiltIns) {
-    CompileEnv env;
-    TypeSystem& ts = env.typeSystem();
+    TypeSystem ts;
     EXPECT_EQ("Integer", ts.getType("Integer").get().name());
     EXPECT_EQ("Float", ts.getType("Float").get().name());
     EXPECT_EQ("Bool", ts.getType("Bool").get().name());
@@ -32,16 +31,14 @@ TEST(TypeSystem, getBuiltIns) {
 }
 
 TEST(TypeSystem, getUnregisteredType) {
-    CompileEnv env;
-    TypeSystem& ts = env.typeSystem();
+    TypeSystem ts;
     EXPECT_THROW(ts.getType("Unregistered"), InternalError);
     EXPECT_EQ("_Unresolved", ts.getTypeOrUnresolved("Unregistered").get().name());
     EXPECT_EQ(ts.unresolved(), ts.getTypeOrUnresolved("Unregistered"));
 }
 
 TEST(TypeSystem, repeatedGetType) {
-    CompileEnv env;
-    TypeSystem& ts = env.typeSystem();
+    TypeSystem ts;
     TypeInfoId id1 = ts.getType("Integer");
     TypeInfoId id2 = ts.getType("Integer");
     EXPECT_TRUE(id1 == id2);

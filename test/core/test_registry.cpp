@@ -1,4 +1,4 @@
-#include <jex_compileenv.hpp>
+#include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_registry.hpp>
 
@@ -24,15 +24,15 @@ void passBool(bool* res, bool in) {} // LCOV_EXCL_LINE
 }
 
 TEST(Registry, registerType) {
-    CompileEnv env;
-    Registry registry(env.typeSystem(), env.fctLibrary());
+    Environment env;
+    Registry registry(env);
     registry.registerType<ArgUInt32>();
-    ASSERT_EQ("UInt32", env.typeSystem().getType("UInt32")->name());
+    ASSERT_EQ("UInt32", env.types().getType("UInt32")->name());
 }
 
 TEST(Registry, registerDuplicateType) {
-    CompileEnv env;
-    Registry registry(env.typeSystem(), env.fctLibrary());
+    Environment env;
+    Registry registry(env);
 
 
     registry.registerType<ArgUInt32>();
@@ -40,8 +40,8 @@ TEST(Registry, registerDuplicateType) {
 }
 
 TEST(Registry, registerFct) {
-    CompileEnv env;
-    Registry registry(env.typeSystem(), env.fctLibrary());
+    Environment env;
+    Registry registry(env);
     // register types
     registry.registerType<ArgUInt32>();
     registry.registerType<ArgBool>();
@@ -56,25 +56,25 @@ TEST(Registry, registerFct) {
 }
 
 TEST(Registry, registerFctUnregisteredType) {
-    CompileEnv env;
-    Registry registry(env.typeSystem(), env.fctLibrary());
+    Environment env;
+    Registry registry(env);
     // ArgUInt32 not registered.
     ASSERT_THROW(registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass")), InternalError);
 }
 
 TEST(FctLibrary, getFctUnregistered) {
-    CompileEnv env;
-    Registry registry(env.typeSystem(), env.fctLibrary());
+    Environment env;
+    Registry registry(env);
     registry.registerType<ArgUInt32>();
-    TypeInfoId typeUInt32 = env.typeSystem().getType("UInt32");
-    ASSERT_THROW(env.fctLibrary().getFct("pass", {typeUInt32}), InternalError);
+    TypeInfoId typeUInt32 = env.types().getType("UInt32");
+    ASSERT_THROW(env.fctLib().getFct("pass", {typeUInt32}), InternalError);
 }
 
 TEST(FctLibrary, getFctSignatureChecks) {
-    CompileEnv env;
-    TypeSystem& typeSystem = env.typeSystem();
-    FctLibrary& fctLibrary = env.fctLibrary();
-    Registry registry(typeSystem, fctLibrary);
+    Environment env;
+    TypeSystem& typeSystem = env.types();
+    FctLibrary& fctLibrary = env.fctLib();
+    Registry registry(env);
     registry.registerType<ArgUInt32>();
     registry.registerType<ArgBool>();
     registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));

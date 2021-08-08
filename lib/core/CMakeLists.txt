@@ -4,6 +4,7 @@ set(core_sources
     jex_basicastvisitor.cpp
     jex_builtins.cpp
     jex_compileenv.cpp
+    jex_environment.cpp
     jex_errorhandling.cpp
     jex_fctinfo.cpp
     jex_fctlibrary.cpp

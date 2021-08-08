@@ -1,5 +1,6 @@
 #pragma once
 
+#include <jex_environment.hpp>
 #include <jex_fctinfo.hpp>
 #include <jex_fctlibrary.hpp>
 #include <jex_typesystem.hpp>
@@ -52,9 +53,9 @@ class Registry {
     FctLibrary& d_fcts;
 
 public:
-    Registry(TypeSystem& types, FctLibrary& fcts)
-    : d_types(types)
-    , d_fcts(fcts) {
+    Registry(Environment& env)
+    : d_types(env.types())
+    , d_fcts(env.fctLib()) {
     }
 
     template <typename ArgT>

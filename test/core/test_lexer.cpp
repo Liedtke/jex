@@ -1,6 +1,7 @@
 #include <test_base.hpp>
 
 #include <jex_compileenv.hpp>
+#include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_lexer.hpp>
 
@@ -31,7 +32,8 @@ TEST(Location, defaultConstruction) {
 }
 
 TEST(Lexer, functionCall) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     Lexer lexer(env, "fct(1, 23)");
     Token token = lexer.getNext();
     EXPECT_EQ(Token::Kind::Ident, token.kind);
@@ -61,7 +63,8 @@ TEST(Lexer, functionCall) {
 
 TEST(Lexer, eofGetNext) {
     // test calling next when eof already reached.
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     Lexer lexer(env, "");
     Token token = lexer.getNext();
     EXPECT_EQ(Token::Kind::Eof, token.kind);
@@ -128,7 +131,8 @@ INSTANTIATE_TEST_SUITE_P(SuiteTokens,
                          testing::ValuesIn(tokenTests));
 
 TEST_P(TestToken, lex) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     Lexer lexer(env, GetParam().first);
     Token token = lexer.getNext();
     const Token& exp = GetParam().second;
@@ -154,7 +158,8 @@ INSTANTIATE_TEST_SUITE_P(SuiteLexerExceptions,
                          testing::ValuesIn(exceptionTests));
 
 TEST_P(TestLexerException, lex) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     Lexer lexer(env, GetParam().first);
     try {
         Token token = lexer.getNext();

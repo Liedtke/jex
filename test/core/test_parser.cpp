@@ -1,6 +1,7 @@
 #include <test_base.hpp>
 
 #include <jex_compileenv.hpp>
+#include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_parser.hpp>
 #include <jex_prettyprinter.hpp>
@@ -12,7 +13,8 @@
 namespace jex {
 
 TEST(PrettyPrinter, unsupportedLiteral) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     AstLiteralExpr node(Location{}, env.typeSystem().unresolved(), "test");
     std::stringstream err;
     PrettyPrinter prettyPrint(err);
@@ -24,7 +26,8 @@ using TestExp = std::pair<const char*, const char*>;
 class TestParserError : public testing::TestWithParam<TestExp> {};
 
 TEST_P(TestParserError, test) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     TypeInfoId unresolved = env.typeSystem().unresolved();
     env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);
     env.symbols().addSymbol(Location(), Symbol::Kind::Function, "f", unresolved);
@@ -92,7 +95,8 @@ INSTANTIATE_TEST_SUITE_P(SuiteParserError,
 class TestParserSuccess : public testing::TestWithParam<TestExp> {};
 
 TEST_P(TestParserSuccess, test) {
-    CompileEnv env;
+    Environment environment;
+    CompileEnv env(environment);
     Parser parser(env, GetParam().first);
     TypeInfoId unresolved = env.typeSystem().unresolved();
     env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);

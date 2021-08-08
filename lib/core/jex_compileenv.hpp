@@ -17,6 +17,7 @@ class AstRoot;
 class SymbolTable;
 class TypeSystem;
 class FctLibrary;
+class Environment;
 
 /**
  * Stores and provides access to any object needed during compilation.
@@ -29,12 +30,12 @@ class CompileEnv : NoCopy {
     bool d_hasErrors = false;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     AstRoot* d_root = nullptr;
-    std::unique_ptr<TypeSystem> d_typeSystem;
-    std::unique_ptr<FctLibrary> d_fctLibrary;
+    const TypeSystem& d_typeSystem;
+    const FctLibrary& d_fctLibrary;
     std::unique_ptr<SymbolTable> d_symbolTable;
     std::deque<std::string> d_stringLiterals;
 public:
-    CompileEnv();
+    CompileEnv(const Environment& env);
     ~CompileEnv();
 
     const MsgInfo& createError(const Location& loc, std::string msg);
@@ -71,12 +72,12 @@ public:
         return *d_symbolTable;
     }
 
-    TypeSystem& typeSystem() {
-        return *d_typeSystem;
+    const TypeSystem& typeSystem() const {
+        return d_typeSystem;
     }
 
-    FctLibrary& fctLibrary() {
-        return *d_fctLibrary;
+    const FctLibrary& fctLibrary() const {
+        return d_fctLibrary;
     }
 
     std::string_view createStringLiteral(std::string_view str);
