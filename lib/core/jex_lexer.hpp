@@ -28,6 +28,10 @@ public:
         OpDiv,
         OpMod,
         Comma,
+        Colon,
+        Semicolon,
+        Var,
+        Assign,
     } kind = Kind::Invalid;
     Location location;
     std::string_view text;

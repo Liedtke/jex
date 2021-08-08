@@ -27,41 +27,62 @@ TEST_P(TestParserError, test) {
     CompileEnv env;
     TypeInfoId unresolved = env.typeSystem().unresolved();
     env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);
+    env.symbols().addSymbol(Location(), Symbol::Kind::Function, "f", unresolved);
+    env.symbols().addSymbol(Location(), Symbol::Kind::Type, "Type", unresolved);
     Parser parser(env, GetParam().first);
     try {
         parser.parse();
-        ASSERT_TRUE(false) << "expected CompileError"; // LCOV_EXCL_LINE
     } catch (CompileError& err) {
         ASSERT_STREQ(GetParam().second, err.what());
     }
+    ASSERT_EQ(1, env.messages().size());
+    std::stringstream errMsg;
+    errMsg << *env.messages().begin();
+    EXPECT_EQ(GetParam().second, errMsg.str());
 }
 
 static TestExp errorTests[] = {
-    {"", "1.1-1.1: Error: Unexpected end of file, expecting literal, identifier or '('"},
-    {"9223372036854775808", "1.1-1.19: Error: Invalid integer literal"},
-    {"92233720368547758070", "1.1-1.20: Error: Invalid integer literal"},
-    {"(", "1.2-1.2: Error: Unexpected end of file, expecting literal, identifier or '('"},
-    {"(1", "1.3-1.3: Error: Unexpected end of file, expecting ')'"},
-    {"1++", "1.3-1.3: Error: Unexpected operator '+', expecting literal, identifier or '('"},
-    {"1+*", "1.3-1.3: Error: Unexpected operator '*', expecting literal, identifier or '('"},
-    {"1*/", "1.3-1.3: Error: Unexpected operator '/', expecting literal, identifier or '('"},
-    {"(%", "1.2-1.2: Error: Unexpected operator '%', expecting literal, identifier or '('"},
-    {"1*-", "1.3-1.3: Error: Unexpected operator '-', expecting literal, identifier or '('"},
-    {"()", "1.2-1.2: Error: Unexpected ')', expecting literal, identifier or '('"},
-    {"1(", "1.2-1.2: Error: Unexpected '(', expecting an operator or end of file"},
-    {"1 + _", "1.5-1.5: Error: Unexpected invalid token '_', expecting literal, identifier or '('"},
-    {"1,", "1.2-1.2: Error: Unexpected ',', expecting an operator or end of file"},
-    {"1a", "1.2-1.2: Error: Unexpected identifier 'a', expecting an operator or end of file"},
-    {"1..1", "1.3-1.3: Error: Unexpected invalid token '.', expecting an operator or end of file"},
-    {"1.e", "1.1-1.3: Error: Invalid floating point literal"},
-    {".1", "1.1-1.1: Error: Unexpected invalid token '.', expecting literal, identifier or '('"}, // TODO: Shall this be allowed?
-    {"1e310", "1.1-1.5: Error: Invalid floating point literal"},
-    {"1e+310", "1.1-1.6: Error: Invalid floating point literal"},
-    {"1e-310", "1.1-1.6: Error: Invalid floating point literal"},
-    {"a(,2)", "1.3-1.3: Error: Unexpected ',', expecting literal, identifier or '('"},
-    {"a(1 23)", "1.5-1.6: Error: Unexpected integer literal '23', expecting ',' or ')'"},
-    {"a(1,2,)", "1.7-1.7: Error: Unexpected ')', expecting literal, identifier or '('"},
-    {"x()", "1.1-1.1: Error: Invalid call: 'x' is not a function"},
+    // var def
+    {"x", "1.1-1.1: Error: Unexpected identifier 'x', expecting 'var' or end of file"},
+    {"var ", "1.5-1.5: Error: Unexpected end of file, expecting identifier"},
+    {"var a", "1.6-1.6: Error: Unexpected end of file, expecting ':'"},
+    {"var a: 1", "1.8-1.8: Error: Unexpected integer literal '1', expecting identifier"},
+    {"var a: Type", "1.12-1.12: Error: Unexpected end of file, expecting '='"},
+    {"var a: Type = ", "1.15-1.15: Error: Unexpected end of file, expecting literal, identifier or '('"},
+    {"var a: Type = 1", "1.16-1.16: Error: Unexpected end of file, expecting ';'"},
+    {"var a: x = 1;", "1.8-1.8: Error: Invalid type: 'x' is not a type"},
+    {"var a: Type = 1;;", "1.17-1.17: Error: Unexpected ';', expecting 'var' or end of file"},
+    // TODO: Treat variables and types as different symbols without collisions?
+    {"var Type: Type = 1;", "1.5-1.8: Error: Duplicate identifier 'Type'"},
+    // expressions
+    {"var a: Type = Type;", "1.15-1.18: Error: Invalid expression: 'Type' is not a variable"},
+    {"var a: Type = Type();", "1.15-1.18: Error: Invalid call: 'Type' is not a function"},
+    {"var a: Type = undefined;", "1.15-1.23: Error: Unknown identifier 'undefined'"},
+    {"var a: Type = undefined();", "1.15-1.23: Error: Unknown identifier 'undefined'"},
+    {"var a: Type = 9223372036854775808;", "1.15-1.33: Error: Invalid integer literal"},
+    {"var a: Type = 92233720368547758070;", "1.15-1.34: Error: Invalid integer literal"},
+    {"var a: Type = (", "1.16-1.16: Error: Unexpected end of file, expecting literal, identifier or '('"},
+    {"var a: Type = (1", "1.17-1.17: Error: Unexpected end of file, expecting ')'"},
+    {"var a: Type = 1++", "1.17-1.17: Error: Unexpected operator '+', expecting literal, identifier or '('"},
+    {"var a: Type = 1+*", "1.17-1.17: Error: Unexpected operator '*', expecting literal, identifier or '('"},
+    {"var a: Type = 1*/", "1.17-1.17: Error: Unexpected operator '/', expecting literal, identifier or '('"},
+    {"var a: Type = (%", "1.16-1.16: Error: Unexpected operator '%', expecting literal, identifier or '('"},
+    {"var a: Type = 1*-", "1.17-1.17: Error: Unexpected operator '-', expecting literal, identifier or '('"},
+    {"var a: Type = ()", "1.16-1.16: Error: Unexpected ')', expecting literal, identifier or '('"},
+    {"var a: Type = 1(", "1.16-1.16: Error: Unexpected '(', expecting ';'"},
+    {"var a: Type = 1 + _", "1.19-1.19: Error: Unexpected invalid token '_', expecting literal, identifier or '('"},
+    {"var a: Type = 1,", "1.16-1.16: Error: Unexpected ',', expecting ';'"},
+    {"var a: Type = 1f", "1.16-1.16: Error: Unexpected identifier 'f', expecting ';'"},
+    {"var a: Type = 1..1", "1.17-1.17: Error: Unexpected invalid token '.', expecting ';'"},
+    {"var a: Type = 1.e", "1.15-1.17: Error: Invalid floating point literal"},
+    {"var a: Type = .1", "1.15-1.15: Error: Unexpected invalid token '.', expecting literal, identifier or '('"}, // TODO: Shall this be allowed?
+    {"var a: Type = 1e310", "1.15-1.19: Error: Invalid floating point literal"},
+    {"var a: Type = 1e+310", "1.15-1.20: Error: Invalid floating point literal"},
+    {"var a: Type = 1e-310", "1.15-1.20: Error: Invalid floating point literal"},
+    {"var a: Type = f(,2)", "1.17-1.17: Error: Unexpected ',', expecting literal, identifier or '('"},
+    {"var a: Type = f(1 23)", "1.19-1.20: Error: Unexpected integer literal '23', expecting ',' or ')'"},
+    {"var a: Type = f(1,2,)", "1.21-1.21: Error: Unexpected ')', expecting literal, identifier or '('"},
+    {"var a: Type = x();", "1.15-1.15: Error: Invalid call: 'x' is not a function"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,
@@ -76,7 +97,8 @@ TEST_P(TestParserSuccess, test) {
     TypeInfoId unresolved = env.typeSystem().unresolved();
     env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);
     env.symbols().addSymbol(Location(), Symbol::Kind::Function, "f", unresolved);
-    parser.parse(); // no error
+    env.symbols().addSymbol(Location(), Symbol::Kind::Type, "Type", unresolved);
+    parser.parse();
     EXPECT_FALSE(env.hasErrors());
     ASSERT_EQ(0, env.messages().size()) << *env.messages().begin();
     // check generated ast
@@ -87,33 +109,63 @@ TEST_P(TestParserSuccess, test) {
 }
 
 static TestExp successTests[] = {
-    {"1", "1"},
-    {"123", "123"},
-    {"9223372036854775807", "9223372036854775807"},
-    {"1.23", "1.23"},
-    {"10.123e-45", "1.0123e-44"},
-    {"1e0", "1"},
-    {"1e1", "10"},
-    {"11", "11"},
-    {"1.23e4", "12300"},
-    {"1+1", "(1 + 1)"},
-    {"10 + 11 + 12", "((10 + 11) + 12)"},
-    {"1+2*3*4+5", "((1 + ((2 * 3) * 4)) + 5)"},
-    {"1+1-2*3/4%2", "((1 + 1) - (((2 * 3) / 4) % 2))"},
-    {"((1))", "1"},
-    {"((1) + (1+2))", "(1 + (1 + 2))"},
-    {"2 * (1 + 3)", "(2 * (1 + 3))"},
-    {"(1 + 3) * (2)", "((1 + 3) * 2)"},
-    {"x", "x"},
-    {"x * 2 + x", "((x * 2) + x)"},
-    {"f()", "f()"},
-    {"f(1)", "f(1)"},
-    {"f(1 + 1)", "f((1 + 1))"},
-    {"f(1,x,(2))", "f(1, x, 2)"},
-    {"f(1 + 2, f(f()))", "f((1 + 2), f(f()))"},
-    {"\"\"", "\"\""},
+    {"", ""},
+    {"// just a comment", ""},
+    {"var a: Type = 1;",
+     "var a: Type = 1;\n"},
+    {"var a: Type = 123;",
+     "var a: Type = 123;\n"},
+    {"var a: Type = 9223372036854775807;",
+     "var a: Type = 9223372036854775807;\n"},
+    {"var a: Type = 1.23;",
+     "var a: Type = 1.23;\n"},
+    {"var a: Type = 10.123e-45;",
+     "var a: Type = 1.0123e-44;\n"},
+    {"var a: Type = 1e0;",
+     "var a: Type = 1;\n"},
+    {"var a: Type = 1e1;",
+     "var a: Type = 10;\n"},
+    {"var a: Type = 11;",
+     "var a: Type = 11;\n"},
+    {"var a: Type = 1.23e4;",
+     "var a: Type = 12300;\n"},
+    {"var a: Type = 1+1;",
+     "var a: Type = (1 + 1);\n"},
+    {"var a: Type = 10 + 11 + 12;",
+     "var a: Type = ((10 + 11) + 12);\n"},
+    {"var a: Type = 1+2*3*4+5;",
+     "var a: Type = ((1 + ((2 * 3) * 4)) + 5);\n"},
+    {"var a: Type = 1+1-2*3/4%2;",
+     "var a: Type = ((1 + 1) - (((2 * 3) / 4) % 2));\n"},
+    {"var a: Type = ((1));",
+     "var a: Type = 1;\n"},
+    {"var a: Type = ((1) + (1+2));",
+     "var a: Type = (1 + (1 + 2));\n"},
+    {"var a: Type = 2 * (1 + 3);",
+     "var a: Type = (2 * (1 + 3));\n"},
+    {"var a: Type = (1 + 3) * (2);",
+     "var a: Type = ((1 + 3) * 2);\n"},
+    {"var a: Type = x;",
+     "var a: Type = x;\n"},
+    {"var a: Type = x * 2 + x;",
+     "var a: Type = ((x * 2) + x);\n"},
+    {"var a: Type = f();",
+     "var a: Type = f();\n"},
+    {"var a: Type = f(1);",
+     "var a: Type = f(1);\n"},
+    {"var a: Type = f(1 + 1);",
+     "var a: Type = f((1 + 1));\n"},
+    {"var a: Type = f(1,x,(2));",
+     "var a: Type = f(1, x, 2);\n"},
+    {"var a: Type = f(1 + 2, f(f()));",
+     "var a: Type = f((1 + 2), f(f()));\n"},
+    {"var a: Type = \"\";",
+     "var a: Type = \"\";\n"},
     // Note: The pretty printer doesn't escape currently.
-    {"\"Hello\\nWorld!\"", "\"Hello\nWorld!\""},
+    {"var a: Type = \"Hello\\nWorld!\";",
+     "var a: Type = \"Hello\nWorld!\";\n"},
+    {"var a: Type = 123;\nvar b: Type = a;",
+     "var a: Type = 123;\nvar b: Type = a;\n"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

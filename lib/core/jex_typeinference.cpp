@@ -9,6 +9,7 @@
 #include <jex_typesystem.hpp>
 
 #include <cassert>
+#include <sstream>
 
 namespace jex {
 
@@ -74,6 +75,17 @@ const FctInfo* TypeInference::resolveFct(IAstExpression& node, std::string_view 
         // Convert exception to non-critical error and add location information.
         d_env.createError(node.d_loc, err.what());
         return nullptr;
+    }
+}
+
+void TypeInference::visit(AstVariableDef& node) {
+    BasicAstVisitor::visit(node); // resolve expression
+    TypeInfoId exprType = node.d_expr->d_resultType;
+    if (d_env.typeSystem().isResolved(exprType) && node.d_resultType != exprType) {
+        std::stringstream errMsg;
+        errMsg << "Invalid type for variable '" << node.d_name->d_name
+               << "': Specified as '" << node.d_resultType->name()
+               << "' but expression returns '" << exprType->name() << "'";
     }
 }
 

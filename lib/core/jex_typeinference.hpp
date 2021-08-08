@@ -21,6 +21,7 @@ public:
     void visit(AstLiteralExpr& node) override;
     void visit(AstFctCall& node) override;
     void visit(AstBinaryExpr& node) override;
+    void visit(AstVariableDef& node) override;
 
 private:
     const FctInfo* resolveFct(IAstExpression& node, std::string_view name, const std::vector<TypeInfoId>& paramTypes);

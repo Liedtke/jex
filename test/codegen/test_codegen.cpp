@@ -13,7 +13,7 @@ namespace jex {
 
 TEST(Codgen, dummy) {
     CompileEnv env;
-    Parser parser(env, "12345");
+    Parser parser(env, "");
     parser.parse();
     TypeInference typeInference(env);
     env.getRoot()->accept(typeInference);

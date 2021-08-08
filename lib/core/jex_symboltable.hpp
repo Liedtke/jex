@@ -18,6 +18,7 @@ struct Symbol {
     enum class Kind {
         Variable,
         Function,
+        Type,
         Unresolved
     } kind;
     TypeInfoId type;

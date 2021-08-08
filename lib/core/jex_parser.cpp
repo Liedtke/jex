@@ -52,15 +52,26 @@ Token& Parser::getNextToken() {
 }
 
 void Parser::parse() {
-    d_env.setRoot(parseExpression());
-    if (d_currToken.kind != Token::Kind::Eof) {
-        std::stringstream msg;
-        msg << "Unexpected " << d_currToken << ", expecting an operator or end of file";
-        d_env.throwError(d_currToken.location, msg.str());
-    }
+    d_env.setRoot(parseRoot());
+    assert(d_currToken.kind == Token::Kind::Eof);
     if (d_env.hasErrors()) {
         // Throw first error in list.
         throw CompileError::create(*d_env.messages().begin());
+    }
+}
+
+AstRoot* Parser::parseRoot() {
+    AstRoot* root = d_env.createNode<AstRoot>(d_currToken.location);
+    while (true) {
+        switch (d_currToken.kind) {
+            case Token::Kind::Eof:
+                return root;
+            case Token::Kind::Var:
+                root->d_varDefs.push_back(parseVariableDef());
+                break;
+            default:
+                throwUnexpected("'var' or end of file");
+        }
     }
 }
 
@@ -69,9 +80,7 @@ IAstExpression* Parser::parseParensExpr() {
     getNextToken();
     IAstExpression* expr = parseExpression();
     if (d_currToken.kind != Token::Kind::ParensR) {
-        std::stringstream msg;
-        msg << "Unexpected " << d_currToken << ", expecting ')'";
-        d_env.throwError(d_currToken.location, msg.str());
+        throwUnexpected("')'");
     }
     getNextToken();
     return expr;
@@ -96,23 +105,24 @@ AstArgList* Parser::parseArgList() {
             case Token::Kind::ParensR:
                 getNextToken(); // consume ')'
                 return argList;
-            default: {
-                std::stringstream msg;
-                msg << "Unexpected " << d_currToken << ", expecting ',' or ')'";
-                d_env.throwError(d_currToken.location, msg.str());
-            }
+            default:
+                throwUnexpected("',' or ')'");
         }
     }
 }
 
-IAstExpression* Parser::parseIdentOrCall() {
+AstIdentifier* Parser::parseIdent() {
     assert(d_currToken.kind == Token::Kind::Ident);
     TypeInfoId unresolved = d_env.typeSystem().unresolved();
     AstIdentifier *ident = d_env.createNode<AstIdentifier>(d_currToken.location, unresolved, d_currToken.text);
+    getNextToken(); // consume identifier
+    return ident;
+}
+
+IAstExpression* Parser::parseIdentOrCall() {
+    AstIdentifier* ident = parseIdent();
     d_env.symbols().resolveSymbol(ident);
     assert(ident->d_symbol != nullptr);
-    getNextToken(); // consume identifier
-
     // parse function call
     if (d_currToken.kind == Token::Kind::ParensL) {
         Symbol::Kind symKind = ident->d_symbol->kind;
@@ -120,9 +130,14 @@ IAstExpression* Parser::parseIdentOrCall() {
             d_env.createError(ident->d_loc, "Invalid call: '" + std::string(ident->d_name) + "' is not a function");
         }
         AstArgList* args = parseArgList();
+        TypeInfoId unresolved = d_env.typeSystem().unresolved();
         return d_env.createNode<AstFctCall>(Location::combine(ident->d_loc, args->d_loc), unresolved, ident, args);
     }
     // regular identifier
+    Symbol::Kind symKind = ident->d_symbol->kind;
+    if (symKind != Symbol::Kind::Variable && symKind != Symbol::Kind::Unresolved) {
+        d_env.createError(ident->d_loc, "Invalid expression: '" + std::string(ident->d_name) + "' is not a variable");
+    }
     return ident;
 }
 
@@ -139,10 +154,8 @@ IAstExpression* Parser::parsePrimary() {
         case Token::Kind::Ident:
             return parseIdentOrCall();
         default:
-            std::stringstream msg;
             // TODO: extend expectation list
-            msg << "Unexpected " << d_currToken << ", expecting literal, identifier or '('";
-            d_env.throwError(d_currToken.location, msg.str());
+            throwUnexpected("literal, identifier or '('");
     }
 }
 
@@ -209,6 +222,49 @@ AstLiteralExpr* Parser::parseLiteralString() {
     AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, type, d_currToken.text);
     getNextToken(); // consume literal
     return res;
+}
+
+AstVariableDef* Parser::parseVariableDef() {
+    assert(d_currToken.kind == Token::Kind::Var);
+    const Location beginLoc = d_currToken.location;
+    getNextToken(); // consume 'var'
+    if (d_currToken.kind != Token::Kind::Ident) {
+        throwUnexpected("identifier");
+    }
+    AstIdentifier* name = parseIdent();
+    if (d_currToken.kind != Token::Kind::Colon) {
+        throwUnexpected("':'");
+    }
+    getNextToken();
+    if (d_currToken.kind != Token::Kind::Ident) {
+        throwUnexpected("identifier");
+    }
+    AstIdentifier* type = parseIdent();
+    // Resolve type and register variable in symbol table.
+    d_env.symbols().resolveSymbol(type);
+    if (type->d_symbol->kind != Symbol::Kind::Type && type->d_symbol->kind != Symbol::Kind::Unresolved) {
+        d_env.createError(type->d_loc, "Invalid type: '" + std::string(type->d_name) + "' is not a type");
+    }
+    Symbol* defSym = d_env.symbols().addSymbol(name->d_loc, Symbol::Kind::Variable, name->d_name, type->d_resultType);
+    if (d_currToken.kind != Token::Kind::Assign) {
+        throwUnexpected("'='");
+    }
+    getNextToken();
+    IAstExpression* expr = parseExpression();
+    if (d_currToken.kind != Token::Kind::Semicolon) {
+        throwUnexpected("';'");
+    }
+    getNextToken();
+    const Location loc = Location::combine(beginLoc, expr->d_loc);
+    AstVariableDef* varDef = d_env.createNode<AstVariableDef>(loc, name, type, expr);
+    defSym->defNode = varDef;
+    return varDef;
+}
+
+[[noreturn]] void Parser::throwUnexpected(std::string_view expecting) {
+    std::stringstream msg;
+    msg << "Unexpected " << d_currToken << ", expecting " << expecting;
+    d_env.throwError(d_currToken.location, msg.str());
 }
 
 } // namespace jex

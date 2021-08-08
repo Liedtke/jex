@@ -117,6 +117,10 @@ static TestSingleToken tokenTests[] = {
     {"\"Hello!\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 8}}, "Hello!"}},
     {"\"\\n\\t\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 6}}, "\n\t"}},
     {R"jex("'\'\"\?\\\a\b\f\n\r\t\v")jex", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 25}}, "'\'\"\?\\\a\b\f\n\r\t\v"}},
+    {" : ", Token{Token::Kind::Colon, Location{{1, 2}, {1, 2}}, ":"}},
+    {" ; ", Token{Token::Kind::Semicolon, Location{{1, 2}, {1, 2}}, ";"}},
+    {" = ", Token{Token::Kind::Assign, Location{{1, 2}, {1, 2}}, "="}},
+    {" var ", Token{Token::Kind::Var, Location{{1, 2}, {1, 4}}, "var"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTokens,

@@ -40,6 +40,8 @@ public:
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator%"));
         // TODO: Add support for proper type inference of literals.
         d_env->symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", d_env->typeSystem().getType("UInt32"));
+        // TODO: Types in the typesystem shouldn't have to be added explicitly to the SymbolTable.
+        d_env->symbols().addSymbol(Location(), Symbol::Kind::Type, "UInt32", d_env->typeSystem().unresolved());
         // TODO: Entries in the function library shouldn't have to be added explicitly to it.
         d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "pass", d_env->typeSystem().unresolved());
         d_env->symbols().addSymbol(Location(), Symbol::Kind::Function, "add", d_env->typeSystem().unresolved());
@@ -52,7 +54,7 @@ public:
 };
 
 TEST_F(TestTypeInference, resolveFct) {
-    Parser parser(*d_env, "pass(x)");
+    Parser parser(*d_env, "var a: UInt32 = pass(x);");
     parser.parse();
     TypeInference typeInference(*d_env);
     d_env->getRoot()->accept(typeInference);
@@ -60,7 +62,7 @@ TEST_F(TestTypeInference, resolveFct) {
 }
 
 TEST_F(TestTypeInference, resolveFctInvalidOverload) {
-    Parser parser(*d_env, "pass()");
+    Parser parser(*d_env, "var a: UInt32 = pass();");
     parser.parse();
     TypeInference typeInference(*d_env);
     // TODO: Should the type inference throw in case of errors?
@@ -68,11 +70,11 @@ TEST_F(TestTypeInference, resolveFctInvalidOverload) {
     ASSERT_EQ(1, d_env->messages().size());
     std::stringstream err;
     err << *d_env->messages().begin();
-    ASSERT_EQ("1.1-1.6: Error: No matching candidate found for function 'pass()'", err.str());
+    ASSERT_EQ("1.17-1.22: Error: No matching candidate found for function 'pass()'", err.str());
 }
 
 TEST_F(TestTypeInference, resolveFctInvalidOverloadRepeated) {
-    Parser parser(*d_env, "add(pass(pass()), add())");
+    Parser parser(*d_env, "var a: UInt32 = add(pass(pass()), add());");
     parser.parse();
     TypeInference typeInference(*d_env);
     d_env->getRoot()->accept(typeInference);
@@ -84,13 +86,13 @@ TEST_F(TestTypeInference, resolveFctInvalidOverloadRepeated) {
     ++iter;
     err << *iter;
     ASSERT_EQ(
-        "1.10-1.15: Error: No matching candidate found for function 'pass()'\n"
-        "1.19-1.23: Error: No matching candidate found for function 'add()'",
+        "1.26-1.31: Error: No matching candidate found for function 'pass()'\n"
+        "1.35-1.39: Error: No matching candidate found for function 'add()'",
         err.str());
 }
 
 TEST_F(TestTypeInference, resolveOperator) {
-    Parser parser(*d_env, "x + x");
+    Parser parser(*d_env, "var a: UInt32 = x + x;");
     parser.parse();
     TypeInference typeInference(*d_env);
     d_env->getRoot()->accept(typeInference);
@@ -98,7 +100,7 @@ TEST_F(TestTypeInference, resolveOperator) {
 }
 
 TEST_F(TestTypeInference, resolveOperatorAll) {
-    Parser parser(*d_env, "x + x - x * x / x % x");
+    Parser parser(*d_env, "var a: UInt32 = x + x - x * x / x % x;");
     parser.parse();
     TypeInference typeInference(*d_env);
     d_env->getRoot()->accept(typeInference);
@@ -106,7 +108,7 @@ TEST_F(TestTypeInference, resolveOperatorAll) {
 }
 
 TEST_F(TestTypeInference, resolveOperatorInvalidOverload) {
-    Parser parser(*d_env, "x + 1");
+    Parser parser(*d_env, "var a: UInt32 = x + 1;");
     parser.parse();
     TypeInference typeInference(*d_env);
     // TODO: Should the type inference throw in case of errors?
@@ -114,11 +116,11 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverload) {
     ASSERT_EQ(1, d_env->messages().size());
     std::stringstream err;
     err << *d_env->messages().begin();
-    ASSERT_EQ("1.1-1.5: Error: No matching candidate found for function 'operator+(UInt32, Integer)'", err.str());
+    ASSERT_EQ("1.17-1.21: Error: No matching candidate found for function 'operator+(UInt32, Integer)'", err.str());
 }
 
 TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
-    Parser parser(*d_env, "x + 1 + (1 + x)");
+    Parser parser(*d_env, "var a: UInt32 = x + 1 + (1 + x);");
     parser.parse();
     TypeInference typeInference(*d_env);
     d_env->getRoot()->accept(typeInference);
@@ -130,8 +132,8 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
     ++iter;
     err << *iter;
     ASSERT_EQ(
-        "1.1-1.5: Error: No matching candidate found for function 'operator+(UInt32, Integer)'\n"
-        "1.10-1.14: Error: No matching candidate found for function 'operator+(Integer, UInt32)'",
+        "1.17-1.21: Error: No matching candidate found for function 'operator+(UInt32, Integer)'\n"
+        "1.26-1.30: Error: No matching candidate found for function 'operator+(Integer, UInt32)'",
         err.str());
 }
 

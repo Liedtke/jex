@@ -8,6 +8,8 @@ class AstLiteralExpr;
 class AstFctCall;
 class AstIdentifier;
 class AstArgList;
+class AstVariableDef;
+class AstRoot;
 
 class IAstVisitor {
 public:
@@ -18,6 +20,8 @@ public:
     virtual void visit(AstFctCall& node) = 0;
     virtual void visit(AstIdentifier& node) = 0;
     virtual void visit(AstArgList& node) = 0;
+    virtual void visit(AstVariableDef& node) = 0;
+    virtual void visit(AstRoot& node) = 0;
 };
 
 } // namespace jex

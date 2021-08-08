@@ -11,6 +11,9 @@ class CompileEnv;
 class AstLiteralExpr;
 class IAstExpression;
 class AstArgList;
+class AstVariableDef;
+class AstIdentifier;
+class AstRoot;
 
 class Parser : NoCopy {
     CompileEnv& d_env;
@@ -26,20 +29,24 @@ public:
     }
 
     void parse();
+    IAstExpression* parseExpression();
 
 private:
     void initPrecs();
     int getPrec() const;
     Token& getNextToken();
-    IAstExpression* parseExpression();
     IAstExpression* parsePrimary();
     IAstExpression* parseBinOpRhs(int prec, IAstExpression* lhs);
     AstLiteralExpr* parseLiteralInt();
     AstLiteralExpr* parseLiteralFloat();
     AstLiteralExpr* parseLiteralString();
     IAstExpression* parseParensExpr();
+    AstIdentifier* parseIdent();
     IAstExpression* parseIdentOrCall();
     AstArgList* parseArgList();
+    AstVariableDef* parseVariableDef();
+    AstRoot* parseRoot();
+    [[noreturn]] void throwUnexpected(std::string_view expecting);
 };
 
 } // namespace jex

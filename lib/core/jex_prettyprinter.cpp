@@ -71,4 +71,20 @@ void PrettyPrinter::visit(AstArgList& node) {
     }
 }
 
+void PrettyPrinter::visit(AstVariableDef& node) {
+    d_str << "var ";
+    node.d_name->accept(*this);
+    d_str << ": ";
+    node.d_type->accept(*this);
+    d_str << " = ";
+    node.d_expr->accept(*this);
+    d_str << ";\n";
+}
+
+void PrettyPrinter::visit(AstRoot& node) {
+    for (AstVariableDef* def : node.d_varDefs) {
+        def->accept(*this);
+    }
+}
+
 } // namespace jex

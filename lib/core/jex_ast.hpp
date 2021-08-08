@@ -140,4 +140,35 @@ public:
     }
 };
 
+class AstVariableDef : public IAstExpression {
+public:
+    AstIdentifier* d_name;
+    AstIdentifier* d_type;
+    IAstExpression* d_expr;
+
+    AstVariableDef(const Location& loc, AstIdentifier* name, AstIdentifier* type, IAstExpression* expr)
+    : IAstExpression(loc, name->d_resultType)
+    , d_name(name)
+    , d_type(type)
+    , d_expr(expr) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+};
+
+class AstRoot : public IAstNode {
+public:
+    std::vector<AstVariableDef*> d_varDefs;
+
+    AstRoot(const Location& loc)
+    : IAstNode(loc) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+};
+
 } // namespace jex

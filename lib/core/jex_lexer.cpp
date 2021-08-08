@@ -37,6 +37,14 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "'('";
         case Token::Kind::ParensR:
             return str << "')'";
+        case Token::Kind::Colon:
+            return str << "':'";
+        case Token::Kind::Semicolon:
+            return str << "';'";
+        case Token::Kind::Assign:
+            return str << "'='";
+        case Token::Kind::Var:
+            return str << "'var'";
     }
     return str; // LCOV_EXCL_LINE unreachable
 }
@@ -141,6 +149,15 @@ Token Lexer::getNext() {
             case '%':
                 advance();
                 return setToken(Token::Kind::OpMod);
+            case ':':
+                advance();
+                return setToken(Token::Kind::Colon);
+            case ';':
+                advance();
+                return setToken(Token::Kind::Semicolon);
+            case '=':
+                advance();
+                return setToken(Token::Kind::Assign);
         }
 
         // parse numeric literals
@@ -160,6 +177,10 @@ Token Lexer::getNext() {
 
         // parse identifier: [A-Za-z][A-Za-z0-9_]
         if (std::isalpha(*d_cursor)) {
+            if (*d_cursor == 'v' && advance() == 'a' && advance() == 'r') {
+                advance(); // consume 'r'
+                return setToken(Token::Kind::Var);
+            }
             while(std::isalnum(*d_cursor) || *d_cursor == '_') {
                 advance();
             }

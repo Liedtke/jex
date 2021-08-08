@@ -26,4 +26,16 @@ void BasicAstVisitor::visit(AstArgList& node) {
     }
 }
 
+void BasicAstVisitor::visit(AstVariableDef& node) {
+    node.d_name->accept(*this);
+    node.d_type->accept(*this);
+    node.d_expr->accept(*this);
+}
+
+void BasicAstVisitor::visit(AstRoot& node) {
+    for (AstVariableDef* def : node.d_varDefs) {
+        def->accept(*this);
+    }
+}
+
 } // namespace jex
