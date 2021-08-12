@@ -18,8 +18,7 @@ std::ostream& operator<<(std::ostream& str, const MsgInfo::Kind& info) {
         case MsgInfo::Kind::Error:
             return str << "Error";
     }
-    assert(false); // LCOV_EXCL_LINE
-    return str << "<unknown message kind>"; // LCOV_EXCL_LINE
+    throw InternalError("<unknown message kind>"); // LCOV_EXCL_LINE
 }
 
 std::ostream& operator<<(std::ostream& str, const MsgInfo& info) {

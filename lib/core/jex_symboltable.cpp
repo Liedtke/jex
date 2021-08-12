@@ -21,7 +21,11 @@ SymbolTable::SymbolTable(CompileEnv& env)
     }
     // add functions
     for (auto& fctEntry : d_env.fctLibrary()) {
-        d_symbols[fctEntry.first] = std::make_unique<Symbol>(Symbol::Kind::Function, fctEntry.first, typeUnresolved, nullptr);
+        auto inserted = d_symbols.emplace(fctEntry.first, std::make_unique<Symbol>(Symbol::Kind::Function, fctEntry.first, typeUnresolved, nullptr));
+        if (!inserted.second) {
+            throw InternalError("Invalid function '" + fctEntry.first + "': There is already a type registered with the same name");
+        }
+
     }
 }
 
