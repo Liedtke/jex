@@ -1,3 +1,5 @@
+#include <test_base.hpp>
+
 #include <jex_symboltable.hpp>
 
 #include <jex_ast.hpp>
@@ -27,6 +29,7 @@ TEST(SymbolTable, resolveUnknownSymbol) {
 
 TEST(SymbolTable, addAndResolveSymbol) {
     Environment environment;
+    test::registerBuiltIns(environment);
     CompileEnv env(environment);
     SymbolTable& symbols = env.symbols();
 

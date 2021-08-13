@@ -5,6 +5,7 @@
 #include <jex_typesystem.hpp>
 
 namespace jex {
+class Module;
 
 class Environment : NoCopy {
     TypeSystem d_types;
@@ -15,6 +16,8 @@ public:
     : d_types()
     , d_fctLib() {
     }
+
+    void addModule(const Module& module);
 
     TypeSystem& types() {
         return d_types;

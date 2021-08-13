@@ -4,28 +4,10 @@
 
 namespace jex {
 
-namespace {
-
-static const struct {
-    TypeId id;
-    const char* name;
-} s_builtIns[] = {
-    {TypeId::Integer, "Integer"},
-    {TypeId::Float, "Float"},
-    {TypeId::Bool, "Bool"},
-    {TypeId::String, "String"},
-};
-
-} // anonymous namespace
-
 TypeSystem::TypeSystem()
 : d_types()
 , d_typesByName()
-, d_unresolved(TypeInfoId(&d_types.emplace_back(TypeId::Unresolved, "_Unresolved"))) {
-    // Register built-ins.
-    for (const auto& bi : s_builtIns) {
-        registerType(bi.id, bi.name);
-    }
+, d_unresolved(TypeInfoId(&d_types.emplace_back(TypeId::Unresolved, "_Unresolved", 0, nullptr))) {
 }
 
 TypeInfoId TypeSystem::getTypeOrUnresolved(std::string_view name) const {
@@ -44,11 +26,11 @@ TypeInfoId TypeSystem::getType(std::string_view name) const {
     return id;
 }
 
-TypeInfoId TypeSystem::registerType(TypeId typeId, std::string name) {
+TypeInfoId TypeSystem::registerType(TypeId typeId, std::string name, size_t size, TypeInfo::CreateTypeFct createTypeFct) {
     if (d_typesByName.find(name) != d_typesByName.end()) {
         throw InternalError("Duplicate type registration for '" + name + "'");
     }
-    TypeInfoId id(&d_types.emplace_back(typeId, std::move(name)));
+    TypeInfoId id(&d_types.emplace_back(typeId, std::move(name), size, createTypeFct));
     auto res = d_typesByName.emplace(id.get().name(), id);
     assert(res.second); (void) res;
     return id;

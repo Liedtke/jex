@@ -27,6 +27,7 @@ class TestParserError : public testing::TestWithParam<TestExp> {};
 
 TEST_P(TestParserError, test) {
     Environment environment;
+    test::registerBuiltIns(environment);
     CompileEnv env(environment);
     TypeInfoId unresolved = env.typeSystem().unresolved();
     env.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", unresolved);
@@ -96,6 +97,7 @@ class TestParserSuccess : public testing::TestWithParam<TestExp> {};
 
 TEST_P(TestParserSuccess, test) {
     Environment environment;
+    test::registerBuiltIns(environment);
     CompileEnv env(environment);
     Parser parser(env, GetParam().first);
     TypeInfoId unresolved = env.typeSystem().unresolved();

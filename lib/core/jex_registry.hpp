@@ -59,8 +59,8 @@ public:
     }
 
     template <typename ArgT>
-    void registerType() {
-        d_types.registerType(ArgT::kind, ArgT::name);
+    void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
+        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), fct);
     }
 
     template <typename FctDescT>
@@ -80,8 +80,8 @@ public:
 class Module {
 public:
     virtual ~Module() = default;
-    virtual void registerTypes(Registry& registry) = 0;
-    virtual void registerFcts(Registry& regitsry) = 0;
+    virtual void registerTypes(Registry& registry) const = 0;
+    virtual void registerFcts(Registry& regitsry) const = 0;
 };
 
 } // namespace jex

@@ -1,3 +1,5 @@
+#include <test_base.hpp>
+
 #include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_registry.hpp>
@@ -72,6 +74,7 @@ TEST(FctLibrary, getFctUnregistered) {
 
 TEST(FctLibrary, getFctSignatureChecks) {
     Environment env;
+    test::registerBuiltIns(env);
     TypeSystem& typeSystem = env.types();
     FctLibrary& fctLibrary = env.fctLib();
     Registry registry(env);

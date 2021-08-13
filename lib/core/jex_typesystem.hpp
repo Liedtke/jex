@@ -36,7 +36,7 @@ public:
      * Registers a new type with given type kind and name. If a type with the same name has already
      * been registered, throws an InternalError.
      */
-    TypeInfoId registerType(TypeId typeId, std::string name);
+    TypeInfoId registerType(TypeId typeId, std::string name, size_t size, TypeInfo::CreateTypeFct createTypeFct = nullptr);
 
     TypeInfoId unresolved() const {
         return d_unresolved;

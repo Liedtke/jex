@@ -68,6 +68,7 @@ public:
     union Value {
         double d_float;
         int64_t d_int;
+        bool d_bool;
         std::string_view d_str;
 
         Value() {}
@@ -86,6 +87,11 @@ public:
     AstLiteralExpr(const Location& loc, TypeInfoId type, std::string_view value)
     : IAstExpression(loc, type) {
         new (&d_value.d_str) std::string_view(value);
+    }
+
+    AstLiteralExpr(const Location& loc, TypeInfoId type, bool value)
+    : IAstExpression(loc, type) {
+        d_value.d_bool = value;
     }
 
     void accept(IAstVisitor& visitor) override {

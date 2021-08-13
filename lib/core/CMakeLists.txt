@@ -2,7 +2,6 @@ set(core_sources
     jex_ast.cpp
     jex_astvisitor.cpp
     jex_basicastvisitor.cpp
-    jex_builtins.cpp
     jex_compileenv.cpp
     jex_environment.cpp
     jex_errorhandling.cpp

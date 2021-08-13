@@ -7,8 +7,8 @@
 namespace jex {
 
 TEST(TypeInfo, idEquals) {
-    TypeInfo a(TypeId::Bool, "Bool");
-    TypeInfo b(TypeId::Bool, "Bool");
+    TypeInfo a(TypeId::Bool, "Bool", 1, nullptr);
+    TypeInfo b(TypeId::Bool, "Bool", 1, nullptr);
     // Equality is based on memory address.
     EXPECT_FALSE(a.id() == b.id());
     EXPECT_TRUE(a.id() != b.id());
@@ -17,17 +17,9 @@ TEST(TypeInfo, idEquals) {
 }
 
 TEST(TypeInfo, getTypeInfoFromId) {
-    TypeInfo ti(TypeId::Bool, "Bool");
+    TypeInfo ti(TypeId::Bool, "Bool", 1, nullptr);
     EXPECT_EQ(&ti, &ti.id().get());
     EXPECT_EQ("Bool", ti.id()->name());
-}
-
-TEST(TypeSystem, getBuiltIns) {
-    TypeSystem ts;
-    EXPECT_EQ("Integer", ts.getType("Integer").get().name());
-    EXPECT_EQ("Float", ts.getType("Float").get().name());
-    EXPECT_EQ("Bool", ts.getType("Bool").get().name());
-    EXPECT_EQ("String", ts.getType("String").get().name());
 }
 
 TEST(TypeSystem, getUnregisteredType) {
@@ -39,6 +31,7 @@ TEST(TypeSystem, getUnregisteredType) {
 
 TEST(TypeSystem, repeatedGetType) {
     TypeSystem ts;
+    ts.registerType(jex::TypeId::Integer, "Integer", 8);
     TypeInfoId id1 = ts.getType("Integer");
     TypeInfoId id2 = ts.getType("Integer");
     EXPECT_TRUE(id1 == id2);

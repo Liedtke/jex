@@ -245,7 +245,7 @@ AstVariableDef* Parser::parseVariableDef() {
     if (type->d_symbol->kind != Symbol::Kind::Type && type->d_symbol->kind != Symbol::Kind::Unresolved) {
         d_env.createError(type->d_loc, "Invalid type: '" + std::string(type->d_name) + "' is not a type");
     }
-    Symbol* defSym = d_env.symbols().addSymbol(name->d_loc, Symbol::Kind::Variable, name->d_name, type->d_resultType);
+    name->d_symbol = d_env.symbols().addSymbol(name->d_loc, Symbol::Kind::Variable, name->d_name, type->d_resultType);
     if (d_currToken.kind != Token::Kind::Assign) {
         throwUnexpected("'='");
     }
@@ -257,7 +257,7 @@ AstVariableDef* Parser::parseVariableDef() {
     getNextToken();
     const Location loc = Location::combine(beginLoc, expr->d_loc);
     AstVariableDef* varDef = d_env.createNode<AstVariableDef>(loc, name, type, expr);
-    defSym->defNode = varDef;
+    name->d_symbol->defNode = varDef;
     return varDef;
 }
 

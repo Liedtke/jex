@@ -1,3 +1,5 @@
+#include <test_base.hpp>
+
 #include <jex_ast.hpp>
 #include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
@@ -29,6 +31,7 @@ protected:
 
 public:
     TestTypeInference() {
+        test::registerBuiltIns(d_env);
         Registry registry(d_env);
         registry.registerType<ArgUInt32>();
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));

@@ -22,8 +22,8 @@ using ArgBool = Arg<bool, BoolName, TypeId::Bool>;
  * Defines a module containing the built-in types and functions.
  */
 class BuiltInsModule : public Module {
-    void registerTypes(Registry& registry);
-    void registerFcts(Registry& registry);
+    void registerTypes(Registry& registry) const;
+    void registerFcts(Registry& registry) const;
 };
 
 } // namespace jex

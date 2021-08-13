@@ -6,6 +6,7 @@ llvm_map_components_to_libnames(
 )
 
 set(codegen_sources
+    jex_builtins.cpp
     jex_codegen.cpp
     jex_codegenvisitor.cpp
     jex_codemodule.cpp
