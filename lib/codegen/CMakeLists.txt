@@ -2,10 +2,13 @@ find_package(LLVM REQUIRED CONFIG)
 
 add_definitions(${LLVM_DEFINITIONS})
 llvm_map_components_to_libnames(
-    llvm_libs support core irreader target
+    llvm_libs core irreader
+    target native nativecodegen
+    orcjit
 )
 
 set(codegen_sources
+    jex_backend.cpp
     jex_builtins.cpp
     jex_codegen.cpp
     jex_codegenvisitor.cpp

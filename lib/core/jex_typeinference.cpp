@@ -29,6 +29,10 @@ static const char* opTypeToString(OpType op) {
     throw InternalError("Unsupported operator in TypeInference::opTypeToString"); // LCOV_EXCL_LINE
 }
 
+void TypeInference::run() {
+    d_env.getRoot()->accept(*this);
+}
+
 void TypeInference::visit(AstLiteralExpr& node) {
     BasicAstVisitor::visit(node);
     // Literals are already resolved by the Parser.

@@ -13,8 +13,8 @@ CodeGen::CodeGen(CompileEnv& env)
 CodeGen::~CodeGen() {
 }
 
-const llvm::Module* CodeGen::getLlvmModule() const {
-    return &d_module->d_llvmModule;
+const llvm::Module& CodeGen::getLlvmModule() const {
+    return d_module->llvmModule();
 }
 
 void CodeGen::createIR() {

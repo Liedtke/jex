@@ -22,7 +22,11 @@ public:
 
     void createIR();
 
-    const llvm::Module* getLlvmModule() const;
+    const llvm::Module& getLlvmModule() const;
+
+    std::unique_ptr<CodeModule> releaseModule() {
+        return std::move(d_module);
+    }
 };
 
 } // namespace jex

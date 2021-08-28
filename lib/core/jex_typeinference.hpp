@@ -24,6 +24,8 @@ public:
     void visit(AstBinaryExpr& node) override;
     void visit(AstVariableDef& node) override;
 
+    void run();
+
 private:
     const FctInfo* resolveFct(IAstExpression& node, std::string_view name, const std::vector<TypeInfoId>& paramTypes);
 };

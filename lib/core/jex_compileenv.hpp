@@ -34,6 +34,9 @@ class CompileEnv : NoCopy {
     const FctLibrary& d_fctLibrary;
     std::unique_ptr<SymbolTable> d_symbolTable;
     std::deque<std::string> d_stringLiterals;
+
+    // Size of the runtime context.
+    std::optional<size_t> d_contextSize;
 public:
     CompileEnv(const Environment& env);
     ~CompileEnv();
@@ -70,6 +73,15 @@ public:
 
     SymbolTable& symbols() {
         return *d_symbolTable;
+    }
+
+    void setContextSize(size_t size) {
+        d_contextSize = size;
+    }
+
+    size_t getContextSize() const {
+        assert(d_contextSize);
+        return d_contextSize.value();
     }
 
     const TypeSystem& typeSystem() const {

@@ -8,13 +8,15 @@
 #include <jex_registry.hpp>
 #include <jex_typeinference.hpp>
 
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/raw_ostream.h"
 
 #include <gtest/gtest.h>
 
 namespace jex {
 
-TEST(Codgen, empty) {
+TEST(Codegen, empty) {
     Environment env;
     CompileEnv compileEnv(env);
     Parser parser(compileEnv, "");
@@ -26,13 +28,13 @@ TEST(Codgen, empty) {
     // print module
     std::string result;
     llvm::raw_string_ostream irstream(result);
-    irstream << *codeGen.getLlvmModule();
+    irstream << codeGen.getLlvmModule();
     ASSERT_EQ("; ModuleID = 'test'\n"
               "source_filename = \"test\"\n",
               result);
 }
 
-TEST(Codgen, simpleVarDef) {
+TEST(Codegen, simpleVarDef) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
@@ -47,7 +49,7 @@ TEST(Codgen, simpleVarDef) {
     // print module
     std::string result;
     llvm::raw_string_ostream irstream(result);
-    irstream << *codeGen.getLlvmModule();
+    irstream << codeGen.getLlvmModule();
     const char* expected =
 R"IR(; ModuleID = 'test'
 source_filename = "test"

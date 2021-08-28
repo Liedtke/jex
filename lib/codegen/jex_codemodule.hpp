@@ -3,20 +3,31 @@
 #include <jex_base.hpp>
 #include <jex_compileenv.hpp>
 
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
+namespace llvm {
+    class LLVMContext;
+    class Module;
+}
 
 namespace jex {
 
 class CodeModule : NoCopy {
-public:
-    llvm::LLVMContext d_llvmContext;
-    llvm::Module d_llvmModule;
+    std::unique_ptr<llvm::LLVMContext> d_llvmContext;
+    std::unique_ptr<llvm::Module> d_llvmModule;
 
-    CodeModule(const CompileEnv& env)
-    : d_llvmContext()
-    , d_llvmModule(env.fileName(), d_llvmContext) {
+public:
+    CodeModule(const CompileEnv& env);
+    ~CodeModule();
+
+    llvm::LLVMContext& llvmContext() {
+        return *d_llvmContext;
     }
+
+    llvm::Module& llvmModule() {
+        return *d_llvmModule;
+    }
+
+    std::unique_ptr<llvm::LLVMContext> releaseContext();
+    std::unique_ptr<llvm::Module> releaseModule();
 };
 
 } // namespace jex
