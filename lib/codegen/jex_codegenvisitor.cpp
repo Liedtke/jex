@@ -3,13 +3,15 @@
 #include <jex_ast.hpp>
 #include <jex_codemodule.hpp>
 #include <jex_errorhandling.hpp>
+#include <jex_fctinfo.hpp>
 #include <jex_symboltable.hpp>
 
 #include <set>
+#include <sstream>
 
 namespace jex {
 
-llvm::StringRef toLlvm(std::string_view str) {
+static llvm::StringRef toLlvm(std::string_view str) {
     return llvm::StringRef(str.data(), str.length());
 }
 
@@ -111,6 +113,29 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
         default:
             d_env.throwError(node.d_loc, "Literal not supported by code generation");
     }
+}
+
+void CodeGenVisitor::visit(AstBinaryExpr& node) {
+    // Generate argument evaluation.
+    llvm::Value* lhs = visitExpression(*node.d_lhs);
+    llvm::Value* rhs = visitExpression(*node.d_rhs);
+    // Generate alloca to store the result.
+    llvm::Type* resType = getType(node.d_resultType);
+    llvm::Value* res = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
+    // Declare the C function.
+    llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
+    std::vector<llvm::Type*> params;
+    // TODO: Design proper calling conventions.
+    params.push_back(getType(node.d_fctInfo->d_retType)->getPointerTo());
+    for (TypeInfoId paramType : node.d_fctInfo->d_paramTypes) {
+        params.push_back(getType(paramType));
+    }
+    llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
+    llvm::Value* fct = d_module->llvmModule().getOrInsertFunction(node.d_fctInfo->d_mangledName, fctType).getCallee();
+    d_env.addFctUsage(node.d_fctInfo);
+    // Call the function.
+    d_builder->CreateCall(fctType, fct, {res, lhs, rhs});
+    d_result = d_builder->CreateLoad(res);
 }
 
 } // namespace jex

@@ -33,8 +33,8 @@ void BuiltInsModule::registerTypes(Registry& registry) const {
 }
 
 void BuiltInsModule::registerFcts(Registry& registry) const {
-    registry.registerFct(FctDesc<ArgInteger, ArgInteger, ArgInteger>(add, "add"));
-    registry.registerFct(FctDesc<ArgFloat, ArgFloat, ArgFloat>(add, "add"));
+    registry.registerFct(FctDesc<ArgInteger, ArgInteger, ArgInteger>(add, "operator_add"));
+    registry.registerFct(FctDesc<ArgFloat, ArgFloat, ArgFloat>(add, "operator_add"));
 }
 
 } // namespace jex

@@ -36,11 +36,11 @@ public:
         registry.registerType<ArgUInt32>();
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "add"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator+"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator-"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator*"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator/"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator%"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_add"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_sub"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_mul"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_div"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_mod"));
     }
 
     void SetUp() override {
@@ -113,7 +113,7 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverload) {
     ASSERT_EQ(1, d_compileEnv->messages().size());
     std::stringstream err;
     err << *d_compileEnv->messages().begin();
-    ASSERT_EQ("1.17-1.21: Error: No matching candidate found for function 'operator+(UInt32, Integer)'", err.str());
+    ASSERT_EQ("1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'", err.str());
 }
 
 TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
@@ -129,8 +129,8 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
     ++iter;
     err << *iter;
     ASSERT_EQ(
-        "1.17-1.21: Error: No matching candidate found for function 'operator+(UInt32, Integer)'\n"
-        "1.26-1.30: Error: No matching candidate found for function 'operator+(Integer, UInt32)'",
+        "1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'\n"
+        "1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'",
         err.str());
 }
 

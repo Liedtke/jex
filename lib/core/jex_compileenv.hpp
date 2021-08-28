@@ -4,9 +4,10 @@
 
 #include <cassert>
 #include <deque>
+#include <memory>
+#include <unordered_set>
 #include <set>
 #include <string>
-#include <memory>
 
 namespace jex {
 
@@ -18,6 +19,7 @@ class SymbolTable;
 class TypeSystem;
 class FctLibrary;
 class Environment;
+class FctInfo;
 
 /**
  * Stores and provides access to any object needed during compilation.
@@ -34,6 +36,7 @@ class CompileEnv : NoCopy {
     const FctLibrary& d_fctLibrary;
     std::unique_ptr<SymbolTable> d_symbolTable;
     std::deque<std::string> d_stringLiterals;
+    std::unordered_set<const FctInfo*> d_usedFcts;
 
     // Size of the runtime context.
     std::optional<size_t> d_contextSize;
@@ -90,6 +93,14 @@ public:
 
     const FctLibrary& fctLibrary() const {
         return d_fctLibrary;
+    }
+
+    void addFctUsage(const FctInfo* fct) {
+        d_usedFcts.insert(fct);
+    }
+
+    const std::unordered_set<const FctInfo*>& usedFcts() const {
+        return d_usedFcts;
     }
 
     std::string_view createStringLiteral(std::string_view str);

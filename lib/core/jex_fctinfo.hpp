@@ -16,6 +16,7 @@ public:
     using FctWrapper = void(*)(void* fctPtr, void** args);
 
     std::string d_name;
+    std::string d_mangledName;
     void* d_fctPtr;
     FctWrapper d_fctWrapper;
     TypeInfoId d_retType;

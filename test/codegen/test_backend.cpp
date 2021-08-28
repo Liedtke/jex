@@ -45,4 +45,28 @@ TEST(Backend, simpleVarDef) {
     ASSERT_THROW(backend.getFctPtr("c"), InternalError);
 }
 
+TEST(Backend, simpleCall) {
+    Backend::initialize();
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : Integer = 123 + 5 + 2;");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    typeInference.run();
+    CodeGen codeGen(compileEnv);
+    codeGen.createIR();
+    Backend backend(compileEnv);
+    ASSERT_LE(8, compileEnv.getContextSize());
+    auto ctx = std::make_unique<char[]>(compileEnv.getContextSize());
+    backend.jit(codeGen.releaseModule());
+    { // Evaluate a.
+        const uintptr_t fctAddr = backend.getFctPtr("a");
+        ASSERT_NE(0, fctAddr);
+        auto fctA = reinterpret_cast<int64_t* (*)(char*)>(fctAddr);
+        ASSERT_EQ(130, *fctA(ctx.get()));
+    }
+}
+
 } // namespace jex

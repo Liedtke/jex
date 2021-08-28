@@ -4,12 +4,23 @@
 
 namespace jex {
 
+static std::string createMangledName(const FctInfo* fctInfo) {
+    std::string name("_");
+    name += fctInfo->d_name;
+    for (TypeInfoId type : fctInfo->d_paramTypes) {
+        name += "_" + type->name();
+    }
+    return name;
+}
+
 FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType, std::vector<TypeInfoId> params)
 : d_name(std::move(name))
+, d_mangledName()
 , d_fctPtr(fctPtr)
 , d_fctWrapper(fctWrapper)
 , d_retType(retType)
 , d_paramTypes(std::move(params)) {
+    d_mangledName = createMangledName(this);
 }
 
 bool FctInfo::matches(const std::vector<TypeInfoId>& params) const {

@@ -77,4 +77,42 @@ entry:
     ASSERT_EQ(expected, result);
 }
 
+TEST(Codegen, operatorCall) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : Integer = 123 + 5;");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    compileEnv.getRoot()->accept(typeInference);
+    CodeGen codeGen(compileEnv);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%Rctx = type opaque
+
+define i64* @a(%Rctx* %rctx) {
+entry:
+  %res_operator_add = alloca i64, align 8
+  call void @_operator_add_Integer_Integer(i64* %res_operator_add, i64 123, i64 5)
+  %0 = load i64, i64* %res_operator_add, align 4
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to i64*
+  store i64 %0, i64* %varPtrTyped, align 4
+  ret i64* %varPtrTyped
+}
+
+declare void @_operator_add_Integer_Integer(i64*, i64, i64)
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
 } // namespace jex

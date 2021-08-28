@@ -16,15 +16,15 @@ namespace jex {
 static const char* opTypeToString(OpType op) {
     switch (op) {
         case OpType::Add:
-            return "operator+";
+            return "operator_add";
         case OpType::Sub:
-            return "operator-";
+            return "operator_sub";
         case OpType::Mul:
-            return "operator*";
+            return "operator_mul";
         case OpType::Div:
-            return "operator/";
+            return "operator_div";
         case OpType::Mod:
-            return "operator%";
+            return "operator_mod";
     }
     throw InternalError("Unsupported operator in TypeInference::opTypeToString"); // LCOV_EXCL_LINE
 }
