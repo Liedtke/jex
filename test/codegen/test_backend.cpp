@@ -4,6 +4,7 @@
 #include <jex_codemodule.hpp>
 #include <jex_compileenv.hpp>
 #include <jex_environment.hpp>
+#include <jex_errorhandling.hpp>
 #include <jex_parser.hpp>
 #include <jex_typeinference.hpp>
 
@@ -40,6 +41,8 @@ TEST(Backend, simpleVarDef) {
         auto fctA = reinterpret_cast<double* (*)(char*)>(fctAddr);
         ASSERT_DOUBLE_EQ(123.456, *fctA(ctx.get()));
     }
+    // c does not exist
+    ASSERT_THROW(backend.getFctPtr("c"), InternalError);
 }
 
 } // namespace jex
