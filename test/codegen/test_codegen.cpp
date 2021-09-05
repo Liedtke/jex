@@ -23,7 +23,7 @@ TEST(Codegen, empty) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     compileEnv.getRoot()->accept(typeInference);
-    CodeGen codeGen(compileEnv);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
     std::string result;
@@ -44,7 +44,7 @@ TEST(Codegen, simpleVarDef) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     compileEnv.getRoot()->accept(typeInference);
-    CodeGen codeGen(compileEnv);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
     std::string result;
@@ -86,7 +86,7 @@ TEST(Codegen, operatorCall) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     compileEnv.getRoot()->accept(typeInference);
-    CodeGen codeGen(compileEnv);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
     std::string result;
@@ -129,7 +129,7 @@ TEST(Codegen, operatorCallNoIntrinsic) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     compileEnv.getRoot()->accept(typeInference);
-    CodeGen codeGen(compileEnv);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
     std::string result;
@@ -154,6 +154,40 @@ entry:
 }
 
 declare void @_operator_add_Float_Float(double*, double, double)
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
+TEST(Codegen, operatorCallOptimized) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : Integer = 123 + 5 + (3 + 8);");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    compileEnv.getRoot()->accept(typeInference);
+    CodeGen codeGen(compileEnv, OptLevel::O3);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%Rctx = type opaque
+
+; Function Attrs: nofree norecurse nounwind
+define i64* @a(%Rctx* %rctx) local_unnamed_addr #0 {
+entry:
+  %varPtrTyped = bitcast %Rctx* %rctx to i64*
+  store i64 139, i64* %varPtrTyped, align 4
+  ret i64* %varPtrTyped
+}
+
+attributes #0 = { nofree norecurse nounwind }
 )IR";
     ASSERT_EQ(expected, result);
 }

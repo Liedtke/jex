@@ -23,7 +23,7 @@ TEST(Backend, simpleVarDef) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    CodeGen codeGen(compileEnv);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     Backend backend(compileEnv);
     ASSERT_LE(16, compileEnv.getContextSize());
@@ -54,7 +54,7 @@ TEST(Backend, simpleCall) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    CodeGen codeGen(compileEnv);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     Backend backend(compileEnv);
     ASSERT_LE(8, compileEnv.getContextSize());
