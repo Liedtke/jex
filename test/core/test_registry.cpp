@@ -48,20 +48,20 @@ TEST(Registry, registerFct) {
     registry.registerType<ArgUInt32>();
     registry.registerType<ArgBool>();
     // register function
-    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass));
     // register with different name
-    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass2"));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass2", pass));
     // register with duplicate name
-    ASSERT_THROW(registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass")), InternalError);
+    ASSERT_THROW(registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass)), InternalError);
     // register different function with same name (overload)
-    registry.registerFct(FctDesc<ArgBool, ArgBool>(passBool, "pass"));
+    registry.registerFct(FctDesc<ArgBool, ArgBool>("pass", passBool));
 }
 
 TEST(Registry, registerFctUnregisteredType) {
     Environment env;
     Registry registry(env);
     // ArgUInt32 not registered.
-    ASSERT_THROW(registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass")), InternalError);
+    ASSERT_THROW(registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass)), InternalError);
 }
 
 TEST(FctLibrary, getFctUnregistered) {
@@ -80,7 +80,7 @@ TEST(FctLibrary, getFctSignatureChecks) {
     Registry registry(env);
     registry.registerType<ArgUInt32>();
     registry.registerType<ArgBool>();
-    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass));
 
     TypeInfoId typeUInt32 = typeSystem.getType("UInt32");
     TypeInfoId typeBool = typeSystem.getType("Bool");

@@ -2,7 +2,9 @@
 
 #include <jex_ast.hpp>
 #include <jex_codemodule.hpp>
+#include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
+#include <jex_intrinsicgen.hpp>
 #include <jex_fctinfo.hpp>
 #include <jex_symboltable.hpp>
 
@@ -115,6 +117,35 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
     }
 }
 
+llvm::FunctionCallee CodeGenVisitor::getOrCreateFct(const FctInfo* fctInfo) {
+    // Declare the C function.
+    llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
+    std::vector<llvm::Type*> params;
+    // TODO: Design proper calling conventions.
+    params.push_back(getType(fctInfo->d_retType)->getPointerTo());
+    for (TypeInfoId paramType : fctInfo->d_paramTypes) {
+        params.push_back(getType(paramType));
+    }
+    llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
+    // TODO: Check for optimizer settings whether intrinsics should be used.
+    if (fctInfo->d_intrinsicFct) {
+        // Generate and insert intrinsic function.
+        llvm::Function* fct = d_module->llvmModule().getFunction(fctInfo->d_intrinsicName);
+        if (fct == nullptr) {
+            // Generate intrinsic.
+            fct = llvm::Function::Create(
+        fctType, llvm::GlobalValue::LinkageTypes::InternalLinkage, fctInfo->d_intrinsicName, d_module->llvmModule());
+            IntrinsicGen intrinsicGen(*d_module, *fct);
+            fctInfo->d_intrinsicFct(intrinsicGen);
+        }
+        return fct;
+    } else {
+        // Generate C function call.
+        d_env.addFctUsage(fctInfo);
+        return d_module->llvmModule().getOrInsertFunction(fctInfo->d_mangledName, fctType);
+    }
+}
+
 void CodeGenVisitor::visit(AstBinaryExpr& node) {
     // Generate argument evaluation.
     llvm::Value* lhs = visitExpression(*node.d_lhs);
@@ -122,19 +153,9 @@ void CodeGenVisitor::visit(AstBinaryExpr& node) {
     // Generate alloca to store the result.
     llvm::Type* resType = getType(node.d_resultType);
     llvm::Value* res = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
-    // Declare the C function.
-    llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
-    std::vector<llvm::Type*> params;
-    // TODO: Design proper calling conventions.
-    params.push_back(getType(node.d_fctInfo->d_retType)->getPointerTo());
-    for (TypeInfoId paramType : node.d_fctInfo->d_paramTypes) {
-        params.push_back(getType(paramType));
-    }
-    llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
-    llvm::Value* fct = d_module->llvmModule().getOrInsertFunction(node.d_fctInfo->d_mangledName, fctType).getCallee();
-    d_env.addFctUsage(node.d_fctInfo);
+    llvm::FunctionCallee fct = getOrCreateFct(node.d_fctInfo);
     // Call the function.
-    d_builder->CreateCall(fctType, fct, {res, lhs, rhs});
+    d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), {res, lhs, rhs});
     d_result = d_builder->CreateLoad(res);
 }
 

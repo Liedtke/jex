@@ -50,8 +50,7 @@ TEST(Backend, simpleCall) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
-    Parser parser(compileEnv,
-    "var a : Integer = 123 + 5 + 2;");
+    Parser parser(compileEnv, "var a : Integer = 123 + 5 * (2 + 1);");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -65,7 +64,7 @@ TEST(Backend, simpleCall) {
         const uintptr_t fctAddr = backend.getFctPtr("a");
         ASSERT_NE(0, fctAddr);
         auto fctA = reinterpret_cast<int64_t* (*)(char*)>(fctAddr);
-        ASSERT_EQ(130, *fctA(ctx.get()));
+        ASSERT_EQ(138, *fctA(ctx.get()));
     }
 }
 

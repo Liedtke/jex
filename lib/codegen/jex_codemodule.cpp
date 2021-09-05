@@ -1,4 +1,5 @@
 #include <jex_codemodule.hpp>
+#include <jex_compileenv.hpp>
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"

@@ -21,9 +21,11 @@ struct Arg {
 template<typename ArgRet, typename... ArgT>
 struct FctDesc {
     using FctType = void(*)(typename ArgRet::retType, typename ArgT::type...);
+    using IntrinsicFct = FctInfo::IntrinsicFct;
 
-    FctType fctPtr;
     std::string name;
+    FctType fctPtr;
+    IntrinsicFct intrinsicFct;
     std::string retTypeName;
     std::vector<std::string> argTypeNames;
 
@@ -40,9 +42,10 @@ struct FctDesc {
         wrapperInner(reinterpret_cast<FctType>(fct), args, std::index_sequence_for<ArgT...>());
     }
 
-    FctDesc(FctType fctPtr, std::string name)
-    : fctPtr(fctPtr)
-    , name(std::move(name))
+    FctDesc(std::string name, FctType fctPtr, IntrinsicFct intrinsicFct = nullptr)
+    : name(std::move(name))
+    , fctPtr(fctPtr)
+    , intrinsicFct(std::move(intrinsicFct))
     , retTypeName(ArgRet::name)
     , argTypeNames{ArgT::name...} {
     }
@@ -63,8 +66,8 @@ public:
         d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), fct);
     }
 
-    template <typename FctDescT>
-    void registerFct(FctDescT&& desc) {
+    template <typename ...T>
+    void registerFct(FctDesc<T...>&& desc) {
         // Resolve return and parameter types.
         TypeInfoId retTypeInfo = d_types.getType(desc.retTypeName);
         std::vector<TypeInfoId> paramTypeInfos;
@@ -73,7 +76,7 @@ public:
             [this](const std::string& name) { return d_types.getType(name); });
         // Add function to function library.
         d_fcts.registerFct(FctInfo(desc.name, reinterpret_cast<void*>(desc.fctPtr),
-                           FctDescT::wrapper, retTypeInfo, paramTypeInfos));
+                           FctDesc<T...>::wrapper, retTypeInfo, paramTypeInfos, desc.intrinsicFct));
     }
 };
 

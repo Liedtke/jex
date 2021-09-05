@@ -34,13 +34,13 @@ public:
         test::registerBuiltIns(d_env);
         Registry registry(d_env);
         registry.registerType<ArgUInt32>();
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>(pass, "pass"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "add"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_add"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_sub"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_mul"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_div"));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>(add, "operator_mod"));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("add", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_add", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_sub", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mul", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_div", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mod", add));
     }
 
     void SetUp() override {

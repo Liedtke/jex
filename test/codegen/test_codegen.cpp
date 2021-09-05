@@ -101,7 +101,7 @@ source_filename = "test"
 define i64* @a(%Rctx* %rctx) {
 entry:
   %res_operator_add = alloca i64, align 8
-  call void @_operator_add_Integer_Integer(i64* %res_operator_add, i64 123, i64 5)
+  call void @_operator_add_Integer_Integer__intrinsic(i64* %res_operator_add, i64 123, i64 5)
   %0 = load i64, i64* %res_operator_add, align 4
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
@@ -110,7 +110,50 @@ entry:
   ret i64* %varPtrTyped
 }
 
-declare void @_operator_add_Integer_Integer(i64*, i64, i64)
+define internal void @_operator_add_Integer_Integer__intrinsic(i64* %0, i64 %1, i64 %2) {
+entry:
+  %result = add i64 %1, %2
+  store i64 %result, i64* %0, align 4
+  ret void
+}
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
+TEST(Codegen, operatorCallNoIntrinsic) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : Float = 123.2 + 5.5;");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    compileEnv.getRoot()->accept(typeInference);
+    CodeGen codeGen(compileEnv);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%Rctx = type opaque
+
+define double* @a(%Rctx* %rctx) {
+entry:
+  %res_operator_add = alloca double, align 8
+  call void @_operator_add_Float_Float(double* %res_operator_add, double 1.232000e+02, double 5.500000e+00)
+  %0 = load double, double* %res_operator_add, align 8
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to double*
+  store double %0, double* %varPtrTyped, align 8
+  ret double* %varPtrTyped
+}
+
+declare void @_operator_add_Float_Float(double*, double, double)
 )IR";
     ASSERT_EQ(expected, result);
 }

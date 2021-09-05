@@ -1,7 +1,8 @@
 #pragma once
 
 #include <jex_base.hpp>
-#include <jex_compileenv.hpp>
+
+#include <memory>
 
 namespace llvm {
     class LLVMContext;
@@ -9,6 +10,8 @@ namespace llvm {
 }
 
 namespace jex {
+
+class CompileEnv;
 
 class CodeModule : NoCopy {
     std::unique_ptr<llvm::LLVMContext> d_llvmContext;

@@ -13,6 +13,7 @@ namespace jex {
 
 class CodeModule;
 class CompileEnv;
+class FctInfo;
 struct Symbol;
 
 class CodeGenVisitor : private BasicAstVisitor, NoCopy {
@@ -41,6 +42,7 @@ private:
     llvm::Value* visitExpression(IAstExpression& node);
     llvm::Value* getVarPtr(Symbol* varSym);
     llvm::Type* getType(TypeInfoId type);
+    llvm::FunctionCallee getOrCreateFct(const FctInfo* fctInfo);
 };
 
 } // namespace jex
