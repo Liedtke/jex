@@ -37,6 +37,7 @@ private:
     Token& getNextToken();
     IAstExpression* parsePrimary();
     IAstExpression* parseBinOpRhs(int prec, IAstExpression* lhs);
+    AstLiteralExpr* parseLiteralBool();
     AstLiteralExpr* parseLiteralInt();
     AstLiteralExpr* parseLiteralFloat();
     AstLiteralExpr* parseLiteralString();

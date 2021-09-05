@@ -172,6 +172,10 @@ static TestExp successTests[] = {
      "var a: Type = \"Hello\nWorld!\";\n"},
     {"var a: Type = 123;\nvar b: Type = a;",
      "var a: Type = 123;\nvar b: Type = a;\n"},
+    {"var a: Type = true;",
+     "var a: Type = true;\n"},
+    {"var a: Type = false;",
+     "var a: Type = false;\n"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

@@ -9,6 +9,9 @@ namespace jex {
 
 void PrettyPrinter::visit(AstLiteralExpr& node) {
     switch (node.d_resultType->kind()) {
+        case TypeId::Bool:
+            d_str << (node.d_value.d_bool ? "true" : "false");
+            break;
         case TypeId::Float:
             d_str << node.d_value.d_float;
             break;

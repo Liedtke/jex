@@ -18,6 +18,7 @@ public:
         Invalid,
         Eof,
         Ident,
+        LiteralBool,
         LiteralInt,
         LiteralFloat,
         LiteralString,

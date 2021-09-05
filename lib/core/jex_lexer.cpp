@@ -17,6 +17,8 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "identifier '" << token.text << '\'';
         case Token::Kind::Invalid:
             return str << "invalid token '" << token.text << "'";
+        case Token::Kind::LiteralBool:
+            return str << "bool literal '" << token.text << '\'';
         case Token::Kind::LiteralInt:
             return str << "integer literal '" << token.text << '\'';
         case Token::Kind::LiteralFloat:
@@ -177,12 +179,15 @@ Token Lexer::getNext() {
 
         // parse identifier: [A-Za-z][A-Za-z0-9_]
         if (std::isalpha(*d_cursor)) {
-            if (*d_cursor == 'v' && advance() == 'a' && advance() == 'r') {
-                advance(); // consume 'r'
-                return setToken(Token::Kind::Var);
-            }
             while(std::isalnum(*d_cursor) || *d_cursor == '_') {
                 advance();
+            }
+            std::string_view text = std::string_view(d_tokenBegin, d_cursor - d_tokenBegin);
+            if (text == "var") {
+                return setToken(Token::Kind::Var);
+            }
+            if (text == "true" || text == "false") {
+                return setToken(Token::Kind::LiteralBool);
             }
             return setToken(Token::Kind::Ident);
         }

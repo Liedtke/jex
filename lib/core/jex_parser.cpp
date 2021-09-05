@@ -143,6 +143,8 @@ IAstExpression* Parser::parseIdentOrCall() {
 
 IAstExpression* Parser::parsePrimary() {
     switch (d_currToken.kind) {
+        case Token::Kind::LiteralBool:
+            return parseLiteralBool();
         case Token::Kind::LiteralInt:
             return parseLiteralInt();
         case Token::Kind::LiteralFloat:
@@ -218,8 +220,18 @@ AstLiteralExpr* Parser::parseLiteralFloat() {
 }
 
 AstLiteralExpr* Parser::parseLiteralString() {
+    assert(d_currToken.kind == Token::Kind::LiteralString);
     TypeInfoId type = d_env.typeSystem().getType("String");
     AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, type, d_currToken.text);
+    getNextToken(); // consume literal
+    return res;
+}
+
+AstLiteralExpr* Parser::parseLiteralBool() {
+    assert(d_currToken.kind == Token::Kind::LiteralBool);
+    const bool value = d_currToken.text == "true";
+    TypeInfoId type = d_env.typeSystem().getType("Bool");
+    AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, type, value);
     getNextToken(); // consume literal
     return res;
 }

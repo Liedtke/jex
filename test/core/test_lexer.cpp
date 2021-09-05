@@ -124,6 +124,9 @@ static TestSingleToken tokenTests[] = {
     {" ; ", Token{Token::Kind::Semicolon, Location{{1, 2}, {1, 2}}, ";"}},
     {" = ", Token{Token::Kind::Assign, Location{{1, 2}, {1, 2}}, "="}},
     {" var ", Token{Token::Kind::Var, Location{{1, 2}, {1, 4}}, "var"}},
+    {" varx ", Token{Token::Kind::Ident, Location{{1, 2}, {1, 5}}, "varx"}},
+    {" true ", Token{Token::Kind::LiteralBool, Location{{1, 2}, {1, 5}}, "true"}},
+    {" false ", Token{Token::Kind::LiteralBool, Location{{1, 2}, {1, 6}}, "false"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTokens,
