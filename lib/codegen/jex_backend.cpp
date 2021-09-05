@@ -36,6 +36,7 @@ static T checked(llvm::Expected<T> expectedObj, const char* errPrefix) {
 
 Backend::Backend(CompileEnv& env)
 : d_env(env) {
+    initialize();
 }
 
 Backend::~Backend() {

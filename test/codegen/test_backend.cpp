@@ -13,7 +13,6 @@
 namespace jex {
 
 TEST(Backend, simpleVarDef) {
-    Backend::initialize();
     Environment env;
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
@@ -46,7 +45,6 @@ TEST(Backend, simpleVarDef) {
 }
 
 TEST(Backend, simpleCall) {
-    Backend::initialize();
     Environment env;
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
