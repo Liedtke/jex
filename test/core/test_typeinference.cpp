@@ -54,7 +54,7 @@ TEST_F(TestTypeInference, resolveFct) {
     Parser parser(*d_compileEnv, "var a: UInt32 = pass(x);");
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
-    d_compileEnv->getRoot()->accept(typeInference);
+    typeInference.run();
     ASSERT_FALSE(d_compileEnv->hasErrors());
 }
 
@@ -63,36 +63,42 @@ TEST_F(TestTypeInference, resolveFctInvalidOverload) {
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
     // TODO: Should the type inference throw in case of errors?
-    d_compileEnv->getRoot()->accept(typeInference);
-    ASSERT_EQ(1, d_compileEnv->messages().size());
-    std::stringstream err;
-    err << *d_compileEnv->messages().begin();
-    ASSERT_EQ("1.17-1.22: Error: No matching candidate found for function 'pass()'", err.str());
+    try {
+        typeInference.run();
+    } catch (const CompileError&) {
+        ASSERT_EQ(1, d_compileEnv->messages().size());
+        std::stringstream err;
+        err << *d_compileEnv->messages().begin();
+        ASSERT_EQ("1.17-1.22: Error: No matching candidate found for function 'pass()'", err.str());
+    }
 }
 
 TEST_F(TestTypeInference, resolveFctInvalidOverloadRepeated) {
     Parser parser(*d_compileEnv, "var a: UInt32 = add(pass(pass()), add());");
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
-    d_compileEnv->getRoot()->accept(typeInference);
-    // Only the inner errors gets reported as the outer ones are only follow-up errors.
-    ASSERT_EQ(2, d_compileEnv->messages().size());
-    std::stringstream err;
-    auto iter = d_compileEnv->messages().begin();
-    err << *iter << '\n';
-    ++iter;
-    err << *iter;
-    ASSERT_EQ(
-        "1.26-1.31: Error: No matching candidate found for function 'pass()'\n"
-        "1.35-1.39: Error: No matching candidate found for function 'add()'",
-        err.str());
+    try {
+        typeInference.run();
+    } catch (const CompileError&) {
+        // Only the inner errors gets reported as the outer ones are only follow-up errors.
+        ASSERT_EQ(2, d_compileEnv->messages().size());
+        std::stringstream err;
+        auto iter = d_compileEnv->messages().begin();
+        err << *iter << '\n';
+        ++iter;
+        err << *iter;
+        ASSERT_EQ(
+            "1.26-1.31: Error: No matching candidate found for function 'pass()'\n"
+            "1.35-1.39: Error: No matching candidate found for function 'add()'",
+            err.str());
+    }
 }
 
 TEST_F(TestTypeInference, resolveOperator) {
     Parser parser(*d_compileEnv, "var a: UInt32 = x + x;");
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
-    d_compileEnv->getRoot()->accept(typeInference);
+    typeInference.run();
     ASSERT_FALSE(d_compileEnv->hasErrors());
 }
 
@@ -100,7 +106,7 @@ TEST_F(TestTypeInference, resolveOperatorAll) {
     Parser parser(*d_compileEnv, "var a: UInt32 = x + x - x * x / x % x;");
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
-    d_compileEnv->getRoot()->accept(typeInference);
+    typeInference.run();
     ASSERT_FALSE(d_compileEnv->hasErrors());
 }
 
@@ -108,30 +114,35 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverload) {
     Parser parser(*d_compileEnv, "var a: UInt32 = x + 1;");
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
-    // TODO: Should the type inference throw in case of errors?
-    d_compileEnv->getRoot()->accept(typeInference);
-    ASSERT_EQ(1, d_compileEnv->messages().size());
-    std::stringstream err;
-    err << *d_compileEnv->messages().begin();
-    ASSERT_EQ("1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'", err.str());
+    try {
+        typeInference.run();
+    } catch (const CompileError&) {
+        ASSERT_EQ(1, d_compileEnv->messages().size());
+        std::stringstream err;
+        err << *d_compileEnv->messages().begin();
+        ASSERT_EQ("1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'", err.str());
+    }
 }
 
 TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
     Parser parser(*d_compileEnv, "var a: UInt32 = x + 1 + (1 + x);");
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
-    d_compileEnv->getRoot()->accept(typeInference);
-    // Only the inner errors gets reported as the outer ones are only follow-up errors.
-    ASSERT_EQ(2, d_compileEnv->messages().size());
-    std::stringstream err;
-    auto iter = d_compileEnv->messages().begin();
-    err << *iter << '\n';
-    ++iter;
-    err << *iter;
-    ASSERT_EQ(
-        "1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'\n"
-        "1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'",
-        err.str());
+    try {
+        typeInference.run();
+    } catch (const CompileError&) {
+        // Only the inner errors gets reported as the outer ones are only follow-up errors.
+        ASSERT_EQ(2, d_compileEnv->messages().size());
+        std::stringstream err;
+        auto iter = d_compileEnv->messages().begin();
+        err << *iter << '\n';
+        ++iter;
+        err << *iter;
+        ASSERT_EQ(
+            "1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'\n"
+            "1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'",
+            err.str());
+    }
 }
 
 } // namespace jex
