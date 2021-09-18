@@ -40,9 +40,11 @@ CompileResult::CompileResult(CompileResult&& other) = default;
 CompileResult::~CompileResult() = default;
 
 CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages,
-                             std::unique_ptr<llvm::orc::LLJIT> jit)
+                             std::unique_ptr<llvm::orc::LLJIT> jit,
+                             size_t                            contextSize)
 : d_messages(std::move(messages))
-, d_jit(std::move(jit)) {
+, d_jit(std::move(jit))
+, d_contextSize(contextSize) {
 }
 
 CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages)
@@ -86,7 +88,7 @@ CompileResult Backend::jit(std::unique_ptr<CodeModule> module) {
         symbols.insert(std::make_pair(es.intern(fct->d_mangledName), llvm::JITEvaluatedSymbol::fromPointer(fct->d_fctPtr)));
     }
     checked(lib.define(absoluteSymbols(symbols)), "Error adding fct symbols: ");
-    return CompileResult(d_env.releaseMessages(), std::move(jit));
+    return CompileResult(d_env.releaseMessages(), std::move(jit), d_env.getContextSize());
 }
 
 void Backend::initialize() {

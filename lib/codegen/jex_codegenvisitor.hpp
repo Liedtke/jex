@@ -37,6 +37,7 @@ public:
     void visit(AstVariableDef& node) override;
     void visit(AstLiteralExpr& node) override;
     void visit(AstBinaryExpr& node) override;
+    void visit(AstFctCall& node) override;
 
 private:
     llvm::Value* visitExpression(IAstExpression& node);

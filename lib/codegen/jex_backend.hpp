@@ -2,6 +2,7 @@
 
 #include <jex_base.hpp>
 
+#include <cassert>
 #include <iosfwd>
 #include <memory>
 #include <set>
@@ -23,9 +24,11 @@ class CompileResult {
 
     std::unique_ptr<std::set<MsgInfo>> d_messages;
     std::unique_ptr<llvm::orc::LLJIT> d_jit;
+    size_t d_contextSize = 0;
 
     CompileResult(std::unique_ptr<std::set<MsgInfo>> messages,
-                  std::unique_ptr<llvm::orc::LLJIT> jit);
+                  std::unique_ptr<llvm::orc::LLJIT> jit,
+                  size_t                            contextSize);
     CompileResult(std::unique_ptr<std::set<MsgInfo>> messages);
 
 public:
@@ -41,6 +44,11 @@ public:
 
     const std::set<MsgInfo>& getMessages() const {
         return *d_messages;
+    }
+
+    size_t getContextSize() const {
+        assert(*this); // May not be called if the compile result isn't valid.
+        return d_contextSize;
     }
 
     uintptr_t getFctPtr(std::string_view fctName);

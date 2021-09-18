@@ -159,4 +159,19 @@ void CodeGenVisitor::visit(AstBinaryExpr& node) {
     d_result = d_builder->CreateLoad(res);
 }
 
+void CodeGenVisitor::visit(AstFctCall& node) {
+    // Generate alloca to store the result.
+    llvm::Type* resType = getType(node.d_resultType);
+    llvm::Value* res = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
+    llvm::FunctionCallee fct = getOrCreateFct(node.d_fctInfo);
+    // Visit arguments.
+    std::vector<llvm::Value*> args({res});
+    for (IAstExpression* expr : node.d_args->d_args) {
+        args.push_back(visitExpression(*expr));
+    }
+    // Call the function.
+    d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), args);
+    d_result = d_builder->CreateLoad(res);
+}
+
 } // namespace jex
