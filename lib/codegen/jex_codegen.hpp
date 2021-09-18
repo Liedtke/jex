@@ -21,6 +21,7 @@ class CodeGen : NoCopy {
     CompileEnv& d_env;
     std::unique_ptr<CodeModule> d_module;
     OptLevel d_optLevel;
+
 public:
     CodeGen(CompileEnv& env, OptLevel optLevel);
     ~CodeGen();
@@ -29,9 +30,7 @@ public:
 
     const llvm::Module& getLlvmModule() const;
 
-    std::unique_ptr<CodeModule> releaseModule() {
-        return std::move(d_module);
-    }
+    std::unique_ptr<CodeModule> releaseModule();
 
 private:
     void optimize();

@@ -27,21 +27,21 @@ TEST(Backend, simpleVarDef) {
     Backend backend(compileEnv);
     ASSERT_LE(16, compileEnv.getContextSize());
     auto ctx = std::make_unique<char[]>(compileEnv.getContextSize());
-    backend.jit(codeGen.releaseModule());
+    CompileResult compiled = backend.jit(codeGen.releaseModule());
     { // Evaluate a.
-        const uintptr_t fctAddr = backend.getFctPtr("a");
+        const uintptr_t fctAddr = compiled.getFctPtr("a");
         ASSERT_NE(0, fctAddr);
         auto fctA = reinterpret_cast<int64_t* (*)(char*)>(fctAddr);
         ASSERT_EQ(123, *fctA(ctx.get()));
     }
     { // Evaluate b.
-        const uintptr_t fctAddr = backend.getFctPtr("b");
+        const uintptr_t fctAddr = compiled.getFctPtr("b");
         ASSERT_NE(0, fctAddr);
         auto fctA = reinterpret_cast<double* (*)(char*)>(fctAddr);
         ASSERT_DOUBLE_EQ(123.456, *fctA(ctx.get()));
     }
     // c does not exist
-    ASSERT_THROW(backend.getFctPtr("c"), InternalError);
+    ASSERT_THROW(compiled.getFctPtr("c"), InternalError);
 }
 
 TEST(Backend, simpleCall) {
@@ -57,9 +57,9 @@ TEST(Backend, simpleCall) {
     Backend backend(compileEnv);
     ASSERT_LE(8, compileEnv.getContextSize());
     auto ctx = std::make_unique<char[]>(compileEnv.getContextSize());
-    backend.jit(codeGen.releaseModule());
+    CompileResult compiled = backend.jit(codeGen.releaseModule());
     { // Evaluate a.
-        const uintptr_t fctAddr = backend.getFctPtr("a");
+        const uintptr_t fctAddr = compiled.getFctPtr("a");
         ASSERT_NE(0, fctAddr);
         auto fctA = reinterpret_cast<int64_t* (*)(char*)>(fctAddr);
         ASSERT_EQ(138, *fctA(ctx.get()));

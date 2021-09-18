@@ -34,6 +34,35 @@ static T checked(llvm::Expected<T> expectedObj, const char* errPrefix) {
     return std::move(*expectedObj);
 }
 
+
+CompileResult::CompileResult() = default;
+CompileResult::CompileResult(CompileResult&& other) = default;
+CompileResult::~CompileResult() = default;
+
+CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages,
+                             std::unique_ptr<llvm::orc::LLJIT> jit)
+: d_messages(std::move(messages))
+, d_jit(std::move(jit)) {
+}
+
+CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages)
+: d_messages(std::move(messages)) {}
+
+uintptr_t CompileResult::getFctPtr(std::string_view fctName) {
+    if (!d_jit) {
+        throw InternalError("Cannot get function pointer as compilation failed.");
+    }
+    llvm::JITEvaluatedSymbol sym = checked(d_jit->lookup(fctName), "Error looking up function pointer: ");
+    return static_cast<uintptr_t>(sym.getAddress());
+}
+
+std::ostream& operator<<(std::ostream& str, const CompileResult& compileResult) {
+    for (const MsgInfo& msg : compileResult.getMessages()) {
+        str << msg;
+    }
+    return str;
+}
+
 Backend::Backend(CompileEnv& env)
 : d_env(env) {
     initialize();
@@ -42,26 +71,22 @@ Backend::Backend(CompileEnv& env)
 Backend::~Backend() {
 }
 
-void Backend::jit(std::unique_ptr<CodeModule> module) {
+CompileResult Backend::jit(std::unique_ptr<CodeModule> module) {
     // Create lljit and add IR module.
     module->llvmModule().setTargetTriple(llvm::sys::getDefaultTargetTriple());
-    d_jit = checked(llvm::orc::LLJITBuilder().create(), "Error creating LLJITBuilder: ");
-    checked(d_jit->addIRModule(llvm::orc::ThreadSafeModule(module->releaseModule(), module->releaseContext())),
+    std::unique_ptr<llvm::orc::LLJIT> jit = checked(llvm::orc::LLJITBuilder().create(), "Error creating LLJITBuilder: ");
+    checked(jit->addIRModule(llvm::orc::ThreadSafeModule(module->releaseModule(), module->releaseContext())),
             "Error adding IR module: ");
     // Create library for functions registered in the function library.
     // Add all functions used in the module.
-    llvm::orc::JITDylib& lib = d_jit->getMainJITDylib();
-    llvm::orc::ExecutionSession& es = d_jit->getExecutionSession();
+    llvm::orc::JITDylib& lib = jit->getMainJITDylib();
+    llvm::orc::ExecutionSession& es = jit->getExecutionSession();
     llvm::orc::SymbolMap symbols;
     for (const FctInfo* fct : d_env.usedFcts()) {
         symbols.insert(std::make_pair(es.intern(fct->d_mangledName), llvm::JITEvaluatedSymbol::fromPointer(fct->d_fctPtr)));
     }
     checked(lib.define(absoluteSymbols(symbols)), "Error adding fct symbols: ");
-}
-
-uintptr_t Backend::getFctPtr(std::string_view fctName) {
-    llvm::JITEvaluatedSymbol sym = checked(d_jit->lookup(fctName), "Error looking up function pointer: ");
-    return static_cast<uintptr_t>(sym.getAddress());
+    return CompileResult(d_env.releaseMessages(), std::move(jit));
 }
 
 void Backend::initialize() {

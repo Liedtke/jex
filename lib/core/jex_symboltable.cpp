@@ -25,7 +25,6 @@ SymbolTable::SymbolTable(CompileEnv& env)
         if (!inserted.second) {
             throw InternalError("Invalid function '" + fctEntry.first + "': There is already a type registered with the same name");
         }
-
     }
 }
 

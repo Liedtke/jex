@@ -2,6 +2,7 @@
 
 #include <jex_codegenvisitor.hpp>
 #include <jex_codemodule.hpp>
+#include <jex_compileenv.hpp>
 
 #include "llvm/Passes/PassBuilder.h"
 
@@ -34,6 +35,8 @@ const llvm::Module& CodeGen::getLlvmModule() const {
 void CodeGen::createIR() {
     CodeGenVisitor codeGenVisitor(d_env);
     codeGenVisitor.createIR();
+    // Any errors in code generation should be hard failures.
+    assert(!d_env.hasErrors());
     d_module = codeGenVisitor.releaseModule();
     optimize();
 }
@@ -60,5 +63,8 @@ void CodeGen::optimize() {
     passMgr.run(d_module->llvmModule(), moduleAnalysisManager);
 }
 
+std::unique_ptr<CodeModule> CodeGen::releaseModule() {
+    return std::move(d_module);
+}
 
 } // namespace jex

@@ -13,6 +13,7 @@ namespace jex {
 
 CompileEnv::CompileEnv(const Environment& env)
 : d_fileName("test") // TODO: Provide real file name
+, d_messages(std::make_unique<std::set<MsgInfo>>())
 , d_typeSystem(env.types())
 , d_fctLibrary(env.fctLib())
 , d_symbolTable(std::make_unique<SymbolTable>(*this)) {
@@ -22,7 +23,7 @@ CompileEnv::~CompileEnv() {
 }
 
 const MsgInfo& CompileEnv::createError(const Location& loc, std::string msg) {
-    auto inserted = d_messages.emplace(MsgInfo::Kind::Error, loc, std::move(msg));
+    auto inserted = d_messages->emplace(MsgInfo::Kind::Error, loc, std::move(msg));
     assert(inserted.second);
     d_hasErrors = true;
     return *inserted.first;
@@ -37,6 +38,10 @@ const MsgInfo& CompileEnv::createError(const Location& loc, std::string msg) {
 
 std::string_view CompileEnv::createStringLiteral(std::string_view str) {
     return d_stringLiterals.emplace_back(str);
+}
+
+std::unique_ptr<std::set<MsgInfo>> CompileEnv::releaseMessages() {
+    return std::move(d_messages);
 }
 
 } // namespace jex

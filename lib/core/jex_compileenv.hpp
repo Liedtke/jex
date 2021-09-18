@@ -28,7 +28,7 @@ class FctInfo;
  */
 class CompileEnv : NoCopy {
     std::string d_fileName;
-    std::set<MsgInfo> d_messages;
+    std::unique_ptr<std::set<MsgInfo>> d_messages;
     bool d_hasErrors = false;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
     AstRoot* d_root = nullptr;
@@ -60,8 +60,10 @@ public:
     }
 
     const std::set<MsgInfo>& messages() const {
-        return d_messages;
+        return *d_messages;
     }
+
+    std::unique_ptr<std::set<MsgInfo>> releaseMessages();
 
     bool hasErrors() const {
         return d_hasErrors;

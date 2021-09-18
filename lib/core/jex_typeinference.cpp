@@ -31,6 +31,10 @@ static const char* opTypeToString(OpType op) {
 
 void TypeInference::run() {
     d_env.getRoot()->accept(*this);
+    if (d_env.hasErrors()) {
+        // Throw first error in list.
+        throw CompileError::create(*d_env.messages().begin());
+    }
 }
 
 void TypeInference::visit(AstLiteralExpr& node) {
