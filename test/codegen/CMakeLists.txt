@@ -1,5 +1,6 @@
 add_executable(test_codegen
     test_backend.cpp
+    test_builtins.cpp
     test_codegen.cpp
 )
 
