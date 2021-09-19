@@ -19,6 +19,8 @@ namespace {
 
 static constexpr char typeName[] = "UInt32";
 using ArgUInt32 = Arg<uint32_t, typeName, jex::TypeId::Complex>;
+static constexpr char typeNameInteger[] = "Integer";
+using ArgInteger = Arg<int64_t, typeNameInteger, jex::TypeId::Integer>;
 void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
 void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
 
@@ -159,5 +161,50 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
             err.str());
     }
 }
+
+using TestOpNameExp = std::pair<const char*, const char*>;
+
+class TestOpName : public testing::TestWithParam<TestOpNameExp> {};
+
+TEST_P(TestOpName, test) {
+    Environment env;
+    Registry registry(env);
+    registry.registerType<ArgInteger>();
+    CompileEnv compileEnv(env);
+    std::string code = std::string("var a: Integer = 1 ") + GetParam().first + " 1;";
+    Parser parser(compileEnv, code.c_str());
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    try {
+        typeInference.run();
+    } catch (const CompileError&) {
+        ASSERT_EQ(1, compileEnv.messages().size());
+        std::stringstream err;
+        err << *compileEnv.messages().begin();
+        std::stringstream exp;
+        exp << "1.18-1." << (21 + strlen(GetParam().first))
+            << ": Error: Invalid function name '"
+            << GetParam().second << "'";
+        EXPECT_EQ(exp.str(), err.str());
+    }
+}
+
+static TestOpNameExp opNameTests[] = {
+    {"+", "operator_add"},
+    {"-", "operator_sub"},
+    {"*", "operator_mul"},
+    {"/", "operator_div"},
+    {"%", "operator_mod"},
+    {"==", "operator_eq"},
+    {"!=", "operator_ne"},
+    {"<", "operator_lt"},
+    {">", "operator_gt"},
+    {"<=", "operator_le"},
+    {">=", "operator_ge"},
+};
+
+INSTANTIATE_TEST_SUITE_P(SuiteOpName,
+                         TestOpName,
+                         testing::ValuesIn(opNameTests));
 
 } // namespace jex
