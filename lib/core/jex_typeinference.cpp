@@ -25,6 +25,18 @@ static const char* opTypeToString(OpType op) {
             return "operator_div";
         case OpType::Mod:
             return "operator_mod";
+        case OpType::EQ:
+            return "operator_eq";
+        case OpType::NE:
+            return "operator_ne";
+        case OpType::LT:
+            return "operator_lt";
+        case OpType::GT:
+            return "operator_gt";
+        case OpType::LE:
+            return "operator_le";
+        case OpType::GE:
+            return "operator_ge";
     }
     throw InternalError("Unsupported operator in TypeInference::opTypeToString"); // LCOV_EXCL_LINE
 }

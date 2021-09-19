@@ -46,6 +46,24 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
         case OpType::Mod:
             d_str << " % ";
             break;
+        case OpType::EQ:
+            d_str << " == ";
+            break;
+        case OpType::NE:
+            d_str << " != ";
+            break;
+        case OpType::LT:
+            d_str << " < ";
+            break;
+        case OpType::GT:
+            d_str << " > ";
+            break;
+        case OpType::LE:
+            d_str << " <= ";
+            break;
+        case OpType::GE:
+            d_str << " >= ";
+            break;
     }
     node.d_rhs->accept(*this);
     d_str << ")";

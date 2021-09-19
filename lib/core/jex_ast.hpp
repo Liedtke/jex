@@ -19,7 +19,13 @@ enum class OpType {
     Sub,
     Mul,
     Div,
-    Mod
+    Mod,
+    EQ,
+    NE,
+    LT,
+    GT,
+    LE,
+    GE
 };
 
 class IAstNode : NoCopy {

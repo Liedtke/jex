@@ -24,6 +24,18 @@ OpType getOp(const Token& op, CompileEnv& env) {
             return OpType::Div;
         case Token::Kind::OpMod:
             return OpType::Mod;
+        case Token::Kind::OpEQ:
+            return OpType::EQ;
+        case Token::Kind::OpNE:
+            return OpType::NE;
+        case Token::Kind::OpLT:
+            return OpType::LT;
+        case Token::Kind::OpGT:
+            return OpType::GT;
+        case Token::Kind::OpLE:
+            return OpType::LE;
+        case Token::Kind::OpGE:
+            return OpType::GE;
         default: // LCOV_EXCL_LINE
             env.throwError(op.location, "Invalid operator '" + std::string(op.text) + "'"); // LCOV_EXCL_LINE
     }
@@ -32,13 +44,21 @@ OpType getOp(const Token& op, CompileEnv& env) {
 } // anonymous namespace
 
 void Parser::initPrecs() {
+    // == !=
+    d_precs[Token::Kind::OpEQ] = 10;
+    d_precs[Token::Kind::OpNE] = 10;
+    // < <= > >=
+    d_precs[Token::Kind::OpLT] = 20;
+    d_precs[Token::Kind::OpLE] = 20;
+    d_precs[Token::Kind::OpGT] = 20;
+    d_precs[Token::Kind::OpGE] = 20;
     // + -
-    d_precs[Token::Kind::OpAdd] = 10;
-    d_precs[Token::Kind::OpSub] = 10;
+    d_precs[Token::Kind::OpAdd] = 30;
+    d_precs[Token::Kind::OpSub] = 30;
     // * / %
-    d_precs[Token::Kind::OpMul] = 20;
-    d_precs[Token::Kind::OpDiv] = 20;
-    d_precs[Token::Kind::OpMod] = 20;
+    d_precs[Token::Kind::OpMul] = 40;
+    d_precs[Token::Kind::OpDiv] = 40;
+    d_precs[Token::Kind::OpMod] = 40;
 }
 
 int Parser::getPrec() const {

@@ -24,11 +24,17 @@ public:
         LiteralString,
         ParensL,
         ParensR,
-        OpAdd,
-        OpSub,
-        OpMul,
-        OpDiv,
-        OpMod,
+        OpAdd,  // +
+        OpSub,  // -
+        OpMul,  // *
+        OpDiv,  // /
+        OpMod,  // %
+        OpEQ,   // ==
+        OpNE,   // !=
+        OpLT,   // <
+        OpGT,   // >
+        OpLE,   // <=
+        OpGE,   // >=
         Comma,
         Colon,
         Semicolon,

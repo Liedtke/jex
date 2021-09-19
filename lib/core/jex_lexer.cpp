@@ -35,6 +35,18 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "operator '/'";
         case Token::Kind::OpMod:
             return str << "operator '%'";
+        case Token::Kind::OpEQ:
+            return str << "operator '=='";
+        case Token::Kind::OpNE:
+            return str << "operator '!='";
+        case Token::Kind::OpLT:
+            return str << "operator '<'";
+        case Token::Kind::OpGT:
+            return str << "operator '>'";
+        case Token::Kind::OpLE:
+            return str << "operator '<='";
+        case Token::Kind::OpGE:
+            return str << "operator '>='";
         case Token::Kind::ParensL:
             return str << "'('";
         case Token::Kind::ParensR:
@@ -159,7 +171,33 @@ Token Lexer::getNext() {
                 return setToken(Token::Kind::Semicolon);
             case '=':
                 advance();
+                if (*d_cursor == '=') {
+                    advance(); // consume '='
+                    return setToken(Token::Kind::OpEQ);
+                }
                 return setToken(Token::Kind::Assign);
+            case '<':
+                advance();
+                if (*d_cursor == '=') {
+                    advance(); // consume '='
+                    return setToken(Token::Kind::OpLE);
+                }
+                return setToken(Token::Kind::OpLT);
+            case '>':
+                advance();
+                if (*d_cursor == '=') {
+                    advance(); // consume '='
+                    return setToken(Token::Kind::OpGE);
+                }
+                return setToken(Token::Kind::OpGT);
+            case '!':
+                advance();
+                if (*d_cursor == '=') {
+                    advance(); // consume '='
+                    return setToken(Token::Kind::OpNE);
+                }
+                // TODO: add not operator '!'.
+                return setToken(Token::Kind::Invalid);
         }
 
         // parse numeric literals

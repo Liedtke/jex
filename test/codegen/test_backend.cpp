@@ -25,13 +25,13 @@ class TestModule : public Module {
 };
 }
 
-static CompileResult compile(const Environment& env, const char* sourceCode) {
+static CompileResult compile(const Environment& env, const char* sourceCode, OptLevel op = OptLevel::O2) {
     CompileEnv compileEnv(env);
     Parser parser(compileEnv, sourceCode);
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    CodeGen codeGen(compileEnv, OptLevel::O0);
+    CodeGen codeGen(compileEnv, op);
     codeGen.createIR();
     Backend backend(compileEnv);
     return backend.jit(codeGen.releaseModule());

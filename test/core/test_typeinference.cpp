@@ -41,6 +41,13 @@ public:
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mul", add));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_div", add));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mod", add));
+        // For these tests, the comparison returns UInt32, although it should certainly be bool.
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_eq", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ne", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_lt", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_gt", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_le", add));
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ge", add));
     }
 
     void SetUp() override {
@@ -102,8 +109,16 @@ TEST_F(TestTypeInference, resolveOperator) {
     ASSERT_FALSE(d_compileEnv->hasErrors());
 }
 
-TEST_F(TestTypeInference, resolveOperatorAll) {
+TEST_F(TestTypeInference, resolveOperatorArithmetic) {
     Parser parser(*d_compileEnv, "var a: UInt32 = x + x - x * x / x % x;");
+    parser.parse();
+    TypeInference typeInference(*d_compileEnv);
+    typeInference.run();
+    ASSERT_FALSE(d_compileEnv->hasErrors());
+}
+
+TEST_F(TestTypeInference, resolveOperatorComparison) {
+    Parser parser(*d_compileEnv, "var a: UInt32 = x == x != x < x <= x > x >= x;");
     parser.parse();
     TypeInference typeInference(*d_compileEnv);
     typeInference.run();

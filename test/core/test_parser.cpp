@@ -87,6 +87,9 @@ static TestExp errorTests[] = {
     {"var a: Type = f(1 23)", "1.19-1.20: Error: Unexpected integer literal '23', expecting ',' or ')'"},
     {"var a: Type = f(1,2,)", "1.21-1.21: Error: Unexpected ')', expecting literal, identifier or '('"},
     {"var a: Type = x();", "1.15-1.15: Error: Invalid call: 'x' is not a function"},
+    {"var a: Type = 1 <=> 2;", "1.19-1.19: Error: Unexpected operator '>', expecting literal, identifier or '('"},
+    {"var a: Type = 1 === 2;", "1.19-1.19: Error: Unexpected '=', expecting literal, identifier or '('"},
+    {"var a: Type = 1 <> 2;", "1.18-1.18: Error: Unexpected operator '>', expecting literal, identifier or '('"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,
@@ -176,6 +179,21 @@ static TestExp successTests[] = {
      "var a: Type = true;\n"},
     {"var a: Type = false;",
      "var a: Type = false;\n"},
+    // -- Comparison operators --
+    // left-to-right associativity
+    {"var a: Type = 1 < 1 < 1;",
+     "var a: Type = ((1 < 1) < 1);\n"},
+    {"var a: Type = 1 > 1 < 1;",
+     "var a: Type = ((1 > 1) < 1);\n"},
+    {"var a: Type = 1 <= 1 >= 1;",
+     "var a: Type = ((1 <= 1) >= 1);\n"},
+    {"var a: Type = 1 == 2 != 3;",
+     "var a: Type = ((1 == 2) != 3);\n"},
+    // == != have less precedence than < <= > >=
+    {"var a: Type = 1 < 2 != 3 > 4;",
+     "var a: Type = ((1 < 2) != (3 > 4));\n"},
+    {"var a: Type = 1 <= 2 == 3 >= 4;",
+     "var a: Type = ((1 <= 2) == (3 >= 4));\n"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,
