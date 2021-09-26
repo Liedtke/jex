@@ -159,7 +159,7 @@ public:
     IAstExpression* d_expr;
 
     AstVariableDef(const Location& loc, AstIdentifier* name, AstIdentifier* type, IAstExpression* expr)
-    : IAstExpression(loc, name->d_resultType)
+    : IAstExpression(loc, type->d_resultType)
     , d_name(name)
     , d_type(type)
     , d_expr(expr) {

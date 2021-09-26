@@ -12,7 +12,10 @@ class Environment;
 class Compiler {
     Compiler() = delete;
 public:
-    static CompileResult compile(Environment& env, const std::string& source, OptLevel optLevel);
+    static CompileResult compile(Environment& env,
+                                 const std::string& source,
+                                 OptLevel optLevel = OptLevel::O2,
+                                 bool useIntrinsics = true);
 };
 
 } // namespace jex

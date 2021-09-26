@@ -74,6 +74,7 @@ TEST_F(TestTypeInference, resolveFctInvalidOverload) {
     // TODO: Should the type inference throw in case of errors?
     try {
         typeInference.run();
+        ASSERT_TRUE(false); // LCOV_EXCL_LINE
     } catch (const CompileError&) {
         ASSERT_EQ(1, d_compileEnv->messages().size());
         std::stringstream err;
@@ -88,6 +89,7 @@ TEST_F(TestTypeInference, resolveFctInvalidOverloadRepeated) {
     TypeInference typeInference(*d_compileEnv);
     try {
         typeInference.run();
+        ASSERT_TRUE(false); // LCOV_EXCL_LINE
     } catch (const CompileError&) {
         // Only the inner errors gets reported as the outer ones are only follow-up errors.
         ASSERT_EQ(2, d_compileEnv->messages().size());
@@ -109,6 +111,13 @@ TEST_F(TestTypeInference, resolveOperator) {
     TypeInference typeInference(*d_compileEnv);
     typeInference.run();
     ASSERT_FALSE(d_compileEnv->hasErrors());
+}
+
+TEST_F(TestTypeInference, resolveWrongVarType) {
+    Parser parser(*d_compileEnv, "var a: UInt32 = 1;");
+    parser.parse();
+    TypeInference typeInference(*d_compileEnv);
+    ASSERT_THROW(typeInference.run(), CompileError);
 }
 
 TEST_F(TestTypeInference, resolveOperatorArithmetic) {
@@ -133,6 +142,7 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverload) {
     TypeInference typeInference(*d_compileEnv);
     try {
         typeInference.run();
+        ASSERT_TRUE(false); // LCOV_EXCL_LINE
     } catch (const CompileError&) {
         ASSERT_EQ(1, d_compileEnv->messages().size());
         std::stringstream err;
@@ -147,6 +157,7 @@ TEST_F(TestTypeInference, resolveOperatorInvalidOverloadRepeated) {
     TypeInference typeInference(*d_compileEnv);
     try {
         typeInference.run();
+        ASSERT_TRUE(false); // LCOV_EXCL_LINE
     } catch (const CompileError&) {
         // Only the inner errors gets reported as the outer ones are only follow-up errors.
         ASSERT_EQ(2, d_compileEnv->messages().size());

@@ -106,6 +106,7 @@ void TypeInference::visit(AstVariableDef& node) {
         errMsg << "Invalid type for variable '" << node.d_name->d_name
                << "': Specified as '" << node.d_resultType->name()
                << "' but expression returns '" << exprType->name() << "'";
+        d_env.createError(node.d_loc, errMsg.str());
     }
 }
 

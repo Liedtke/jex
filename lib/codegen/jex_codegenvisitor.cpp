@@ -127,8 +127,7 @@ llvm::FunctionCallee CodeGenVisitor::getOrCreateFct(const FctInfo* fctInfo) {
         params.push_back(getType(paramType));
     }
     llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
-    // TODO: Check for optimizer settings whether intrinsics should be used.
-    if (fctInfo->d_intrinsicFct) {
+    if (d_env.useIntrinsics() && fctInfo->d_intrinsicFct) {
         // Generate and insert intrinsic function.
         llvm::Function* fct = d_module->llvmModule().getFunction(fctInfo->d_intrinsicName);
         if (fct == nullptr) {

@@ -123,7 +123,7 @@ entry:
 TEST(Codegen, operatorCallNoIntrinsic) {
     Environment env;
     env.addModule(BuiltInsModule());
-    CompileEnv compileEnv(env);
+    CompileEnv compileEnv(env, /*useIntrinsics*/false);
     Parser parser(compileEnv,
     "var a : Float = 123.2 + 5.5;");
     parser.parse();

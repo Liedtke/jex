@@ -10,8 +10,8 @@
 
 namespace jex {
 
-CompileResult Compiler::compile(Environment& env, const std::string& source, OptLevel optLevel) {
-    CompileEnv compileEnv(env);
+CompileResult Compiler::compile(Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics) {
+    CompileEnv compileEnv(env, useIntrinsics);
     try {
         // 1) Parse.
         Parser parser(compileEnv, source.c_str());

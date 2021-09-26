@@ -28,6 +28,7 @@ class FctInfo;
  */
 class CompileEnv : NoCopy {
     std::string d_fileName;
+    bool d_useIntrinsics;
     std::unique_ptr<std::set<MsgInfo>> d_messages;
     bool d_hasErrors = false;
     std::deque<std::unique_ptr<IAstNode>> d_nodes;
@@ -41,7 +42,7 @@ class CompileEnv : NoCopy {
     // Size of the runtime context.
     std::optional<size_t> d_contextSize;
 public:
-    CompileEnv(const Environment& env);
+    CompileEnv(const Environment& env, bool useIntrinsics = true);
     ~CompileEnv();
 
     const MsgInfo& createError(const Location& loc, std::string msg);
@@ -57,6 +58,10 @@ public:
 
     const std::string& fileName() const {
         return d_fileName;
+    }
+
+    bool useIntrinsics() const {
+        return d_useIntrinsics;
     }
 
     const std::set<MsgInfo>& messages() const {

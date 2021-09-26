@@ -11,8 +11,9 @@
 
 namespace jex {
 
-CompileEnv::CompileEnv(const Environment& env)
+CompileEnv::CompileEnv(const Environment& env, bool useIntrinsics)
 : d_fileName("test") // TODO: Provide real file name
+, d_useIntrinsics(useIntrinsics)
 , d_messages(std::make_unique<std::set<MsgInfo>>())
 , d_typeSystem(env.types())
 , d_fctLibrary(env.fctLib())

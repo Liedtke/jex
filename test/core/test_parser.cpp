@@ -90,6 +90,7 @@ static TestExp errorTests[] = {
     {"var a: Type = 1 <=> 2;", "1.19-1.19: Error: Unexpected operator '>', expecting literal, identifier or '('"},
     {"var a: Type = 1 === 2;", "1.19-1.19: Error: Unexpected '=', expecting literal, identifier or '('"},
     {"var a: Type = 1 <> 2;", "1.18-1.18: Error: Unexpected operator '>', expecting literal, identifier or '('"},
+    {"var a: Type = !false;", "1.15-1.15: Error: Unexpected invalid token '!', expecting literal, identifier or '('"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,
