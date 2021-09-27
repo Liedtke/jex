@@ -21,6 +21,7 @@ public:
 
     void visit(AstLiteralExpr& node) override;
     void visit(AstFctCall& node) override;
+    void visit(AstIf& node) override;
     void visit(AstBinaryExpr& node) override;
     void visit(AstVariableDef& node) override;
 
@@ -28,6 +29,11 @@ public:
 
 private:
     const FctInfo* resolveFct(IAstExpression& node, std::string_view name, const std::vector<TypeInfoId>& paramTypes);
+
+    /**
+     * Resolves arguments and returns true if successful. Returns false if any of the arguments is unresolved.
+     */
+    bool resolveArguments(const AstFctCall& call, std::vector<TypeInfoId>& argTypes);
 };
 
 } // namespace jex

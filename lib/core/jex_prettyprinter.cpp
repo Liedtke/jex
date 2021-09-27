@@ -76,6 +76,10 @@ void PrettyPrinter::visit(AstFctCall& node) {
     d_str << ")";
 }
 
+void PrettyPrinter::visit(AstIf& node) {
+    PrettyPrinter::visit(static_cast<AstFctCall&>(node));
+}
+
 void PrettyPrinter::visit(AstIdentifier& node) {
     d_str << node.d_name;
 }

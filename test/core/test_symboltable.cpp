@@ -47,7 +47,7 @@ TEST(SymbolTable, addAndResolveSymbol) {
     ASSERT_TRUE(env.messages().empty());
 }
 
-TEST(SymbolTable, testDuplicateAdd) {
+TEST(SymbolTable, duplicateAdd) {
     Environment environment;
     CompileEnv env(environment);
     SymbolTable& symbols = env.symbols();
@@ -64,6 +64,18 @@ TEST(SymbolTable, testDuplicateAdd) {
     ASSERT_EQ(
         "2.1-2.4: Error: Duplicate identifier 'duplicate'\n"
         "1.1-1.4: Note: Previously defined here", errMsg.str());
+}
+
+TEST(SymbolTable, resolveIf) {
+    Environment environment;
+    CompileEnv env(environment);
+    SymbolTable& symbols = env.symbols();
+    TypeInfoId unresolved = env.typeSystem().unresolved();
+    AstIdentifier ident({{2, 1}, {2, 1}}, unresolved, "if");
+    ASSERT_TRUE(symbols.resolveSymbol(&ident));
+    ASSERT_EQ(Symbol::Kind::Function, ident.d_symbol->kind);
+    // There aren't any messages resported.
+    ASSERT_TRUE(env.messages().empty());
 }
 
 } // namespace jex

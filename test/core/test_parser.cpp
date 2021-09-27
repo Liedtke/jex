@@ -195,6 +195,9 @@ static TestExp successTests[] = {
      "var a: Type = ((1 < 2) != (3 > 4));\n"},
     {"var a: Type = 1 <= 2 == 3 >= 4;",
      "var a: Type = ((1 <= 2) == (3 >= 4));\n"},
+    // Special if function.
+    {"var a: Type = if(true, 1, 2);",
+     "var a: Type = if(true, 1, 2);\n"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

@@ -12,9 +12,13 @@ const char* const SymbolTable::s_unresolved = "_unresolved";
 
 SymbolTable::SymbolTable(CompileEnv& env)
 : d_env(env) {
+    // Add _unresolved type.
     const TypeInfoId typeUnresolved = d_env.typeSystem().unresolved();
     d_symbols[s_unresolved] = std::make_unique<Symbol>(
         Symbol::Kind::Unresolved, s_unresolved, typeUnresolved, nullptr);
+    // Add special if function.
+    d_symbols["if"] = std::make_unique<Symbol>(
+        Symbol::Kind::Function, "if", typeUnresolved, nullptr);
     // add types
     for (auto& typeEntry : d_env.typeSystem()) {
         d_symbols[typeEntry.first] = std::make_unique<Symbol>(Symbol::Kind::Type, typeEntry.first, typeEntry.second, nullptr);

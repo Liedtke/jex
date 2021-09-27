@@ -152,6 +152,17 @@ public:
     }
 };
 
+class AstIf : public AstFctCall {
+public:
+    AstIf(const Location& loc, TypeInfoId resultType, AstIdentifier* fct, AstArgList* args)
+    : AstFctCall(loc, resultType, fct, args) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+};
+
 class AstVariableDef : public IAstExpression {
 public:
     AstIdentifier* d_name;

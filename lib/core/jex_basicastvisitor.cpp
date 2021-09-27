@@ -17,6 +17,11 @@ void BasicAstVisitor::visit(AstFctCall& node) {
     node.d_args->accept(*this);
 }
 
+void BasicAstVisitor::visit(AstIf& node) {
+    // Use function call implementation by default.
+    BasicAstVisitor::visit(static_cast<AstFctCall&>(node));
+}
+
 void BasicAstVisitor::visit(AstIdentifier& node) {
 }
 

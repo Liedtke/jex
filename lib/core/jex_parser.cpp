@@ -151,6 +151,10 @@ IAstExpression* Parser::parseIdentOrCall() {
         }
         AstArgList* args = parseArgList();
         TypeInfoId unresolved = d_env.typeSystem().unresolved();
+        if (ident->d_name == "if") {
+            // Special node for if which behaves differently to regular function calls.
+            return d_env.createNode<AstIf>(Location::combine(ident->d_loc, args->d_loc), unresolved, ident, args);
+        }
         return d_env.createNode<AstFctCall>(Location::combine(ident->d_loc, args->d_loc), unresolved, ident, args);
     }
     // regular identifier

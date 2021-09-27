@@ -55,19 +55,54 @@ void TypeInference::visit(AstLiteralExpr& node) {
     assert(d_env.typeSystem().isResolved(node.d_resultType));
 }
 
-void TypeInference::visit(AstFctCall& node) {
-    BasicAstVisitor::visit(node); // resolve arguments
-    std::vector<TypeInfoId> argTypes;
-    argTypes.reserve(node.d_args->d_args.size());
-    for (const IAstExpression* expr : node.d_args->d_args) {
+bool TypeInference::resolveArguments(const AstFctCall& call, std::vector<TypeInfoId>& argTypes) {
+    bool hasUnresolved = false;
+    argTypes.reserve(call.d_args->d_args.size());
+    for (const IAstExpression* expr : call.d_args->d_args) {
         if (!d_env.typeSystem().isResolved(expr->d_resultType)) {
             // There is already a type inference error, don't report errors resulting from that.
             assert(d_env.hasErrors());
-            return;
+            hasUnresolved = true;
         }
         argTypes.push_back(expr->d_resultType);
     }
-    node.d_fctInfo = resolveFct(node, node.d_fct->d_name, argTypes);
+    return !hasUnresolved;
+}
+
+void TypeInference::visit(AstFctCall& node) {
+    BasicAstVisitor::visit(node); // resolve arguments
+    std::vector<TypeInfoId> argTypes;
+    if (resolveArguments(node, argTypes)) {
+        node.d_fctInfo = resolveFct(node, node.d_fct->d_name, argTypes);
+    }
+}
+
+void TypeInference::visit(AstIf& node) {
+    BasicAstVisitor::visit(node); // resolve arguments
+    std::vector<TypeInfoId> argTypes;
+    if (!resolveArguments(node, argTypes)) {
+        return;
+    }
+    if (argTypes.size() != 3) {
+        std::stringstream errMsg;
+        errMsg << "'if' function requires exactly 3 arguments, " << argTypes.size() << " given";
+        d_env.createError(node.d_loc, errMsg.str());
+        return;
+    }
+    if (argTypes[0] != d_env.typeSystem().getType("Bool")) {
+        d_env.createError(node.d_loc,
+            "'if' function requires first argument to be of type 'Bool', '"
+                + argTypes[0]->name() + "' given");
+    }
+    if (argTypes[1] != argTypes[2]) {
+        d_env.createError(node.d_loc,
+            "'if' function requires second and third argument to have the same type, '"
+                + argTypes[1]->name() + "' and '" + argTypes[2]->name() + "' given");
+    }
+    // Set result type to option type.
+    // Differently to regular functions, all types are supported.
+    // (There isn't any overload resolution for if.)
+    node.d_resultType = argTypes[1];
 }
 
 void TypeInference::visit(AstBinaryExpr& node) {
