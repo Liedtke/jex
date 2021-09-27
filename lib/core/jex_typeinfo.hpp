@@ -21,6 +21,16 @@ enum class TypeKind {
     Complex
 };
 
+struct LifetimeFcts {
+    using DtorT = void(*)(void*);
+    using CopyCtorT = void(*)(void* /*target*/, const void* /*source*/);
+    using MoveCtorT = void(*)(void* /*target*/, void* /*source*/);
+
+    DtorT destructor = nullptr;
+    CopyCtorT copyConstructor = nullptr;
+    MoveCtorT moveConstructor = nullptr;
+};
+
 /**
  * Represents a unique ID for a given type in the type system.
  * The ID also provides direct access to the referenced TypeInfo.
@@ -44,6 +54,10 @@ public:
         return d_ptr;
     }
 
+    const TypeInfo& operator*() const {
+        return *d_ptr;
+    }
+
     bool operator==(const TypeInfoId& other) const {
         return d_ptr == other.d_ptr;
     }
@@ -65,13 +79,17 @@ private:
     size_t d_size;
     // Function to create the LLVM type; May be null;
     CreateTypeFct d_createType;
+    // Functions to manage lifetime of object.
+    LifetimeFcts d_lifetimeFcts;
 
 public:
-    TypeInfo(TypeKind typeId, std::string name, size_t size, CreateTypeFct createType)
+    TypeInfo(TypeKind typeId, std::string name, size_t size, CreateTypeFct createType,
+             LifetimeFcts lifetimeFcts = {})
     : d_typeId(typeId)
     , d_name(std::move(name))
     , d_size(size)
-    , d_createType(createType) {
+    , d_createType(createType)
+    , d_lifetimeFcts(lifetimeFcts) {
     }
 
     TypeInfoId id() const {
@@ -92,6 +110,10 @@ public:
 
     const CreateTypeFct& createTypeFct() const {
         return d_createType;
+    }
+
+    const LifetimeFcts& lifetimeFcts() const {
+        return d_lifetimeFcts;
     }
 };
 

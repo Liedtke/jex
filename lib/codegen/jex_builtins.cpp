@@ -53,6 +53,7 @@ void BuiltInsModule::registerTypes(Registry& registry) const {
         [](llvm::LLVMContext& ctx) { return llvm::Type::getInt64Ty(ctx); });
     registry.registerType<ArgFloat>(
         [](llvm::LLVMContext& ctx) { return llvm::Type::getDoubleTy(ctx); });
+    registry.registerType<ArgString>();
 }
 
 void BuiltInsModule::registerFcts(Registry& registry) const {

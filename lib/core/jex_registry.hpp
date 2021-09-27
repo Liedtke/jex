@@ -9,13 +9,37 @@
 #include <iterator>
 
 namespace jex {
-
-template<typename T, const char* _name, TypeKind _kind = TypeKind::Value>
+template<typename T, const char* _name>
 struct Arg {
     using type = T;
     using retType = T*;
-    static constexpr TypeKind kind = _kind;
     static constexpr char const* name = _name;
+};
+
+template<typename T, const char* _name>
+struct ArgValue : public Arg<T, _name> {
+    static constexpr TypeKind kind = TypeKind::Value;
+};
+
+template<typename T, const char* _name>
+struct ArgObject : public Arg<T, _name> {
+    static constexpr TypeKind kind = TypeKind::Complex;
+
+    static void destructor(void* obj) noexcept {
+        static_cast<T*>(obj)->~T();
+    }
+
+    static void copyConstructor(void* target, const void* source) {
+        new (static_cast<T*>(target)) T(*static_cast<const T*>(source));
+    }
+
+    static void moveConstructor(void* target, void* source) {
+        if constexpr (std::is_move_constructible_v<T>) {
+            new (static_cast<T*>(target)) T(std::move(*static_cast<T*>(source)));
+        } else {
+            copyConstructor(target, source);
+        }
+    }
 };
 
 template<typename ArgRet, typename... ArgT>
@@ -61,9 +85,15 @@ public:
     , d_fcts(env.fctLib()) {
     }
 
-    template <typename ArgT>
+    template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Value, bool> = true>
     void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
         d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), fct);
+    }
+
+    template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Complex, bool> = true>
+    void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
+        LifetimeFcts ltFcts = {ArgT::destructor, ArgT::copyConstructor, ArgT::moveConstructor};
+        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), fct, ltFcts);
     }
 
     template <typename ...T>

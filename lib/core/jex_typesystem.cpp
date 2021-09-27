@@ -26,11 +26,13 @@ TypeInfoId TypeSystem::getType(std::string_view name) const {
     return id;
 }
 
-TypeInfoId TypeSystem::registerType(TypeKind typeId, std::string name, size_t size, TypeInfo::CreateTypeFct createTypeFct) {
+TypeInfoId TypeSystem::registerType(TypeKind typeId, std::string name, size_t size,
+                                    TypeInfo::CreateTypeFct createTypeFct,
+                                    const LifetimeFcts& lifetimeFcts) {
     if (d_typesByName.find(name) != d_typesByName.end()) {
         throw InternalError("Duplicate type registration for '" + name + "'");
     }
-    TypeInfoId id(&d_types.emplace_back(typeId, std::move(name), size, createTypeFct));
+    TypeInfoId id(&d_types.emplace_back(typeId, std::move(name), size, createTypeFct, lifetimeFcts));
     auto res = d_typesByName.emplace(id.get().name(), id);
     assert(res.second); (void) res;
     return id;

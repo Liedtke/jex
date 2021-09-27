@@ -5,15 +5,16 @@
 #include <jex_registry.hpp>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace jex {
 
 namespace {
 
 static constexpr char typeName[] = "UInt32";
-using ArgUInt32 = Arg<uint32_t, typeName, jex::TypeKind::Value>;
+using ArgUInt32 = ArgValue<uint32_t, typeName>;
 static constexpr char typeNameBool[] = "Boolean";
-using ArgBool = Arg<bool, typeNameBool, jex::TypeKind::Value>;
+using ArgBool = ArgValue<bool, typeNameBool>;
 
 void pass(uint32_t* res, uint32_t in) {
     *res = in;
@@ -113,6 +114,55 @@ TEST(Registry, wrapperMultipleArgs) {
     void *args[] = {&res, &a, &b};
     FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>::wrapper(reinterpret_cast<void*>(add), args);
     ASSERT_EQ(444, res);
+}
+
+TEST(Registry, registerComplexType) {
+    struct Counts {
+        size_t dtor = 0;
+        size_t copyCtor = 0;
+        size_t moveCtor = 0;
+
+        bool operator==(const Counts& other) const {
+            return dtor == other.dtor && copyCtor == other.copyCtor && moveCtor == other.moveCtor;
+        }
+    };
+    struct TestClass {
+        Counts* counts;
+        TestClass(Counts* counts) : counts(counts) {}
+        TestClass(const TestClass& other) : counts(other.counts) {
+            ++counts->copyCtor;
+        }
+        TestClass(TestClass&& other) : counts(other.counts) {
+            ++counts->moveCtor;
+        }
+        ~TestClass() {
+            ++counts->dtor;
+        }
+    };
+
+    // Register type.
+    static constexpr char name[] = "TestClass";
+    using ArgTestClass = ArgObject<TestClass, name>;
+    Environment env;
+    Registry registry(env);
+    registry.registerType<ArgTestClass>();
+    // Check type info.
+    const TypeInfo& type = *env.types().getType("TestClass");
+    ASSERT_EQ("TestClass", type.name());
+    ASSERT_EQ(TypeKind::Complex, type.kind());
+    ASSERT_EQ(sizeof(TestClass), type.size());
+    // Check lifetime functions.
+    Counts counts;
+    TestClass testObj(&counts);
+    TestClass other(&counts);
+    type.lifetimeFcts().destructor(&other);
+    EXPECT_TRUE((Counts{1, 0, 0} == counts));
+    type.lifetimeFcts().copyConstructor(&other, &testObj);
+    EXPECT_TRUE((Counts{1, 1, 0} == counts));
+    type.lifetimeFcts().destructor(&other);
+    EXPECT_TRUE((Counts{2, 1, 0} == counts));
+    type.lifetimeFcts().moveConstructor(&other, &testObj);
+    EXPECT_TRUE((Counts{2, 1, 1} == counts));
 }
 
 } // namespace jex
