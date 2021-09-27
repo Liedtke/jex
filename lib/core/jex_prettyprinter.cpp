@@ -8,23 +8,11 @@
 namespace jex {
 
 void PrettyPrinter::visit(AstLiteralExpr& node) {
-    switch (node.d_resultType->kind()) {
-        case TypeId::Bool:
-            d_str << (node.d_value.d_bool ? "true" : "false");
-            break;
-        case TypeId::Float:
-            d_str << node.d_value.d_float;
-            break;
-        case TypeId::Integer:
-            d_str << node.d_value.d_int;
-            break;
-        case TypeId::String:
-            // TODO: Should the pretty printer escape the string again?
-            d_str << '"' << node.d_value.d_str << '"';
-            break;
-        default:
-            throw CompileError::create(node.d_loc, "Literal type unsupported by PrettyPrinter");
-    }
+    std::visit(overloaded {
+        [&](bool val) { d_str << (val ? "true" : "false"); },
+        [&](std::string_view val) { d_str << '"' << val << '"'; },
+        [&](auto&& val) { d_str << val; },
+    }, node.d_value);
 }
 
 void PrettyPrinter::visit(AstBinaryExpr& node) {

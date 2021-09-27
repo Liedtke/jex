@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace jex {
@@ -71,33 +72,26 @@ public:
 
 class AstLiteralExpr : public IAstExpression {
 public:
-    union Value {
-        double d_float;
-        int64_t d_int;
-        bool d_bool;
-        std::string_view d_str;
-
-        Value() {}
-    } d_value;
+    std::variant<double, int64_t, bool, std::string_view> d_value;
 
     AstLiteralExpr(const Location& loc, TypeInfoId type, int64_t value)
-    : IAstExpression(loc, type) {
-        d_value.d_int = value;
+    : IAstExpression(loc, type)
+    , d_value(value) {
     }
 
     AstLiteralExpr(const Location& loc, TypeInfoId type, double value)
-    : IAstExpression(loc, type) {
-        d_value.d_float = value;
+    : IAstExpression(loc, type)
+    , d_value(value) {
     }
 
     AstLiteralExpr(const Location& loc, TypeInfoId type, std::string_view value)
-    : IAstExpression(loc, type) {
-        new (&d_value.d_str) std::string_view(value);
+    : IAstExpression(loc, type)
+    , d_value(value) {
     }
 
     AstLiteralExpr(const Location& loc, TypeInfoId type, bool value)
-    : IAstExpression(loc, type) {
-        d_value.d_bool = value;
+    : IAstExpression(loc, type)
+    , d_value(value) {
     }
 
     void accept(IAstVisitor& visitor) override {

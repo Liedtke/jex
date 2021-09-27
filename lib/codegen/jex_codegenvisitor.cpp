@@ -106,19 +106,20 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
 }
 
 void CodeGenVisitor::visit(AstLiteralExpr& node) {
-    switch (node.d_resultType->kind()) {
-        case TypeId::Integer:
-            d_result = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(64, node.d_value.d_int));
-            return;
-        case TypeId::Float:
-            d_result = llvm::ConstantFP::get(d_module->llvmContext(), llvm::APFloat(node.d_value.d_float));
-            return;
-        case TypeId::Bool:
-            d_result = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(1, node.d_value.d_int));
-            return;
-        default:
+    d_result = std::visit(overloaded {
+        [&](int64_t val) -> llvm::Value* {
+            return llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(64, val));
+        },
+        [&](double val) -> llvm::Value* {
+            return llvm::ConstantFP::get(d_module->llvmContext(), llvm::APFloat(val));
+        },
+        [&](bool val) -> llvm::Value* {
+            return llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(1, val));
+        },
+        [&](std::string_view val) -> llvm::Value* {
             d_env.throwError(node.d_loc, "Literal not supported by code generation");
-    }
+        }
+    }, node.d_value);
 }
 
 llvm::FunctionCallee CodeGenVisitor::getOrCreateFct(const FctInfo* fctInfo) {
