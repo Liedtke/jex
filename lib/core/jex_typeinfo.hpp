@@ -14,14 +14,11 @@ class Type;
 namespace jex {
 class TypeInfo;
 
-enum class TypeId {
+enum class TypeKind {
     Unresolved,
-    Integer,
-    Float,
-    Bool,
-    String,
     Function,
-    Complex // Anything non-built-in
+    Value, // trivial & trivially destructible
+    Complex
 };
 
 /**
@@ -63,14 +60,14 @@ class TypeInfo : NoCopy {
 public:
     using CreateTypeFct = std::function<llvm::Type* (llvm::LLVMContext&)>;
 private:
-    TypeId d_typeId;
+    TypeKind d_typeId;
     std::string d_name;
     size_t d_size;
     // Function to create the LLVM type; May be null;
     CreateTypeFct d_createType;
 
 public:
-    TypeInfo(TypeId typeId, std::string name, size_t size, CreateTypeFct createType)
+    TypeInfo(TypeKind typeId, std::string name, size_t size, CreateTypeFct createType)
     : d_typeId(typeId)
     , d_name(std::move(name))
     , d_size(size)
@@ -89,7 +86,7 @@ public:
         return d_size;
     }
 
-    TypeId kind() const {
+    TypeKind kind() const {
         return d_typeId;
     }
 

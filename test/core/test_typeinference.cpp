@@ -18,9 +18,9 @@ namespace jex {
 namespace {
 
 static constexpr char typeName[] = "UInt32";
-using ArgUInt32 = Arg<uint32_t, typeName, jex::TypeId::Complex>;
+using ArgUInt32 = Arg<uint32_t, typeName, jex::TypeKind::Value>;
 static constexpr char typeNameInteger[] = "Integer";
-using ArgInteger = Arg<int64_t, typeNameInteger, jex::TypeId::Integer>;
+using ArgInteger = Arg<int64_t, typeNameInteger, jex::TypeKind::Value>;
 void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
 void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
 

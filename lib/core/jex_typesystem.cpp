@@ -7,7 +7,7 @@ namespace jex {
 TypeSystem::TypeSystem()
 : d_types()
 , d_typesByName()
-, d_unresolved(TypeInfoId(&d_types.emplace_back(TypeId::Unresolved, "_Unresolved", 0, nullptr))) {
+, d_unresolved(TypeInfoId(&d_types.emplace_back(TypeKind::Unresolved, "_Unresolved", 0, nullptr))) {
 }
 
 TypeInfoId TypeSystem::getTypeOrUnresolved(std::string_view name) const {
@@ -26,7 +26,7 @@ TypeInfoId TypeSystem::getType(std::string_view name) const {
     return id;
 }
 
-TypeInfoId TypeSystem::registerType(TypeId typeId, std::string name, size_t size, TypeInfo::CreateTypeFct createTypeFct) {
+TypeInfoId TypeSystem::registerType(TypeKind typeId, std::string name, size_t size, TypeInfo::CreateTypeFct createTypeFct) {
     if (d_typesByName.find(name) != d_typesByName.end()) {
         throw InternalError("Duplicate type registration for '" + name + "'");
     }

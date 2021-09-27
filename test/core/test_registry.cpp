@@ -11,9 +11,9 @@ namespace jex {
 namespace {
 
 static constexpr char typeName[] = "UInt32";
-using ArgUInt32 = Arg<uint32_t, typeName, jex::TypeId::Complex>;
+using ArgUInt32 = Arg<uint32_t, typeName, jex::TypeKind::Value>;
 static constexpr char typeNameBool[] = "Boolean";
-using ArgBool = Arg<bool, typeNameBool, jex::TypeId::Complex>;
+using ArgBool = Arg<bool, typeNameBool, jex::TypeKind::Value>;
 
 void pass(uint32_t* res, uint32_t in) {
     *res = in;

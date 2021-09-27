@@ -7,13 +7,13 @@
 namespace jex {
 
 static constexpr char IntegerName[] = "Integer";
-using ArgInteger = Arg<int64_t, IntegerName, TypeId::Integer>;
+using ArgInteger = Arg<int64_t, IntegerName, TypeKind::Value>;
 
 static constexpr char FloatName[] = "Float";
-using ArgFloat = Arg<double, FloatName, TypeId::Float>;
+using ArgFloat = Arg<double, FloatName, TypeKind::Value>;
 
 static constexpr char BoolName[] = "Bool";
-using ArgBool = Arg<bool, BoolName, TypeId::Bool>;
+using ArgBool = Arg<bool, BoolName, TypeKind::Value>;
 
 // TODO: Come up with concept for strings which require some allocation / ownership /
 // call convention.

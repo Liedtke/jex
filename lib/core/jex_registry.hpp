@@ -10,11 +10,11 @@
 
 namespace jex {
 
-template<typename T, const char* _name, TypeId _kind = TypeId::Complex>
+template<typename T, const char* _name, TypeKind _kind = TypeKind::Value>
 struct Arg {
     using type = T;
     using retType = T*;
-    static constexpr TypeId kind = _kind;
+    static constexpr TypeKind kind = _kind;
     static constexpr char const* name = _name;
 };
 
