@@ -110,6 +110,8 @@ static TestErrorT errorTests[] = {
         {"1.27-1.29: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
     {"var a: Integer = if(true, x, x);",
         {"1.1-1.30: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
+    {"var a: Integer = if(true, x, x, x);",
+        {"1.18-1.33: Error: 'if' function requires exactly 3 arguments, 4 given"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInferenceError,

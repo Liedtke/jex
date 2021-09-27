@@ -58,6 +58,9 @@ source_filename = "test"
 
 define i64* @a(%Rctx* %rctx) {
 entry:
+  br label %begin
+
+begin:                                            ; preds = %entry
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to i64*
@@ -67,6 +70,9 @@ entry:
 
 define double* @b(%Rctx* %rctx) {
 entry:
+  br label %begin
+
+begin:                                            ; preds = %entry
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 8
   %varPtrTyped = bitcast i8* %varPtr to double*
@@ -101,6 +107,9 @@ source_filename = "test"
 define i64* @a(%Rctx* %rctx) {
 entry:
   %res_operator_add = alloca i64, align 8
+  br label %begin
+
+begin:                                            ; preds = %entry
   call void @_operator_add_Integer_Integer__intrinsic(i64* %res_operator_add, i64 123, i64 5)
   %0 = load i64, i64* %res_operator_add, align 4
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
@@ -144,6 +153,9 @@ source_filename = "test"
 define double* @a(%Rctx* %rctx) {
 entry:
   %res_operator_add = alloca double, align 8
+  br label %begin
+
+begin:                                            ; preds = %entry
   call void @_operator_add_Float_Float(double* %res_operator_add, double 1.232000e+02, double 5.500000e+00)
   %0 = load double, double* %res_operator_add, align 8
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
@@ -188,6 +200,65 @@ entry:
 }
 
 attributes #0 = { nofree norecurse nounwind }
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
+TEST(Codegen, ifExpression) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env, false);
+    Parser parser(compileEnv,
+    "var a : Integer = if(1 < 1, 1+1, 2+2);");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    compileEnv.getRoot()->accept(typeInference);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%Rctx = type opaque
+
+define i64* @a(%Rctx* %rctx) {
+entry:
+  %res_operator_lt = alloca i1, align 1
+  %res_operator_add = alloca i64, align 8
+  %res_operator_add1 = alloca i64, align 8
+  br label %begin
+
+begin:                                            ; preds = %entry
+  call void @_operator_lt_Integer_Integer(i1* %res_operator_lt, i64 1, i64 1)
+  %0 = load i1, i1* %res_operator_lt, align 1
+  br i1 %0, label %if_true, label %if_false
+
+if_true:                                          ; preds = %begin
+  call void @_operator_add_Integer_Integer(i64* %res_operator_add, i64 1, i64 1)
+  %1 = load i64, i64* %res_operator_add, align 4
+  br label %if_cnt
+
+if_false:                                         ; preds = %begin
+  call void @_operator_add_Integer_Integer(i64* %res_operator_add1, i64 2, i64 2)
+  %2 = load i64, i64* %res_operator_add1, align 4
+  br label %if_cnt
+
+if_cnt:                                           ; preds = %if_false, %if_true
+  %if_res = phi i64 [ %1, %if_true ], [ %2, %if_false ]
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to i64*
+  store i64 %if_res, i64* %varPtrTyped, align 4
+  ret i64* %varPtrTyped
+}
+
+declare void @_operator_lt_Integer_Integer(i1*, i64, i64)
+
+declare void @_operator_add_Integer_Integer(i64*, i64, i64)
 )IR";
     ASSERT_EQ(expected, result);
 }

@@ -73,4 +73,32 @@ TEST(Backend, simpleFctCall) {
     ASSERT_EQ(7, *fctA(ctx.get()));
 }
 
+TEST(Backend, ifExpressionTrue) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : Integer = if(1 < 2, 12+3, 0);", OptLevel::O0);
+    ASSERT_LE(8, compiled.getContextSize());
+    auto ctx = std::make_unique<char[]>(compiled.getContextSize());
+    // Evaluate a.
+    const uintptr_t fctAddr = compiled.getFctPtr("a");
+    ASSERT_NE(0, fctAddr);
+    auto fctA = reinterpret_cast<int64_t* (*)(char*)>(fctAddr);
+    ASSERT_EQ(15, *fctA(ctx.get()));
+}
+
+TEST(Backend, ifExpressionFalse) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : Integer = if(2 < 2, 12+3, 20-21);", OptLevel::O0);
+    ASSERT_LE(8, compiled.getContextSize());
+    auto ctx = std::make_unique<char[]>(compiled.getContextSize());
+    // Evaluate a.
+    const uintptr_t fctAddr = compiled.getFctPtr("a");
+    ASSERT_NE(0, fctAddr);
+    auto fctA = reinterpret_cast<int64_t* (*)(char*)>(fctAddr);
+    ASSERT_EQ(-1, *fctA(ctx.get()));
+}
+
 } // namespace jex

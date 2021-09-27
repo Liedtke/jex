@@ -85,8 +85,9 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
     d_currFct = llvm::Function::Create(
         fctType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, toLlvm(node.d_name->d_name), d_module->llvmModule());
     d_currFct->getArg(0)->setName("rctx");
-    llvm::BasicBlock* block = llvm::BasicBlock::Create(d_module->llvmContext(), "entry", d_currFct);
-    d_builder->SetInsertPoint(block);
+    llvm::BasicBlock* allocaBlock = llvm::BasicBlock::Create(d_module->llvmContext(), "entry", d_currFct);
+    llvm::BasicBlock* blockBegin = llvm::BasicBlock::Create(d_module->llvmContext(), "begin", d_currFct);
+    d_builder->SetInsertPoint(blockBegin);
     // Evaluate expression and store result.
     llvm::Value* result = visitExpression(*node.d_expr);
     // FIXME: Figure out how to handle different calling conventions.
@@ -98,6 +99,9 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
     // TODO: Figure out copy operation: For large values, copy can't be done by a simple storeinst.
     d_builder->CreateStore(result, varPtr);
     d_builder->CreateRet(varPtr);
+    // Link allocas block to begin block.
+    d_builder->SetInsertPoint(allocaBlock);
+    d_builder->CreateBr(blockBegin);
     d_currFct = nullptr;
 }
 
@@ -171,6 +175,30 @@ void CodeGenVisitor::visit(AstFctCall& node) {
     // Call the function.
     d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), args);
     d_result = d_builder->CreateLoad(res);
+}
+
+void CodeGenVisitor::visit(AstIf& node) {
+    llvm::BasicBlock* trueBranch = llvm::BasicBlock::Create(d_module->llvmContext(), "if_true", d_currFct);
+    llvm::BasicBlock* falseBranch = llvm::BasicBlock::Create(d_module->llvmContext(), "if_false", d_currFct);
+    llvm::BasicBlock* cntBranch = llvm::BasicBlock::Create(d_module->llvmContext(), "if_cnt", d_currFct);
+    // Generate condition.
+    llvm::Value* cond = visitExpression(*node.d_args->d_args[0]);
+    d_builder->CreateCondBr(cond, trueBranch, falseBranch);
+    // Generate true branch.
+    d_builder->SetInsertPoint(trueBranch);
+    llvm::Value* trueVal = visitExpression(*node.d_args->d_args[1]);
+    d_builder->CreateBr(cntBranch);
+    // Generate false branch.
+    d_builder->SetInsertPoint(falseBranch);
+    llvm::Value* falseVal = visitExpression(*node.d_args->d_args[2]);
+    d_builder->CreateBr(cntBranch);
+    // Generate merged branch (continue).
+    d_builder->SetInsertPoint(cntBranch);
+    assert(trueVal->getType() == falseVal->getType());
+    llvm::PHINode* phiRes = d_builder->CreatePHI(trueVal->getType(), 2, "if_res");
+    phiRes->addIncoming(trueVal, trueBranch);
+    phiRes->addIncoming(falseVal, falseBranch);
+    d_result = phiRes;
 }
 
 } // namespace jex
