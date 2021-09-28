@@ -44,7 +44,9 @@ private:
     llvm::Value* visitExpression(IAstExpression& node);
     llvm::Value* getVarPtr(Symbol* varSym);
     llvm::Type* getType(TypeInfoId type);
+    llvm::StructType* createOpaqueStructType(TypeInfoId type);
     llvm::FunctionCallee getOrCreateFct(const FctInfo* fctInfo);
+    void createPlacementCopy(llvm::Value* result, llvm::Value* source, TypeInfoId type);
 };
 
 } // namespace jex

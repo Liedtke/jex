@@ -263,4 +263,38 @@ declare void @_operator_add_Integer_Integer(i64*, i64, i64)
     ASSERT_EQ(expected, result);
 }
 
+TEST(Codegen, stringLiteral) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : String = \"Hello World!\";");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    compileEnv.getRoot()->accept(typeInference);
+    CodeGen codeGen(compileEnv, OptLevel::O3);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%String = type { i64, i64, i64, i64 }
+%Rctx = type opaque
+
+define %String* @a(%Rctx* %rctx) local_unnamed_addr {
+entry:
+  %varPtrTyped = bitcast %Rctx* %rctx to %String*
+  tail call void @String__placement_copy(%String* nonnull @strLit_l1_c18, %String* %varPtrTyped)
+  ret %String* %varPtrTyped
+}
+
+declare void @String__placement_copy(%String*, %String*) local_unnamed_addr
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
 } // namespace jex

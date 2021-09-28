@@ -13,10 +13,10 @@ namespace jex::test {
 
 static inline void registerBuiltIns(Environment& env) {
     TypeSystem& types = env.types();
-    types.registerType(TypeKind::Value, "Bool", 1);
-    types.registerType(TypeKind::Value, "Integer", 8);
-    types.registerType(TypeKind::Value, "Float", 8);
-    types.registerType(TypeKind::Value, "String", 2);
+    types.registerType(TypeKind::Value, "Bool", 1, 1);
+    types.registerType(TypeKind::Value, "Integer", 8, 8);
+    types.registerType(TypeKind::Value, "Float", 8, 8);
+    types.registerType(TypeKind::Value, "String", 8, 8);
 }
 
 }

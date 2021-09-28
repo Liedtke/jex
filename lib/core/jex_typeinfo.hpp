@@ -77,17 +77,19 @@ private:
     TypeKind d_typeId;
     std::string d_name;
     size_t d_size;
+    size_t d_alignment;
     // Function to create the LLVM type; May be null;
     CreateTypeFct d_createType;
     // Functions to manage lifetime of object.
     LifetimeFcts d_lifetimeFcts;
 
 public:
-    TypeInfo(TypeKind typeId, std::string name, size_t size, CreateTypeFct createType,
-             LifetimeFcts lifetimeFcts = {})
+    TypeInfo(TypeKind typeId, std::string name, size_t size, size_t alignment,
+             CreateTypeFct createType, LifetimeFcts lifetimeFcts = {})
     : d_typeId(typeId)
     , d_name(std::move(name))
     , d_size(size)
+    , d_alignment(alignment)
     , d_createType(createType)
     , d_lifetimeFcts(lifetimeFcts) {
     }
@@ -102,6 +104,10 @@ public:
 
     size_t size() const {
         return d_size;
+    }
+
+    size_t alignment() const {
+        return d_alignment;
     }
 
     TypeKind kind() const {

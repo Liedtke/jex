@@ -7,8 +7,8 @@
 namespace jex {
 
 TEST(TypeInfo, idEquals) {
-    TypeInfo a(TypeKind::Value, "Bool", 1, nullptr);
-    TypeInfo b(TypeKind::Value, "Bool", 1, nullptr);
+    TypeInfo a(TypeKind::Value, "Bool", 1, 1, nullptr);
+    TypeInfo b(TypeKind::Value, "Bool", 1, 1, nullptr);
     // Equality is based on memory address.
     EXPECT_FALSE(a.id() == b.id());
     EXPECT_TRUE(a.id() != b.id());
@@ -17,7 +17,7 @@ TEST(TypeInfo, idEquals) {
 }
 
 TEST(TypeInfo, getTypeInfoFromId) {
-    TypeInfo ti(TypeKind::Value, "Bool", 1, nullptr);
+    TypeInfo ti(TypeKind::Value, "Bool", 1, 1, nullptr);
     EXPECT_EQ(&ti, &ti.id().get());
     EXPECT_EQ("Bool", ti.id()->name());
 }
@@ -31,7 +31,7 @@ TEST(TypeSystem, getUnregisteredType) {
 
 TEST(TypeSystem, repeatedGetType) {
     TypeSystem ts;
-    ts.registerType(jex::TypeKind::Value, "Integer", 8);
+    ts.registerType(jex::TypeKind::Value, "Integer", 8, 8);
     TypeInfoId id1 = ts.getType("Integer");
     TypeInfoId id2 = ts.getType("Integer");
     EXPECT_TRUE(id1 == id2);

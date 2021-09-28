@@ -1,6 +1,7 @@
 #include <jex_compileenv.hpp>
 
 #include <jex_ast.hpp>
+#include <jex_constantstore.hpp>
 #include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_fctlibrary.hpp>
@@ -17,7 +18,8 @@ CompileEnv::CompileEnv(const Environment& env, bool useIntrinsics)
 , d_messages(std::make_unique<std::set<MsgInfo>>())
 , d_typeSystem(env.types())
 , d_fctLibrary(env.fctLib())
-, d_symbolTable(std::make_unique<SymbolTable>(*this)) {
+, d_symbolTable(std::make_unique<SymbolTable>(*this))
+, d_constants(std::make_unique<ConstantStore>()) {
 };
 
 CompileEnv::~CompileEnv() {

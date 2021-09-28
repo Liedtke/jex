@@ -18,9 +18,6 @@ using ArgBool = ArgValue<bool, BoolName>;
 static constexpr char StringName[] = "String";
 using ArgString = ArgObject<std::string, StringName>;
 
-// TODO: Come up with concept for strings which require some allocation / ownership /
-// call convention.
-
 /**
  * Defines a module containing the built-in types and functions.
  */

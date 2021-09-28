@@ -36,7 +36,7 @@ public:
      * Registers a new type with given type kind and name. If a type with the same name has already
      * been registered, throws an InternalError.
      */
-    TypeInfoId registerType(TypeKind typeId, std::string name, size_t size,
+    TypeInfoId registerType(TypeKind typeId, std::string name, size_t size, size_t alignment,
                             TypeInfo::CreateTypeFct createTypeFct = nullptr,
                             const LifetimeFcts& lifetimeFcts = {});
 

@@ -2,6 +2,7 @@
 
 #include <jex_ast.hpp>
 #include <jex_codemodule.hpp>
+#include <jex_constantstore.hpp>
 #include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_intrinsicgen.hpp>
@@ -46,14 +47,23 @@ void CodeGenVisitor::createIR() {
     d_env.getRoot()->accept(*this);
 }
 
+llvm::StructType* CodeGenVisitor::createOpaqueStructType(TypeInfoId type) {
+    assert(type->size() % type->alignment() == 0 && "Type size has to be a multiple of its alignment");
+    size_t numElements = type->size() / type->alignment();
+    llvm::Type* intTy = llvm::IntegerType::get(d_module->llvmContext(), type->alignment() * 8);
+    return llvm::StructType::create(std::vector<llvm::Type*>(numElements, intTy), type->name());
+}
+
 llvm::Type* CodeGenVisitor::getType(TypeInfoId type) {
     auto[iter, inserted] = d_types.emplace(type, nullptr);
     if (inserted) {
         const TypeInfo::CreateTypeFct& fct = type->createTypeFct();
-        if (!fct) {
-            throw InternalError("Missing llvm::Type creator for type '" + type->name() + "'");
+        if (fct) {
+            iter->second = fct(d_module->llvmContext());
+        } else {
+            assert(!d_module->llvmModule().getTypeByName(type->name()));
+            iter->second = createOpaqueStructType(type);
         }
-        iter->second = fct(d_module->llvmContext());
     }
     return iter->second;
 }
@@ -77,6 +87,21 @@ llvm::Value* CodeGenVisitor::getVarPtr(Symbol* varSym) {
     return d_builder->CreateBitCast(varPtr, getType(varSym->type)->getPointerTo(), "varPtrTyped");
 }
 
+void CodeGenVisitor::createPlacementCopy(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
+    assert(result->getType() == source->getType() && "Placement copy expects two pointers of the same type");
+    assert(type->lifetimeFcts().copyConstructor && "Copy constructor required");
+    // Create function if not yet created.
+    std::string fctName = type->name() + "__placement_copy";
+    llvm::Function* fct = d_module->llvmModule().getFunction(fctName);
+    if (!fct) {
+        llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
+        llvm::FunctionType* fctType = llvm::FunctionType::get(llvm::Type::getVoidTy(d_module->llvmContext()), {argType, argType}, false);
+        auto extLinkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
+        fct = llvm::Function::Create(fctType, extLinkage, fctName, d_module->llvmModule());
+    }
+    d_builder->CreateCall(fct->getFunctionType(), fct, {result, source});
+}
+
 void CodeGenVisitor::visit(AstVariableDef& node) {
     assert(d_currFct == nullptr);
     // Create function.
@@ -91,13 +116,15 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
     // Evaluate expression and store result.
     llvm::Value* result = visitExpression(*node.d_expr);
     // FIXME: Figure out how to handle different calling conventions.
-    // Current implementation will not work properly if type's underlying value is already a pointer type.
-    if (result->getType()->isPointerTy()) {
-        result = d_builder->CreateLoad(result, "resultLoaded");
-    }
     llvm::Value* varPtr = getVarPtr(node.d_name->d_symbol);
-    // TODO: Figure out copy operation: For large values, copy can't be done by a simple storeinst.
-    d_builder->CreateStore(result, varPtr);
+    if (node.d_resultType->kind() == TypeKind::Complex) {
+        // TODO: Figure out if varPtr is temporary and generate placement move instead.
+        createPlacementCopy(result, varPtr, node.d_resultType);
+    } else {
+        // Perform a simple store.
+        // TODO: This might not be the right thing to do for large values.
+        d_builder->CreateStore(result, varPtr);
+    }
     d_builder->CreateRet(varPtr);
     // Link allocas block to begin block.
     d_builder->SetInsertPoint(allocaBlock);
@@ -117,7 +144,12 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
             return llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(1, val));
         },
         [&](std::string_view val) -> llvm::Value* {
-            d_env.throwError(node.d_loc, "Literal not supported by code generation");
+            const std::string* constStr = d_env.constants().emplace<std::string>(val);
+            llvm::Type* strType = getType(d_env.typeSystem().getType("String"));
+            llvm::Twine name = "strLit_l" + llvm::Twine(node.d_loc.begin.line) + "_c" + llvm::Twine(node.d_loc.begin.col);
+            llvm::Value* var = new llvm::GlobalVariable(strType, /*isConstant*/true, llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr, name);
+            (void)constStr; // FIXME: Store mapping from name to constant pointer somewhere to link later on.
+            return var;
         }
     }, node.d_value);
 }

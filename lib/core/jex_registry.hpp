@@ -87,13 +87,13 @@ public:
 
     template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Value, bool> = true>
     void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
-        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), fct);
+        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), alignof(typename ArgT::type), fct);
     }
 
     template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Complex, bool> = true>
     void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
         LifetimeFcts ltFcts = {ArgT::destructor, ArgT::copyConstructor, ArgT::moveConstructor};
-        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), fct, ltFcts);
+        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), alignof(typename ArgT::type), fct, ltFcts);
     }
 
     template <typename ...T>

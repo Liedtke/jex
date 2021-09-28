@@ -20,6 +20,7 @@ class TypeSystem;
 class FctLibrary;
 class Environment;
 class FctInfo;
+class ConstantStore;
 
 /**
  * Stores and provides access to any object needed during compilation.
@@ -38,6 +39,7 @@ class CompileEnv : NoCopy {
     std::unique_ptr<SymbolTable> d_symbolTable;
     std::deque<std::string> d_stringLiterals;
     std::unordered_set<const FctInfo*> d_usedFcts;
+    std::unique_ptr<ConstantStore> d_constants;
 
     // Size of the runtime context.
     std::optional<size_t> d_contextSize;
@@ -111,6 +113,10 @@ public:
     }
 
     std::string_view createStringLiteral(std::string_view str);
+
+    ConstantStore& constants() {
+        return *d_constants;
+    }
 };
 
 } // namespace jex
