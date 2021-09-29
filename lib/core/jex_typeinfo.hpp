@@ -86,16 +86,21 @@ private:
     CreateTypeFct d_createType;
     // Functions to manage lifetime of object.
     LifetimeFcts d_lifetimeFcts;
+    // Indicator whether the value can be zero-initialized.
+    // If desired, this could be replaced with a std::variant holding the
+    // initializer values for some supported types (like numbers, floats, ...)
+    bool d_isZeroInitialized;
 
 public:
     TypeInfo(TypeKind typeId, std::string name, size_t size, size_t alignment,
-             CreateTypeFct createType, LifetimeFcts lifetimeFcts = {})
+             CreateTypeFct createType, bool isZeroInitialized = false, LifetimeFcts lifetimeFcts = {})
     : d_typeId(typeId)
     , d_name(std::move(name))
     , d_size(size)
     , d_alignment(alignment)
     , d_createType(createType)
-    , d_lifetimeFcts(lifetimeFcts) {
+    , d_lifetimeFcts(lifetimeFcts)
+    , d_isZeroInitialized(isZeroInitialized) {
     }
 
     TypeInfoId id() const {
@@ -124,6 +129,10 @@ public:
 
     const LifetimeFcts& lifetimeFcts() const {
         return d_lifetimeFcts;
+    }
+
+    bool isZeroInitialized() const {
+        return d_isZeroInitialized;
     }
 };
 

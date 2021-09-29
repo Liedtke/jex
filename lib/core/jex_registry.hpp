@@ -104,18 +104,12 @@ public:
     , d_fcts(env.fctLib()) {
     }
 
-    template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Value, bool> = true>
-    void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
-        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type),
-                             alignof(typename ArgT::type), fct);
-    }
-
-    template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Complex, bool> = true>
-    void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
+    template <typename ArgT>
+    void registerType(TypeInfo::CreateTypeFct fct = nullptr, bool isZeroInitialized = false) {
         LifetimeFcts ltFcts = {ArgT::destructor, ArgT::copyConstructor, ArgT::moveConstructor,
                                ArgT::assign, ArgT::moveAssign};
         d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type),
-                             alignof(typename ArgT::type), fct, ltFcts);
+                             alignof(typename ArgT::type), fct, ltFcts, isZeroInitialized);
     }
 
     template <typename ...T>
