@@ -121,9 +121,12 @@ TEST(Registry, registerComplexType) {
         size_t dtor = 0;
         size_t copyCtor = 0;
         size_t moveCtor = 0;
+        size_t assign = 0;
+        size_t moveAssign = 0;
 
         bool operator==(const Counts& other) const {
-            return dtor == other.dtor && copyCtor == other.copyCtor && moveCtor == other.moveCtor;
+            return dtor == other.dtor && copyCtor == other.copyCtor && moveCtor == other.moveCtor
+                && assign == other.assign && moveAssign == other.moveAssign;
         }
     };
     struct TestClass {
@@ -137,6 +140,16 @@ TEST(Registry, registerComplexType) {
         }
         ~TestClass() {
             ++counts->dtor;
+        }
+        TestClass& operator=(const TestClass& other) {
+            counts = other.counts;
+            ++counts->assign;
+            return *this;
+        }
+        TestClass& operator=(TestClass&& other) {
+            counts = other.counts;
+            ++counts->moveAssign;
+            return *this;
         }
     };
 
@@ -156,13 +169,17 @@ TEST(Registry, registerComplexType) {
     TestClass testObj(&counts);
     TestClass other(&counts);
     type.lifetimeFcts().destructor(&other);
-    EXPECT_TRUE((Counts{1, 0, 0} == counts));
+    EXPECT_TRUE((Counts{1, 0, 0, 0, 0} == counts));
     type.lifetimeFcts().copyConstructor(&other, &testObj);
-    EXPECT_TRUE((Counts{1, 1, 0} == counts));
+    EXPECT_TRUE((Counts{1, 1, 0, 0, 0} == counts));
     type.lifetimeFcts().destructor(&other);
-    EXPECT_TRUE((Counts{2, 1, 0} == counts));
+    EXPECT_TRUE((Counts{2, 1, 0, 0, 0} == counts));
     type.lifetimeFcts().moveConstructor(&other, &testObj);
-    EXPECT_TRUE((Counts{2, 1, 1} == counts));
+    EXPECT_TRUE((Counts{2, 1, 1, 0, 0} == counts));
+    type.lifetimeFcts().assign(&other, &testObj);
+    EXPECT_TRUE((Counts{2, 1, 1, 1, 0} == counts));
+    type.lifetimeFcts().moveAssign(&other, &testObj);
+    EXPECT_TRUE((Counts{2, 1, 1, 1, 1} == counts));
 }
 
 } // namespace jex

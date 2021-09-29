@@ -25,10 +25,14 @@ struct LifetimeFcts {
     using DtorT = void(*)(void*);
     using CopyCtorT = void(*)(void* /*target*/, const void* /*source*/);
     using MoveCtorT = void(*)(void* /*target*/, void* /*source*/);
+    using AssignT = void(*)(void* /*target*/, const void* /*source*/);
+    using MoveAssignT = void(*)(void* /*target*/, void* /*source*/);
 
     DtorT destructor = nullptr;
     CopyCtorT copyConstructor = nullptr;
     MoveCtorT moveConstructor = nullptr;
+    AssignT assign = nullptr;
+    MoveAssignT moveAssign = nullptr;
 };
 
 /**

@@ -14,21 +14,18 @@ struct Arg {
     using type = T;
     using retType = T*;
     static constexpr char const* name = _name;
-};
 
-template<typename T, const char* _name>
-struct ArgValue : public Arg<T, _name> {
-    static constexpr TypeKind kind = TypeKind::Value;
-};
-
-template<typename T, const char* _name>
-struct ArgObject : public Arg<T, _name> {
-    static constexpr TypeKind kind = TypeKind::Complex;
+    static void defaultConstructor(void* obj) {
+        static_assert(std::is_default_constructible_v<T>,
+            "Default constructor required for all types used in expressions");
+        new (static_cast<T*>(obj)) T();
+    }
 
     static void destructor(void* obj) noexcept {
         static_cast<T*>(obj)->~T();
     }
 
+    // TODO: Figure out which of these operations are actually needed / useful.
     static void copyConstructor(void* target, const void* source) {
         new (static_cast<T*>(target)) T(*static_cast<const T*>(source));
     }
@@ -40,6 +37,28 @@ struct ArgObject : public Arg<T, _name> {
             copyConstructor(target, source);
         }
     }
+
+    static void assign(void* target, const void* source) {
+        *static_cast<T*>(target) = *static_cast<const T*>(source);
+    }
+
+    static void moveAssign(void* target, void* source) {
+        if constexpr (std::is_move_assignable_v<T>) {
+            *static_cast<T*>(target) = std::move(*static_cast<T*>(source));
+        } else {
+            assign(target, source);
+        }
+    }
+};
+
+template<typename T, const char* _name>
+struct ArgValue : public Arg<T, _name> {
+    static constexpr TypeKind kind = TypeKind::Value;
+};
+
+template<typename T, const char* _name>
+struct ArgObject : public Arg<T, _name> {
+    static constexpr TypeKind kind = TypeKind::Complex;
 };
 
 template<typename ArgRet, typename... ArgT>
@@ -87,13 +106,16 @@ public:
 
     template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Value, bool> = true>
     void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
-        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), alignof(typename ArgT::type), fct);
+        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type),
+                             alignof(typename ArgT::type), fct);
     }
 
     template <typename ArgT, std::enable_if_t<ArgT::kind == TypeKind::Complex, bool> = true>
     void registerType(TypeInfo::CreateTypeFct fct = nullptr) {
-        LifetimeFcts ltFcts = {ArgT::destructor, ArgT::copyConstructor, ArgT::moveConstructor};
-        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type), alignof(typename ArgT::type), fct, ltFcts);
+        LifetimeFcts ltFcts = {ArgT::destructor, ArgT::copyConstructor, ArgT::moveConstructor,
+                               ArgT::assign, ArgT::moveAssign};
+        d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type),
+                             alignof(typename ArgT::type), fct, ltFcts);
     }
 
     template <typename ...T>
