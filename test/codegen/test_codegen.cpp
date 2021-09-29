@@ -375,6 +375,8 @@ source_filename = "test"
 %String = type { i64, i64, i64, i64 }
 %Rctx = type opaque
 
+@strLit_l1_c18 = external constant %String
+
 define %String* @a(%Rctx* %rctx) {
 entry:
   br label %begin

@@ -9,6 +9,8 @@
 #include <jex_fctinfo.hpp>
 #include <jex_symboltable.hpp>
 
+#include "llvm/Support/FormatVariadic.h"
+
 #include <set>
 #include <sstream>
 
@@ -212,8 +214,9 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
         [&](std::string_view val) -> llvm::Value* {
             const std::string* constStr = d_env.constants().emplace<std::string>(val);
             llvm::Type* strType = getType(d_env.typeSystem().getType("String"));
-            llvm::Twine name = "strLit_l" + llvm::Twine(node.d_loc.begin.line) + "_c" + llvm::Twine(node.d_loc.begin.col);
-            llvm::Value* var = new llvm::GlobalVariable(strType, /*isConstant*/true, llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr, name);
+            llvm::Value* var = new llvm::GlobalVariable(d_module->llvmModule(), strType, /*isConstant*/true,
+                llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr,
+                llvm::formatv("strLit_l{0}_c{1}", node.d_loc.begin.line, node.d_loc.begin.col));
             (void)constStr; // FIXME: Store mapping from name to constant pointer somewhere to link later on.
             return var;
         }
