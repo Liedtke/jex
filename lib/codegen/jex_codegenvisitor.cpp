@@ -87,11 +87,11 @@ llvm::Value* CodeGenVisitor::getVarPtr(Symbol* varSym) {
     return d_builder->CreateBitCast(varPtr, getType(varSym->type)->getPointerTo(), "varPtrTyped");
 }
 
-void CodeGenVisitor::createPlacementCopy(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
-    assert(result->getType() == source->getType() && "Placement copy expects two pointers of the same type");
-    assert(type->lifetimeFcts().copyConstructor && "Copy constructor required");
+void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
+    assert(result->getType() == source->getType() && "Assign expects two pointers of the same type");
+    assert(type->lifetimeFcts().assign && "Assignment required");
     // Create function if not yet created.
-    std::string fctName = type->name() + "__placement_copy";
+    std::string fctName = type->name() + "__assign";
     llvm::Function* fct = d_module->llvmModule().getFunction(fctName);
     if (!fct) {
         llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
@@ -118,8 +118,8 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
     // FIXME: Figure out how to handle different calling conventions.
     llvm::Value* varPtr = getVarPtr(node.d_name->d_symbol);
     if (node.d_resultType->kind() == TypeKind::Complex) {
-        // TODO: Figure out if varPtr is temporary and generate placement move instead.
-        createPlacementCopy(result, varPtr, node.d_resultType);
+        // TODO: Figure out if varPtr is temporary and generate move assign instead.
+        createAssign(result, varPtr, node.d_resultType);
     } else {
         // Perform a simple store.
         // TODO: This might not be the right thing to do for large values.
