@@ -74,7 +74,7 @@ void CodeGenVisitor::createInitDestructFct(Iter symBegin, Iter symEnd, const cha
                                            void(CodeGenVisitor::*createCall)(const Symbol*)) {
     // Create Function.
     llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
-    llvm::Type* rctxPtrTy = d_module->llvmModule().getTypeByName("Rctx")->getPointerTo();
+    llvm::Type* rctxPtrTy = llvm::StructType::getTypeByName(d_module->llvmContext(), "Rctx")->getPointerTo();
     llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, {rctxPtrTy}, false);
     d_currFct = llvm::Function::Create(
         fctType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, llvm::Twine(prefix) + "_rctx", d_module->llvmModule());
@@ -129,7 +129,7 @@ llvm::Type* CodeGenVisitor::getType(TypeInfoId type) {
         if (fct) {
             iter->second = fct(d_module->llvmContext());
         } else {
-            assert(!d_module->llvmModule().getTypeByName(type->name()));
+            assert(!llvm::StructType::getTypeByName(d_module->llvmContext(), type->name()));
             iter->second = createOpaqueStructType(type);
         }
     }

@@ -251,7 +251,7 @@ source_filename = "test"
 
 %Rctx = type opaque
 
-; Function Attrs: nofree norecurse nounwind
+; Function Attrs: nofree norecurse nounwind willreturn
 define i64* @a(%Rctx* %rctx) local_unnamed_addr #0 {
 entry:
   %varPtrTyped = bitcast %Rctx* %rctx to i64*
@@ -259,7 +259,7 @@ entry:
   ret i64* %varPtrTyped
 }
 
-; Function Attrs: nofree norecurse nounwind writeonly
+; Function Attrs: nofree norecurse nounwind willreturn writeonly
 define void @__init_rctx(%Rctx* nocapture %rctx) local_unnamed_addr #1 {
 entry:
   %varPtrTyped = bitcast %Rctx* %rctx to i64*
@@ -267,15 +267,15 @@ entry:
   ret void
 }
 
-; Function Attrs: norecurse nounwind readnone
+; Function Attrs: norecurse nounwind readnone willreturn
 define void @__destruct_rctx(%Rctx* nocapture readnone %rctx) local_unnamed_addr #2 {
 entry:
   ret void
 }
 
-attributes #0 = { nofree norecurse nounwind }
-attributes #1 = { nofree norecurse nounwind writeonly }
-attributes #2 = { norecurse nounwind readnone }
+attributes #0 = { nofree norecurse nounwind willreturn }
+attributes #1 = { nofree norecurse nounwind willreturn writeonly }
+attributes #2 = { norecurse nounwind readnone willreturn }
 )IR";
     ASSERT_EQ(expected, result);
 }
