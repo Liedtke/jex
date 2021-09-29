@@ -29,9 +29,23 @@ TEST(Codegen, empty) {
     std::string result;
     llvm::raw_string_ostream irstream(result);
     irstream << codeGen.getLlvmModule();
-    ASSERT_EQ("; ModuleID = 'test'\n"
-              "source_filename = \"test\"\n",
-              result);
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%Rctx = type opaque
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  ret void
+}
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  ret void
+}
+)IR";
+    ASSERT_EQ(expected, result);
 }
 
 TEST(Codegen, simpleVarDef) {
@@ -79,6 +93,24 @@ begin:                                            ; preds = %entry
   store double 1.234560e+02, double* %varPtrTyped, align 8
   ret double* %varPtrTyped
 }
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to i64*
+  store i64 0, i64* %varPtrTyped, align 4
+  %rctxAsBytePtr1 = bitcast %Rctx* %rctx to i8*
+  %varPtr2 = getelementptr i8, i8* %rctxAsBytePtr1, i64 8
+  %varPtrTyped3 = bitcast i8* %varPtr2 to double*
+  store double 0.000000e+00, double* %varPtrTyped3, align 8
+  ret void
+}
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  ret void
+}
 )IR";
     ASSERT_EQ(expected, result);
 }
@@ -125,6 +157,20 @@ entry:
   store i64 %result, i64* %0, align 4
   ret void
 }
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to i64*
+  store i64 0, i64* %varPtrTyped, align 4
+  ret void
+}
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  ret void
+}
 )IR";
     ASSERT_EQ(expected, result);
 }
@@ -166,6 +212,20 @@ begin:                                            ; preds = %entry
 }
 
 declare void @_operator_add_Float_Float(double*, double, double)
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to double*
+  store double 0.000000e+00, double* %varPtrTyped, align 8
+  ret void
+}
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  ret void
+}
 )IR";
     ASSERT_EQ(expected, result);
 }
@@ -199,7 +259,23 @@ entry:
   ret i64* %varPtrTyped
 }
 
+; Function Attrs: nofree norecurse nounwind writeonly
+define void @__init_rctx(%Rctx* nocapture %rctx) local_unnamed_addr #1 {
+entry:
+  %varPtrTyped = bitcast %Rctx* %rctx to i64*
+  store i64 0, i64* %varPtrTyped, align 4
+  ret void
+}
+
+; Function Attrs: norecurse nounwind readnone
+define void @__destruct_rctx(%Rctx* nocapture readnone %rctx) local_unnamed_addr #2 {
+entry:
+  ret void
+}
+
 attributes #0 = { nofree norecurse nounwind }
+attributes #1 = { nofree norecurse nounwind writeonly }
+attributes #2 = { norecurse nounwind readnone }
 )IR";
     ASSERT_EQ(expected, result);
 }
@@ -259,6 +335,20 @@ if_cnt:                                           ; preds = %if_false, %if_true
 declare void @_operator_lt_Integer_Integer(i1*, i64, i64)
 
 declare void @_operator_add_Integer_Integer(i64*, i64, i64)
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to i64*
+  store i64 0, i64* %varPtrTyped, align 4
+  ret void
+}
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  ret void
+}
 )IR";
     ASSERT_EQ(expected, result);
 }
@@ -297,7 +387,29 @@ begin:                                            ; preds = %entry
   ret %String* %varPtrTyped
 }
 
-declare void @String__assign(%String*, %String*)
+declare internal void @String__assign(%String*, %String*)
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @String__ctor(%String* %varPtrTyped)
+  ret void
+}
+
+declare internal void @String__ctor(%String*)
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @String__dtor(%String* %varPtrTyped)
+  ret void
+}
+
+declare internal void @String__dtor(%String*)
 )IR";
     ASSERT_EQ(expected, result);
 }

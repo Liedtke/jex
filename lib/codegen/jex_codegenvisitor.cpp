@@ -25,26 +25,92 @@ CodeGenVisitor::CodeGenVisitor(CompileEnv& env)
 CodeGenVisitor::~CodeGenVisitor() {
 }
 
+void CodeGenVisitor::createInit(const Symbol* sym) {
+    llvm::Value* var = getVarPtr(sym);
+    TypeInfoId type = sym->type;
+    if (type->isZeroInitialized()) {
+        // Simplified initialization instead of function call.
+        d_builder->CreateStore(llvm::Constant::getNullValue(var->getType()->getPointerElementType()), var);
+        return;
+    }
+    // Create constructor if not yet created.
+    assert(type->lifetimeFcts().defaultConstructor && "Default constructor required");
+    std::string fctName = type->name() + "__ctor";
+    llvm::Function* fct = d_module->llvmModule().getFunction(fctName);
+    if (!fct) {
+        llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
+        llvm::FunctionType* fctType = llvm::FunctionType::get(llvm::Type::getVoidTy(d_module->llvmContext()), {argType}, false);
+        auto linkage = llvm::GlobalValue::LinkageTypes::InternalLinkage;
+        fct = llvm::Function::Create(fctType, linkage, fctName, d_module->llvmModule());
+    }
+    d_builder->CreateCall(fct->getFunctionType(), fct, {var});
+}
+
+void CodeGenVisitor::createDestruct(const Symbol* sym) {
+    TypeInfoId type = sym->type;
+    if (type->kind() == TypeKind::Value) {
+        return; // Nothing to do for value types.
+    }
+    assert(type->kind() == TypeKind::Complex &&
+           "The context may only contain value and complex types");
+    // Create destructor if not yet created.
+    assert(type->lifetimeFcts().destructor && "Destructor required");
+    std::string fctName = type->name() + "__dtor";
+    llvm::Function* fct = d_module->llvmModule().getFunction(fctName);
+    if (!fct) {
+        llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
+        llvm::FunctionType* fctType = llvm::FunctionType::get(llvm::Type::getVoidTy(d_module->llvmContext()), {argType}, false);
+        auto linkage = llvm::GlobalValue::LinkageTypes::InternalLinkage;
+        fct = llvm::Function::Create(fctType, linkage, fctName, d_module->llvmModule());
+    }
+    d_builder->CreateCall(fct->getFunctionType(), fct, {getVarPtr(sym)});
+
+}
+
+template<typename Iter>
+void CodeGenVisitor::createInitDestructFct(Iter symBegin, Iter symEnd, const char* prefix,
+                                           void(CodeGenVisitor::*createCall)(const Symbol*)) {
+    // Create Function.
+    llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
+    llvm::Type* rctxPtrTy = d_module->llvmModule().getTypeByName("Rctx")->getPointerTo();
+    llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, {rctxPtrTy}, false);
+    d_currFct = llvm::Function::Create(
+        fctType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, llvm::Twine(prefix) + "_rctx", d_module->llvmModule());
+    d_currFct->getArg(0)->setName("rctx");
+    d_builder->SetInsertPoint(llvm::BasicBlock::Create(d_module->llvmContext(), "entry", d_currFct));
+    // Initialize all variables in context.
+    Iter iter = symBegin;
+    while (iter != symEnd) {
+        const Symbol* sym = *iter;
+        (this->*createCall)(sym);
+        ++iter;
+    }
+    d_builder->CreateRetVoid();
+}
+
 void CodeGenVisitor::createIR() {
     d_offsets.clear();
     d_module = std::make_unique<CodeModule>(d_env);
     d_builder = std::make_unique<llvm::IRBuilder<>>(d_module->llvmContext());
-    // Order by size descending, then by symbol name ascending.
+    // Order by alignment descending, then by symbol name ascending.
     auto cmp = [](const Symbol* a, const Symbol* b) {
-        return a->type->size() > b->type->size() ? true : a->name < b->name;
+        return a->type->alignment() > b->type->alignment() ? true : a->name < b->name;
     };
-    std::set<Symbol*, decltype(cmp)> vars(cmp);
+    std::set<const Symbol*, decltype(cmp)> vars(cmp);
     for (AstVariableDef* varDef: d_env.getRoot()->d_varDefs) {
         vars.insert(varDef->d_name->d_symbol);
     }
     size_t offset = 0;
-    for (Symbol* sym : vars) {
+    for (const Symbol* sym : vars) {
         d_offsets.emplace(sym, offset);
         offset += sym->type->size();
     }
     d_env.setContextSize(offset);
     d_rctxType = llvm::StructType::create(d_module->llvmContext(), "Rctx");
     d_env.getRoot()->accept(*this);
+    // Generate lifetime functions for context.
+    createInitDestructFct(vars.begin(), vars.end(), "__init", &CodeGenVisitor::createInit);
+    createInitDestructFct(vars.begin(), vars.end(), "__destruct", &CodeGenVisitor::createDestruct);
 }
 
 llvm::StructType* CodeGenVisitor::createOpaqueStructType(TypeInfoId type) {
@@ -75,16 +141,16 @@ llvm::Value* CodeGenVisitor::visitExpression(IAstExpression& node) {
     return std::exchange(d_result, nullptr);
 }
 
-llvm::Value* CodeGenVisitor::getVarPtr(Symbol* varSym) {
+llvm::Value* CodeGenVisitor::getVarPtr(const Symbol* varSym) {
     // Get rctx as i8*.
     llvm::Value* rctx = d_currFct->getArg(0);
-    llvm::Type* bytePtrTy = llvm::IntegerType::get(d_module->llvmContext(), 8)->getPointerTo();
-    llvm::Value* rctxAsI8Ptr = d_builder->CreateBitCast(rctx, bytePtrTy, "rctxAsBytePtr");
+    llvm::Type* bytePtrTy = llvm::Type::getInt8PtrTy(d_module->llvmContext());
+    llvm::Value* rctxAsI8Ptr = d_builder->CreatePointerCast(rctx, bytePtrTy, "rctxAsBytePtr");
     // Apply offset to rctx pointer.
     llvm::Value* offset = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(64, d_offsets[varSym]));
     llvm::Value* varPtr = d_builder->CreateGEP(bytePtrTy->getPointerElementType(), rctxAsI8Ptr, offset, "varPtr");
     // Reinterpret cast to target type.
-    return d_builder->CreateBitCast(varPtr, getType(varSym->type)->getPointerTo(), "varPtrTyped");
+    return d_builder->CreatePointerCast(varPtr, getType(varSym->type)->getPointerTo(), "varPtrTyped");
 }
 
 void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
@@ -96,7 +162,7 @@ void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, Type
     if (!fct) {
         llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
         llvm::FunctionType* fctType = llvm::FunctionType::get(llvm::Type::getVoidTy(d_module->llvmContext()), {argType, argType}, false);
-        auto extLinkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
+        auto extLinkage = llvm::GlobalValue::LinkageTypes::InternalLinkage;
         fct = llvm::Function::Create(fctType, extLinkage, fctName, d_module->llvmModule());
     }
     d_builder->CreateCall(fct->getFunctionType(), fct, {result, source});

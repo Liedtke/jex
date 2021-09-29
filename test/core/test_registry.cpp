@@ -131,6 +131,7 @@ TEST(Registry, registerComplexType) {
     };
     struct TestClass {
         Counts* counts;
+        TestClass() : counts(nullptr) { assert(false); } // LCOV_EXCL_LINE
         TestClass(Counts* counts) : counts(counts) {}
         TestClass(const TestClass& other) : counts(other.counts) {
             ++counts->copyCtor;

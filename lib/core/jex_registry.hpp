@@ -106,8 +106,8 @@ public:
 
     template <typename ArgT>
     void registerType(TypeInfo::CreateTypeFct fct = nullptr, bool isZeroInitialized = false) {
-        LifetimeFcts ltFcts = {ArgT::destructor, ArgT::copyConstructor, ArgT::moveConstructor,
-                               ArgT::assign, ArgT::moveAssign};
+        LifetimeFcts ltFcts = {ArgT::defaultConstructor, ArgT::destructor, ArgT::copyConstructor,
+                               ArgT::moveConstructor, ArgT::assign, ArgT::moveAssign};
         d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::type),
                              alignof(typename ArgT::type), fct, ltFcts, isZeroInitialized);
     }

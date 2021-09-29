@@ -47,12 +47,13 @@ struct CmpIntrinsics {
 } // anonymous namespace
 
 void BuiltInsModule::registerTypes(Registry& registry) const {
+    bool zeroInitialized = true;
     registry.registerType<ArgBool>(
-        [](llvm::LLVMContext& ctx) { return llvm::Type::getInt1Ty(ctx); });
+        [](llvm::LLVMContext& ctx) { return llvm::Type::getInt1Ty(ctx); }, zeroInitialized);
     registry.registerType<ArgInteger>(
-        [](llvm::LLVMContext& ctx) { return llvm::Type::getInt64Ty(ctx); });
+        [](llvm::LLVMContext& ctx) { return llvm::Type::getInt64Ty(ctx); }, zeroInitialized);
     registry.registerType<ArgFloat>(
-        [](llvm::LLVMContext& ctx) { return llvm::Type::getDoubleTy(ctx); });
+        [](llvm::LLVMContext& ctx) { return llvm::Type::getDoubleTy(ctx); }, zeroInitialized);
     registry.registerType<ArgString>();
 }
 
