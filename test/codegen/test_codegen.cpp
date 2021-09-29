@@ -272,7 +272,7 @@ TEST(Codegen, stringLiteral) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     compileEnv.getRoot()->accept(typeInference);
-    CodeGen codeGen(compileEnv, OptLevel::O3);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
     std::string result;
@@ -285,14 +285,19 @@ source_filename = "test"
 %String = type { i64, i64, i64, i64 }
 %Rctx = type opaque
 
-define %String* @a(%Rctx* %rctx) local_unnamed_addr {
+define %String* @a(%Rctx* %rctx) {
 entry:
-  %varPtrTyped = bitcast %Rctx* %rctx to %String*
-  tail call void @String__placement_copy(%String* nonnull @strLit_l1_c18, %String* %varPtrTyped)
+  br label %begin
+
+begin:                                            ; preds = %entry
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @String__placement_copy(%String* @strLit_l1_c18, %String* %varPtrTyped)
   ret %String* %varPtrTyped
 }
 
-declare void @String__placement_copy(%String*, %String*) local_unnamed_addr
+declare void @String__placement_copy(%String*, %String*)
 )IR";
     ASSERT_EQ(expected, result);
 }
