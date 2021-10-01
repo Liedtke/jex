@@ -54,7 +54,7 @@ public:
         return d_contextSize;
     }
 
-    uintptr_t getFctPtr(std::string_view fctName);
+    uintptr_t getFctPtr(std::string_view fctName) const;
 };
 
 std::ostream& operator<<(std::ostream& str, const CompileResult& compileResult);

@@ -53,7 +53,7 @@ CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages,
 CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages)
 : d_messages(std::move(messages)) {}
 
-uintptr_t CompileResult::getFctPtr(std::string_view fctName) {
+uintptr_t CompileResult::getFctPtr(std::string_view fctName) const {
     if (!d_jit) {
         throw InternalError("Cannot get function pointer as compilation failed.");
     }

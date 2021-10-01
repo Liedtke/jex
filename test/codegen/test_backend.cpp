@@ -2,6 +2,7 @@
 
 #include <jex_builtins.hpp>
 #include <jex_errorhandling.hpp>
+#include <jex_executioncontext.hpp>
 
 #include <gtest/gtest.h>
 
@@ -106,13 +107,12 @@ TEST(Backend, stringExpression) {
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
         "var a : String = \"Hello World!\";", OptLevel::O0);
-    ASSERT_LE(8, compiled.getContextSize());
-    auto ctx = std::make_unique<char[]>(compiled.getContextSize());
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
     ASSERT_NE(0, fctAddr);
     auto fctA = reinterpret_cast<std::string* (*)(char*)>(fctAddr);
-    ASSERT_EQ("Hello World!", *fctA(ctx.get()));
+    ASSERT_EQ("Hello World!", *fctA(ctx->getDataPtr()));
 }
 
 } // namespace jex
