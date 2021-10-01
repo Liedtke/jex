@@ -32,6 +32,10 @@ public:
 
     bool matches(const std::vector<TypeInfoId>& params) const;
 
+    void call(void** args) const {
+        d_fctWrapper(d_fctPtr, args);
+    }
+
     static void printParamTypes(std::ostream& str, const std::vector<TypeInfoId>& paramTypes);
 };
 

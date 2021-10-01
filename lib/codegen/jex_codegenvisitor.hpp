@@ -44,6 +44,8 @@ private:
     llvm::Value* visitExpression(IAstExpression& node);
     llvm::Value* getVarPtr(const Symbol* varSym);
     llvm::Type* getType(TypeInfoId type);
+    llvm::Type* getParamType(TypeInfoId type);
+    llvm::Type* getReturnType(TypeInfoId type);
     llvm::StructType* createOpaqueStructType(TypeInfoId type);
     llvm::FunctionCallee getOrCreateFct(const FctInfo* fctInfo);
     void createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type);

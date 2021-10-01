@@ -161,25 +161,34 @@ TEST(Registry, registerComplexType) {
     Registry registry(env);
     registry.registerType<ArgTestClass>();
     // Check type info.
-    const TypeInfo& type = *env.types().getType("TestClass");
-    ASSERT_EQ("TestClass", type.name());
-    ASSERT_EQ(TypeKind::Complex, type.kind());
-    ASSERT_EQ(sizeof(TestClass), type.size());
-    // Check lifetime functions.
+    TypeInfoId type = env.types().getType("TestClass");
+    ASSERT_EQ("TestClass", type->name());
+
+    // Lifetime functions registered in class library.
+    const FctInfo& dtor = env.fctLib().getFct("_dtor_TestClass", {});
+    const FctInfo& assign = env.fctLib().getFct("_assign", {type});
+    const FctInfo& moveAssign = env.fctLib().getFct("_moveAssign", {type});
+    const FctInfo& copyCtor = env.fctLib().getFct("_copyCtor", {type});
+    const FctInfo& moveCtor = env.fctLib().getFct("_moveCtor", {type});
+    // Run and check lifetime functions.
     Counts counts;
     TestClass testObj(&counts);
     TestClass other(&counts);
-    type.lifetimeFcts().destructor(&other);
+    void* args[] = {
+        &other,
+        &testObj,
+    };
+    dtor.call(args);
     EXPECT_TRUE((Counts{1, 0, 0, 0, 0} == counts));
-    type.lifetimeFcts().copyConstructor(&other, &testObj);
+    copyCtor.call(args);
     EXPECT_TRUE((Counts{1, 1, 0, 0, 0} == counts));
-    type.lifetimeFcts().destructor(&other);
+    dtor.call(args);
     EXPECT_TRUE((Counts{2, 1, 0, 0, 0} == counts));
-    type.lifetimeFcts().moveConstructor(&other, &testObj);
+    moveCtor.call(args);
     EXPECT_TRUE((Counts{2, 1, 1, 0, 0} == counts));
-    type.lifetimeFcts().assign(&other, &testObj);
+    assign.call(args);
     EXPECT_TRUE((Counts{2, 1, 1, 1, 0} == counts));
-    type.lifetimeFcts().moveAssign(&other, &testObj);
+    moveAssign.call(args);
     EXPECT_TRUE((Counts{2, 1, 1, 1, 1} == counts));
 }
 

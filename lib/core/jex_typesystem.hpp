@@ -38,8 +38,8 @@ public:
      */
     TypeInfoId registerType(TypeKind typeId, std::string name, size_t size, size_t alignment,
                             TypeInfo::CreateTypeFct createTypeFct = nullptr,
-                            const LifetimeFcts& lifetimeFcts = {},
-                            bool isZeroInitialized = false);
+                            bool isZeroInitialized = false,
+                            TypeInfo::CallConv callConv = TypeInfo::CallConv::ByValue);
 
     TypeInfoId unresolved() const {
         return d_unresolved;

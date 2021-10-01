@@ -385,33 +385,33 @@ begin:                                            ; preds = %entry
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
-  call void @String__assign(%String* @strLit_l1_c18, %String* %varPtrTyped)
+  call void @__assign_String(%String* @strLit_l1_c18, %String* %varPtrTyped)
   ret %String* %varPtrTyped
 }
 
-declare internal void @String__assign(%String*, %String*)
+declare void @__assign_String(%String*, %String*)
 
 define void @__init_rctx(%Rctx* %rctx) {
 entry:
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
-  call void @String__ctor(%String* %varPtrTyped)
+  call void @__ctor_String(%String* %varPtrTyped)
   ret void
 }
 
-declare internal void @String__ctor(%String*)
+declare void @__ctor_String(%String*)
 
 define void @__destruct_rctx(%Rctx* %rctx) {
 entry:
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
-  call void @String__dtor(%String* %varPtrTyped)
+  call void @__dtor_String(%String* %varPtrTyped)
   ret void
 }
 
-declare internal void @String__dtor(%String*)
+declare void @__dtor_String(%String*)
 )IR";
     ASSERT_EQ(expected, result);
 }

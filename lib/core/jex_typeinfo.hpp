@@ -21,22 +21,6 @@ enum class TypeKind {
     Complex
 };
 
-struct LifetimeFcts {
-    using DefaultCtorT = void(*)(void*);
-    using DtorT = void(*)(void*);
-    using CopyCtorT = void(*)(void* /*target*/, const void* /*source*/);
-    using MoveCtorT = void(*)(void* /*target*/, void* /*source*/);
-    using AssignT = void(*)(void* /*target*/, const void* /*source*/);
-    using MoveAssignT = void(*)(void* /*target*/, void* /*source*/);
-
-    DefaultCtorT defaultConstructor = nullptr;
-    DtorT destructor = nullptr;
-    CopyCtorT copyConstructor = nullptr;
-    MoveCtorT moveConstructor = nullptr;
-    AssignT assign = nullptr;
-    MoveAssignT moveAssign = nullptr;
-};
-
 /**
  * Represents a unique ID for a given type in the type system.
  * The ID also provides direct access to the referenced TypeInfo.
@@ -78,6 +62,11 @@ public:
  */
 class TypeInfo : NoCopy {
 public:
+    enum class CallConv {
+        ByValue,
+        ByPointer
+    };
+
     using CreateTypeFct = std::function<llvm::Type* (llvm::LLVMContext&)>;
 private:
     TypeKind d_typeId;
@@ -86,23 +75,23 @@ private:
     size_t d_alignment;
     // Function to create the LLVM type; May be null;
     CreateTypeFct d_createType;
-    // Functions to manage lifetime of object.
-    LifetimeFcts d_lifetimeFcts;
     // Indicator whether the value can be zero-initialized.
     // If desired, this could be replaced with a std::variant holding the
     // initializer values for some supported types (like numbers, floats, ...)
     bool d_isZeroInitialized;
+    // Calling convention describing how the type is passed as parameter.
+    TypeInfo::CallConv d_callConv;
 
 public:
-    TypeInfo(TypeKind typeId, std::string name, size_t size, size_t alignment,
-             CreateTypeFct createType, bool isZeroInitialized = false, LifetimeFcts lifetimeFcts = {})
+    TypeInfo(TypeKind typeId, std::string name, size_t size, size_t alignment, CreateTypeFct createType,
+             bool isZeroInitialized = false, TypeInfo::CallConv callConv = CallConv::ByValue)
     : d_typeId(typeId)
     , d_name(std::move(name))
     , d_size(size)
     , d_alignment(alignment)
     , d_createType(createType)
-    , d_lifetimeFcts(lifetimeFcts)
-    , d_isZeroInitialized(isZeroInitialized) {
+    , d_isZeroInitialized(isZeroInitialized)
+    , d_callConv(callConv) {
     }
 
     TypeInfoId id() const {
@@ -129,12 +118,12 @@ public:
         return d_createType;
     }
 
-    const LifetimeFcts& lifetimeFcts() const {
-        return d_lifetimeFcts;
-    }
-
     bool isZeroInitialized() const {
         return d_isZeroInitialized;
+    }
+
+    CallConv callConv() const {
+        return d_callConv;
     }
 };
 

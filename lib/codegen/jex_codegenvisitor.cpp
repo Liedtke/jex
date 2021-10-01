@@ -7,6 +7,7 @@
 #include <jex_errorhandling.hpp>
 #include <jex_intrinsicgen.hpp>
 #include <jex_fctinfo.hpp>
+#include <jex_fctlibrary.hpp>
 #include <jex_symboltable.hpp>
 
 #include "llvm/Support/FormatVariadic.h"
@@ -35,17 +36,14 @@ void CodeGenVisitor::createInit(const Symbol* sym) {
         d_builder->CreateStore(llvm::Constant::getNullValue(var->getType()->getPointerElementType()), var);
         return;
     }
-    // Create constructor if not yet created.
-    assert(type->lifetimeFcts().defaultConstructor && "Default constructor required");
-    std::string fctName = type->name() + "__ctor";
-    llvm::Function* fct = d_module->llvmModule().getFunction(fctName);
-    if (!fct) {
-        llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
-        llvm::FunctionType* fctType = llvm::FunctionType::get(llvm::Type::getVoidTy(d_module->llvmContext()), {argType}, false);
-        auto linkage = llvm::GlobalValue::LinkageTypes::InternalLinkage;
-        fct = llvm::Function::Create(fctType, linkage, fctName, d_module->llvmModule());
+    // Call constructor.
+    const FctInfo& ctor = d_env.fctLibrary().getFct("_ctor_" + type->name(), {});
+    assert(ctor.d_retType == type && "constructor has invalid return type");
+    llvm::FunctionCallee ctorCallee = getOrCreateFct(&ctor);
+    if (type->callConv() == TypeInfo::CallConv::ByValue) {
+        var = d_builder->CreateLoad(var);
     }
-    d_builder->CreateCall(fct->getFunctionType(), fct, {var});
+    d_builder->CreateCall(ctorCallee, {var});
 }
 
 void CodeGenVisitor::createDestruct(const Symbol* sym) {
@@ -55,18 +53,11 @@ void CodeGenVisitor::createDestruct(const Symbol* sym) {
     }
     assert(type->kind() == TypeKind::Complex &&
            "The context may only contain value and complex types");
-    // Create destructor if not yet created.
-    assert(type->lifetimeFcts().destructor && "Destructor required");
-    std::string fctName = type->name() + "__dtor";
-    llvm::Function* fct = d_module->llvmModule().getFunction(fctName);
-    if (!fct) {
-        llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
-        llvm::FunctionType* fctType = llvm::FunctionType::get(llvm::Type::getVoidTy(d_module->llvmContext()), {argType}, false);
-        auto linkage = llvm::GlobalValue::LinkageTypes::InternalLinkage;
-        fct = llvm::Function::Create(fctType, linkage, fctName, d_module->llvmModule());
-    }
-    d_builder->CreateCall(fct->getFunctionType(), fct, {getVarPtr(sym)});
-
+    // Call destructor.
+    const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + type->name(), {});
+    assert(dtor.d_retType == type && "destructor has invalid return type");
+    llvm::FunctionCallee dtorCallee = getOrCreateFct(&dtor);
+    d_builder->CreateCall(dtorCallee, {getVarPtr(sym)});
 }
 
 template<typename Iter>
@@ -136,6 +127,20 @@ llvm::Type* CodeGenVisitor::getType(TypeInfoId type) {
     return iter->second;
 }
 
+llvm::Type* CodeGenVisitor::getParamType(TypeInfoId type) {
+    llvm::Type* ty = getType(type);
+    if (type->callConv() == TypeInfo::CallConv::ByValue) {
+        return ty;
+    } else {
+        assert(type->callConv() == TypeInfo::CallConv::ByPointer);
+        return ty->getPointerTo();
+    }
+}
+
+llvm::Type* CodeGenVisitor::getReturnType(TypeInfoId type) {
+    return getType(type)->getPointerTo();
+}
+
 llvm::Value* CodeGenVisitor::visitExpression(IAstExpression& node) {
     assert(d_result == nullptr);
     node.accept(*this);
@@ -157,23 +162,16 @@ llvm::Value* CodeGenVisitor::getVarPtr(const Symbol* varSym) {
 
 void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
     assert(result->getType() == source->getType() && "Assign expects two pointers of the same type");
-    assert(type->lifetimeFcts().assign && "Assignment required");
-    // Create function if not yet created.
-    std::string fctName = type->name() + "__assign";
-    llvm::Function* fct = d_module->llvmModule().getFunction(fctName);
-    if (!fct) {
-        llvm::Type* argType = getType(type)->getPointerTo(); // Calling convention expects pointer to object.
-        llvm::FunctionType* fctType = llvm::FunctionType::get(llvm::Type::getVoidTy(d_module->llvmContext()), {argType, argType}, false);
-        auto extLinkage = llvm::GlobalValue::LinkageTypes::InternalLinkage;
-        fct = llvm::Function::Create(fctType, extLinkage, fctName, d_module->llvmModule());
-    }
-    d_builder->CreateCall(fct->getFunctionType(), fct, {result, source});
+    const FctInfo& assign = d_env.fctLibrary().getFct("_assign", {type});
+    assert(assign.d_retType == type && "Return type of assign has to be equal to its parameter type");
+    llvm::FunctionCallee assignCallee = getOrCreateFct(&assign);
+    d_builder->CreateCall(assignCallee, {result, source});
 }
 
 void CodeGenVisitor::visit(AstVariableDef& node) {
     assert(d_currFct == nullptr);
     // Create function.
-    llvm::Type* resultPtrType = getType(node.d_type->d_resultType)->getPointerTo();
+    llvm::Type* resultPtrType = getReturnType(node.d_type->d_resultType);
     llvm::FunctionType* fctType = llvm::FunctionType::get(resultPtrType, {d_rctxType->getPointerTo()}, false);
     d_currFct = llvm::Function::Create(
         fctType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, toLlvm(node.d_name->d_name), d_module->llvmModule());
@@ -227,10 +225,9 @@ llvm::FunctionCallee CodeGenVisitor::getOrCreateFct(const FctInfo* fctInfo) {
     // Declare the C function.
     llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
     std::vector<llvm::Type*> params;
-    // TODO: Design proper calling conventions.
-    params.push_back(getType(fctInfo->d_retType)->getPointerTo());
+    params.push_back(getReturnType(fctInfo->d_retType));
     for (TypeInfoId paramType : fctInfo->d_paramTypes) {
-        params.push_back(getType(paramType));
+        params.push_back(getParamType(paramType));
     }
     llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
     if (d_env.useIntrinsics() && fctInfo->d_intrinsicFct) {
