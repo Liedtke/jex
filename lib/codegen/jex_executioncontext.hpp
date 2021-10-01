@@ -13,7 +13,7 @@ class ExecutionContext : NoCopy {
     using LifetimeFct = void(*)(void*);
     const LifetimeFct d_dtor;
     const size_t d_size;
-    char d_data[0] alignas(std::max_align_t);
+    alignas(std::max_align_t) char d_data[0];
 
     ExecutionContext(const CompileResult& compiled);
 
