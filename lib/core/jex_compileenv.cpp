@@ -47,4 +47,8 @@ std::unique_ptr<std::set<MsgInfo>> CompileEnv::releaseMessages() {
     return std::move(d_messages);
 }
 
+std::unique_ptr<ConstantStore> CompileEnv::releaseConstants() {
+    return std::move(d_constants);
+}
+
 } // namespace jex

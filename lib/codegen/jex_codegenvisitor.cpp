@@ -185,7 +185,7 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
     llvm::Value* varPtr = getVarPtr(node.d_name->d_symbol);
     if (node.d_resultType->kind() == TypeKind::Complex) {
         // TODO: Figure out if varPtr is temporary and generate move assign instead.
-        createAssign(result, varPtr, node.d_resultType);
+        createAssign(varPtr, result, node.d_resultType);
     } else {
         // Perform a simple store.
         // TODO: This might not be the right thing to do for large values.
@@ -210,11 +210,12 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
             return llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(1, val));
         },
         [&](std::string_view val) -> llvm::Value* {
-            const std::string* constStr = d_env.constants().emplace<std::string>(val);
-            llvm::Type* strType = getType(d_env.typeSystem().getType("String"));
-            llvm::Value* var = new llvm::GlobalVariable(d_module->llvmModule(), strType, /*isConstant*/true,
-                llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr,
-                llvm::formatv("strLit_l{0}_c{1}", node.d_loc.begin.line, node.d_loc.begin.col));
+            TypeInfoId strType = d_env.typeSystem().getType("String");
+            std::string constantName = llvm::formatv("strLit_l{0}_c{1}", node.d_loc.begin.line, node.d_loc.begin.col);
+            const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + strType->name(), {});
+            const std::string* constStr = d_env.constants().emplace<std::string>(constantName, dtor, val);
+            llvm::Value* var = new llvm::GlobalVariable(d_module->llvmModule(), getType(strType), /*isConstant*/true,
+                llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr, constantName);
             (void)constStr; // FIXME: Store mapping from name to constant pointer somewhere to link later on.
             return var;
         }

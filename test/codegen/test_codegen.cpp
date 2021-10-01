@@ -385,7 +385,7 @@ begin:                                            ; preds = %entry
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
-  call void @__assign_String(%String* @strLit_l1_c18, %String* %varPtrTyped)
+  call void @__assign_String(%String* %varPtrTyped, %String* @strLit_l1_c18)
   ret %String* %varPtrTyped
 }
 

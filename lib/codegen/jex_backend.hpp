@@ -16,6 +16,7 @@ namespace jex {
 
 class CodeModule;
 class CompileEnv;
+class ConstantStore;
 struct MsgInfo;
 
 class CompileResult {
@@ -24,11 +25,13 @@ class CompileResult {
 
     std::unique_ptr<std::set<MsgInfo>> d_messages;
     std::unique_ptr<llvm::orc::LLJIT> d_jit;
+    std::unique_ptr<ConstantStore> d_constants;
     size_t d_contextSize = 0;
 
     CompileResult(std::unique_ptr<std::set<MsgInfo>> messages,
-                  std::unique_ptr<llvm::orc::LLJIT> jit,
-                  size_t                            contextSize);
+                  std::unique_ptr<llvm::orc::LLJIT>  jit,
+                  std::unique_ptr<ConstantStore>     constants,
+                  size_t                             contextSize);
     CompileResult(std::unique_ptr<std::set<MsgInfo>> messages);
 
 public:

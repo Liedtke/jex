@@ -2,6 +2,7 @@
 
 #include <jex_codemodule.hpp>
 #include <jex_compileenv.hpp>
+#include <jex_constantstore.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_fctinfo.hpp>
 #include <jex_fctlibrary.hpp>
@@ -40,10 +41,12 @@ CompileResult::CompileResult(CompileResult&& other) = default;
 CompileResult::~CompileResult() = default;
 
 CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages,
-                             std::unique_ptr<llvm::orc::LLJIT> jit,
-                             size_t                            contextSize)
+                             std::unique_ptr<llvm::orc::LLJIT>  jit,
+                             std::unique_ptr<ConstantStore>     constants,
+                             size_t                             contextSize)
 : d_messages(std::move(messages))
 , d_jit(std::move(jit))
+, d_constants(std::move(constants))
 , d_contextSize(contextSize) {
 }
 
@@ -84,11 +87,16 @@ CompileResult Backend::jit(std::unique_ptr<CodeModule> module) {
     llvm::orc::JITDylib& lib = jit->getMainJITDylib();
     llvm::orc::ExecutionSession& es = jit->getExecutionSession();
     llvm::orc::SymbolMap symbols;
+    // Link external functions.
     for (const FctInfo* fct : d_env.usedFcts()) {
         symbols.insert(std::make_pair(es.intern(fct->d_mangledName), llvm::JITEvaluatedSymbol::fromPointer(fct->d_fctPtr)));
     }
+    // Link external constants.
+    for (auto&[name, constant] : d_env.constants()) {
+        symbols.insert(std::make_pair(es.intern(name), llvm::JITEvaluatedSymbol::fromPointer(constant.valuePtr.get())));
+    }
     checked(lib.define(absoluteSymbols(symbols)), "Error adding fct symbols: ");
-    return CompileResult(d_env.releaseMessages(), std::move(jit), d_env.getContextSize());
+    return CompileResult(d_env.releaseMessages(), std::move(jit), d_env.releaseConstants(), d_env.getContextSize());
 }
 
 void Backend::initialize() {

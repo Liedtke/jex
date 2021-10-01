@@ -117,6 +117,8 @@ public:
     ConstantStore& constants() {
         return *d_constants;
     }
+
+    std::unique_ptr<ConstantStore> releaseConstants();
 };
 
 } // namespace jex
