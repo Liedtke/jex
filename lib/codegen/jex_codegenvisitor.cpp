@@ -184,11 +184,14 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
     // FIXME: Figure out how to handle different calling conventions.
     llvm::Value* varPtr = getVarPtr(node.d_name->d_symbol);
     if (node.d_resultType->kind() == TypeKind::Complex) {
-        // TODO: Figure out if varPtr is temporary and generate move assign instead.
+        // TODO: Figure out if result is temporary and generate move assign instead.
         createAssign(varPtr, result, node.d_resultType);
     } else {
         // Perform a simple store.
-        // TODO: This might not be the right thing to do for large values.
+        if (node.d_expr->d_resultType->callConv() == TypeInfo::CallConv::ByPointer) {
+            // Load value to copy struct later on into varPtr.
+            result = d_builder->CreateLoad(result);
+        }
         d_builder->CreateStore(result, varPtr);
     }
     d_builder->CreateRet(varPtr);
@@ -259,7 +262,9 @@ void CodeGenVisitor::visit(AstBinaryExpr& node) {
     llvm::FunctionCallee fct = getOrCreateFct(node.d_fctInfo);
     // Call the function.
     d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), {res, lhs, rhs});
-    d_result = d_builder->CreateLoad(res);
+    if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
+        d_result = d_builder->CreateLoad(res);
+    }
 }
 
 void CodeGenVisitor::visit(AstFctCall& node) {
@@ -274,7 +279,9 @@ void CodeGenVisitor::visit(AstFctCall& node) {
     }
     // Call the function.
     d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), args);
-    d_result = d_builder->CreateLoad(res);
+    if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
+        d_result = d_builder->CreateLoad(res);
+    }
 }
 
 void CodeGenVisitor::visit(AstIf& node) {

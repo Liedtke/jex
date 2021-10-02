@@ -106,13 +106,13 @@ struct FctDesc {
 
     template<typename... T, size_t... I>
     static void wrapperInner(void(*fct)(typename ArgRet::RetType, T...),
-                             void** args,
+                             void* const* args,
                              std::index_sequence<I...>) {
         fct(reinterpret_cast<typename ArgRet::RetType>(args[0]),
             typePtrToParamType<ArgT>(reinterpret_cast<typename ArgT::Type*>(args[I+1]))...);
     }
 
-    static void wrapper(void* fct, void** args) {
+    static void wrapper(void* fct, void* const* args) {
         // add return value "reinterpret_cast<typename ArgRet::retType>(args[0])"
         wrapperInner(reinterpret_cast<FctType>(fct), args, std::index_sequence_for<ArgT...>());
     }

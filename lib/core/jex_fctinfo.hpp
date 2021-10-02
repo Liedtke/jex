@@ -16,7 +16,7 @@ class IntrinsicGen;
  */
 class FctInfo {
 public:
-    using FctWrapper = void(*)(void* fctPtr, void** args);
+    using FctWrapper = void(*)(void* fctPtr, void* const* args);
     using IntrinsicFct = std::function<void(IntrinsicGen&)>;
 
     std::string d_name;
@@ -32,7 +32,7 @@ public:
 
     bool matches(const std::vector<TypeInfoId>& params) const;
 
-    void call(void** args) const {
+    void call(void* const* args) const {
         d_fctWrapper(d_fctPtr, args);
     }
 
