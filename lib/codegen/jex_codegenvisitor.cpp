@@ -258,12 +258,12 @@ void CodeGenVisitor::visit(AstBinaryExpr& node) {
     llvm::Value* rhs = visitExpression(*node.d_rhs);
     // Generate alloca to store the result.
     llvm::Type* resType = getType(node.d_resultType);
-    llvm::Value* res = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
+    d_result = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
     llvm::FunctionCallee fct = getOrCreateFct(node.d_fctInfo);
     // Call the function.
-    d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), {res, lhs, rhs});
+    d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), {d_result, lhs, rhs});
     if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
-        d_result = d_builder->CreateLoad(res);
+        d_result = d_builder->CreateLoad(d_result);
     }
 }
 
@@ -279,8 +279,9 @@ void CodeGenVisitor::visit(AstFctCall& node) {
     }
     // Call the function.
     d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), args);
+    d_result = res;
     if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
-        d_result = d_builder->CreateLoad(res);
+        d_result = d_builder->CreateLoad(d_result);
     }
 }
 

@@ -416,4 +416,71 @@ declare void @__dtor_String(%String*)
     ASSERT_EQ(expected, result);
 }
 
+TEST(Codegen, stringExpression) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : String = substr(\"Hello World!\", 6, 5);");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    compileEnv.getRoot()->accept(typeInference);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%String = type { i64, i64, i64, i64 }
+%Rctx = type opaque
+
+@strLit_l1_c25 = external constant %String
+
+define %String* @a(%Rctx* %rctx) {
+entry:
+  %res_substr = alloca %String, align 8
+  br label %begin
+
+begin:                                            ; preds = %entry
+  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c25, i64 6, i64 5)
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @__assign_String(%String* %varPtrTyped, %String* %res_substr)
+  ret %String* %varPtrTyped
+}
+
+declare void @_substr_String_Integer_Integer(%String*, %String*, i64, i64)
+
+declare void @__assign_String(%String*, %String*)
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @__ctor_String(%String* %varPtrTyped)
+  ret void
+}
+
+declare void @__ctor_String(%String*)
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @__dtor_String(%String* %varPtrTyped)
+  ret void
+}
+
+declare void @__dtor_String(%String*)
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
 } // namespace jex

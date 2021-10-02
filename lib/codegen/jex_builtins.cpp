@@ -44,6 +44,13 @@ struct CmpIntrinsics {
     }
 };
 
+static void substr(std::string* res, const std::string* in, int64_t pos, int64_t count) {
+    assert(res != nullptr);
+    assert(pos >= 0); // TODO: Figure out how to support error handling in expressions.
+    assert(count >= 0);
+    new (res) std::string(in->substr(pos, count));
+}
+
 } // anonymous namespace
 
 void BuiltInsModule::registerTypes(Registry& registry) const {
@@ -98,6 +105,9 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(FloatCmp("operator_gt", cmp<std::greater<>>, FloatCmpIntr::generate<llvm::CmpInst::Predicate::FCMP_OGT>));
     registry.registerFct(FloatCmp("operator_le", cmp<std::less_equal<>>, FloatCmpIntr::generate<llvm::CmpInst::Predicate::FCMP_OLE>));
     registry.registerFct(FloatCmp("operator_ge", cmp<std::greater_equal<>>, FloatCmpIntr::generate<llvm::CmpInst::Predicate::FCMP_OGE>));
+
+    // === String ===
+    registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr));
 }
 
 } // namespace jex
