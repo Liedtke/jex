@@ -11,10 +11,12 @@ set(codegen_sources
     jex_backend.cpp
     jex_builtins.cpp
     jex_codegen.cpp
+    jex_codegenutils.cpp
     jex_codegenvisitor.cpp
     jex_codemodule.cpp
     jex_executioncontext.cpp
     jex_intrinsicgen.cpp
+    jex_unwind.cpp
 )
 
 add_library(jex_codegen ${codegen_sources})

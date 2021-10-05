@@ -11,9 +11,11 @@
 
 namespace jex {
 
+class CodeGenUtils;
 class CodeModule;
 class CompileEnv;
 class FctInfo;
+class Unwind;
 struct Symbol;
 
 class CodeGenVisitor : private BasicAstVisitor, NoCopy {
@@ -21,8 +23,9 @@ class CodeGenVisitor : private BasicAstVisitor, NoCopy {
     std::unique_ptr<CodeModule> d_module;
     std::unique_ptr<llvm::IRBuilder<>> d_builder;
     llvm::Function* d_currFct = nullptr;
+    std::unique_ptr<CodeGenUtils> d_utils;
+    std::unique_ptr<Unwind> d_unwind;
     std::unordered_map<const Symbol*, size_t> d_offsets;
-    std::unordered_map<TypeInfoId, llvm::Type*> d_types;
     llvm::StructType* d_rctxType = nullptr;
     llvm::Value* d_result = nullptr;
 public:
@@ -43,14 +46,11 @@ public:
 private:
     llvm::Value* visitExpression(IAstExpression& node);
     llvm::Value* getVarPtr(const Symbol* varSym);
-    llvm::Type* getType(TypeInfoId type);
-    llvm::Type* getParamType(TypeInfoId type);
-    llvm::Type* getReturnType(TypeInfoId type);
-    llvm::StructType* createOpaqueStructType(TypeInfoId type);
-    llvm::FunctionCallee getOrCreateFct(const FctInfo* fctInfo);
     void createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type);
     void createInit(const Symbol* sym);
     void createDestruct(const Symbol* sym);
+    void pushUnwind(const IAstExpression& node, llvm::Value* value);
+    llvm::BasicBlock* createBlock(const char* name);
 
     template<typename Iter>
     void createInitDestructFct(Iter symBegin, Iter symEnd, const char* prefix,

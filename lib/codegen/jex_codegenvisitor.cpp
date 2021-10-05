@@ -1,14 +1,15 @@
 #include <jex_codegenvisitor.hpp>
 
 #include <jex_ast.hpp>
+#include <jex_codegenutils.hpp>
 #include <jex_codemodule.hpp>
 #include <jex_constantstore.hpp>
 #include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
-#include <jex_intrinsicgen.hpp>
 #include <jex_fctinfo.hpp>
 #include <jex_fctlibrary.hpp>
 #include <jex_symboltable.hpp>
+#include <jex_unwind.hpp>
 
 #include "llvm/Support/FormatVariadic.h"
 
@@ -28,6 +29,13 @@ CodeGenVisitor::CodeGenVisitor(CompileEnv& env)
 CodeGenVisitor::~CodeGenVisitor() {
 }
 
+llvm::BasicBlock* CodeGenVisitor::createBlock(const char* name) {
+    assert(d_currFct);
+    // Insert regular blocks in front of unwinding blocks for better readability.
+    llvm::BasicBlock* insertPoint = d_unwind ? d_unwind->getEntryBlock() : nullptr;
+    return llvm::BasicBlock::Create(d_module->llvmContext(), name, d_currFct, insertPoint);
+}
+
 void CodeGenVisitor::createInit(const Symbol* sym) {
     llvm::Value* var = getVarPtr(sym);
     TypeInfoId type = sym->type;
@@ -39,7 +47,7 @@ void CodeGenVisitor::createInit(const Symbol* sym) {
     // Call constructor.
     const FctInfo& ctor = d_env.fctLibrary().getFct("_ctor_" + type->name(), {});
     assert(ctor.d_retType == type && "constructor has invalid return type");
-    llvm::FunctionCallee ctorCallee = getOrCreateFct(&ctor);
+    llvm::FunctionCallee ctorCallee = d_utils->getOrCreateFct(&ctor);
     if (type->callConv() == TypeInfo::CallConv::ByValue) {
         var = d_builder->CreateLoad(var);
     }
@@ -56,7 +64,7 @@ void CodeGenVisitor::createDestruct(const Symbol* sym) {
     // Call destructor.
     const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + type->name(), {});
     assert(dtor.d_retType == type && "destructor has invalid return type");
-    llvm::FunctionCallee dtorCallee = getOrCreateFct(&dtor);
+    llvm::FunctionCallee dtorCallee = d_utils->getOrCreateFct(&dtor);
     d_builder->CreateCall(dtorCallee, {getVarPtr(sym)});
 }
 
@@ -70,7 +78,7 @@ void CodeGenVisitor::createInitDestructFct(Iter symBegin, Iter symEnd, const cha
     d_currFct = llvm::Function::Create(
         fctType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, llvm::Twine(prefix) + "_rctx", d_module->llvmModule());
     d_currFct->getArg(0)->setName("rctx");
-    d_builder->SetInsertPoint(llvm::BasicBlock::Create(d_module->llvmContext(), "entry", d_currFct));
+    d_builder->SetInsertPoint(createBlock("entry"));
     // Initialize all variables in context.
     Iter iter = symBegin;
     while (iter != symEnd) {
@@ -84,6 +92,7 @@ void CodeGenVisitor::createInitDestructFct(Iter symBegin, Iter symEnd, const cha
 void CodeGenVisitor::createIR() {
     d_offsets.clear();
     d_module = std::make_unique<CodeModule>(d_env);
+    d_utils = std::make_unique<CodeGenUtils>(d_env, *d_module);
     d_builder = std::make_unique<llvm::IRBuilder<>>(d_module->llvmContext());
     // Order by alignment descending, then by symbol name ascending.
     auto cmp = [](const Symbol* a, const Symbol* b) {
@@ -106,41 +115,6 @@ void CodeGenVisitor::createIR() {
     createInitDestructFct(vars.begin(), vars.end(), "__destruct", &CodeGenVisitor::createDestruct);
 }
 
-llvm::StructType* CodeGenVisitor::createOpaqueStructType(TypeInfoId type) {
-    assert(type->size() % type->alignment() == 0 && "Type size has to be a multiple of its alignment");
-    size_t numElements = type->size() / type->alignment();
-    llvm::Type* intTy = llvm::IntegerType::get(d_module->llvmContext(), type->alignment() * 8);
-    return llvm::StructType::create(std::vector<llvm::Type*>(numElements, intTy), type->name());
-}
-
-llvm::Type* CodeGenVisitor::getType(TypeInfoId type) {
-    auto[iter, inserted] = d_types.emplace(type, nullptr);
-    if (inserted) {
-        const TypeInfo::CreateTypeFct& fct = type->createTypeFct();
-        if (fct) {
-            iter->second = fct(d_module->llvmContext());
-        } else {
-            assert(!llvm::StructType::getTypeByName(d_module->llvmContext(), type->name()));
-            iter->second = createOpaqueStructType(type);
-        }
-    }
-    return iter->second;
-}
-
-llvm::Type* CodeGenVisitor::getParamType(TypeInfoId type) {
-    llvm::Type* ty = getType(type);
-    if (type->callConv() == TypeInfo::CallConv::ByValue) {
-        return ty;
-    } else {
-        assert(type->callConv() == TypeInfo::CallConv::ByPointer);
-        return ty->getPointerTo();
-    }
-}
-
-llvm::Type* CodeGenVisitor::getReturnType(TypeInfoId type) {
-    return getType(type)->getPointerTo();
-}
-
 llvm::Value* CodeGenVisitor::visitExpression(IAstExpression& node) {
     assert(d_result == nullptr);
     node.accept(*this);
@@ -157,27 +131,31 @@ llvm::Value* CodeGenVisitor::getVarPtr(const Symbol* varSym) {
     llvm::Value* offset = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(64, d_offsets[varSym]));
     llvm::Value* varPtr = d_builder->CreateGEP(bytePtrTy->getPointerElementType(), rctxAsI8Ptr, offset, "varPtr");
     // Reinterpret cast to target type.
-    return d_builder->CreatePointerCast(varPtr, getType(varSym->type)->getPointerTo(), "varPtrTyped");
+    return d_builder->CreatePointerCast(varPtr, d_utils->getType(varSym->type)->getPointerTo(), "varPtrTyped");
 }
 
 void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
     assert(result->getType() == source->getType() && "Assign expects two pointers of the same type");
     const FctInfo& assign = d_env.fctLibrary().getFct("_assign", {type});
     assert(assign.d_retType == type && "Return type of assign has to be equal to its parameter type");
-    llvm::FunctionCallee assignCallee = getOrCreateFct(&assign);
+    llvm::FunctionCallee assignCallee = d_utils->getOrCreateFct(&assign);
     d_builder->CreateCall(assignCallee, {result, source});
 }
 
 void CodeGenVisitor::visit(AstVariableDef& node) {
     assert(d_currFct == nullptr);
+    assert(!d_unwind);
     // Create function.
-    llvm::Type* resultPtrType = getReturnType(node.d_type->d_resultType);
+    llvm::Type* resultPtrType = d_utils->getReturnType(node.d_type->d_resultType);
     llvm::FunctionType* fctType = llvm::FunctionType::get(resultPtrType, {d_rctxType->getPointerTo()}, false);
     d_currFct = llvm::Function::Create(
         fctType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, toLlvm(node.d_name->d_name), d_module->llvmModule());
     d_currFct->getArg(0)->setName("rctx");
-    llvm::BasicBlock* allocaBlock = llvm::BasicBlock::Create(d_module->llvmContext(), "entry", d_currFct);
-    llvm::BasicBlock* blockBegin = llvm::BasicBlock::Create(d_module->llvmContext(), "begin", d_currFct);
+    // Initialize unwinding for handling lifetime.
+    d_unwind = std::make_unique<Unwind>(d_env, *d_module, *d_utils, d_currFct);
+    // Create "basic function structure".
+    llvm::BasicBlock* allocaBlock = createBlock("entry");
+    llvm::BasicBlock* blockBegin = createBlock("begin");
     d_builder->SetInsertPoint(blockBegin);
     // Evaluate expression and store result.
     llvm::Value* result = visitExpression(*node.d_expr);
@@ -194,10 +172,11 @@ void CodeGenVisitor::visit(AstVariableDef& node) {
         }
         d_builder->CreateStore(result, varPtr);
     }
-    d_builder->CreateRet(varPtr);
+    d_unwind->finalize(d_builder->GetInsertBlock(), varPtr);
     // Link allocas block to begin block.
     d_builder->SetInsertPoint(allocaBlock);
     d_builder->CreateBr(blockBegin);
+    d_unwind.reset();
     d_currFct = nullptr;
 }
 
@@ -217,39 +196,13 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
             std::string constantName = llvm::formatv("strLit_l{0}_c{1}", node.d_loc.begin.line, node.d_loc.begin.col);
             const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + strType->name(), {});
             const std::string* constStr = d_env.constants().emplace<std::string>(constantName, dtor, val);
-            llvm::Value* var = new llvm::GlobalVariable(d_module->llvmModule(), getType(strType), /*isConstant*/true,
-                llvm::GlobalValue::LinkageTypes::ExternalLinkage, nullptr, constantName);
+            auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
+            llvm::Value* var = new llvm::GlobalVariable(d_module->llvmModule(), d_utils->getType(strType),
+                /*isConstant*/true, linkage, nullptr, constantName);
             (void)constStr; // FIXME: Store mapping from name to constant pointer somewhere to link later on.
             return var;
         }
     }, node.d_value);
-}
-
-llvm::FunctionCallee CodeGenVisitor::getOrCreateFct(const FctInfo* fctInfo) {
-    // Declare the C function.
-    llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
-    std::vector<llvm::Type*> params;
-    params.push_back(getReturnType(fctInfo->d_retType));
-    for (TypeInfoId paramType : fctInfo->d_paramTypes) {
-        params.push_back(getParamType(paramType));
-    }
-    llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
-    if (d_env.useIntrinsics() && fctInfo->d_intrinsicFct) {
-        // Generate and insert intrinsic function.
-        llvm::Function* fct = d_module->llvmModule().getFunction(fctInfo->d_intrinsicName);
-        if (fct == nullptr) {
-            // Generate intrinsic.
-            fct = llvm::Function::Create(
-        fctType, llvm::GlobalValue::LinkageTypes::InternalLinkage, fctInfo->d_intrinsicName, d_module->llvmModule());
-            IntrinsicGen intrinsicGen(*d_module, *fct);
-            fctInfo->d_intrinsicFct(intrinsicGen);
-        }
-        return fct;
-    } else {
-        // Generate C function call.
-        d_env.addFctUsage(fctInfo);
-        return d_module->llvmModule().getOrInsertFunction(fctInfo->d_mangledName, fctType);
-    }
 }
 
 void CodeGenVisitor::visit(AstBinaryExpr& node) {
@@ -257,21 +210,22 @@ void CodeGenVisitor::visit(AstBinaryExpr& node) {
     llvm::Value* lhs = visitExpression(*node.d_lhs);
     llvm::Value* rhs = visitExpression(*node.d_rhs);
     // Generate alloca to store the result.
-    llvm::Type* resType = getType(node.d_resultType);
+    llvm::Type* resType = d_utils->getType(node.d_resultType);
     d_result = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
-    llvm::FunctionCallee fct = getOrCreateFct(node.d_fctInfo);
+    llvm::FunctionCallee fct = d_utils->getOrCreateFct(node.d_fctInfo);
     // Call the function.
     d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), {d_result, lhs, rhs});
     if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
         d_result = d_builder->CreateLoad(d_result);
     }
+    d_unwind->add(node, d_result);
 }
 
 void CodeGenVisitor::visit(AstFctCall& node) {
     // Generate alloca to store the result.
-    llvm::Type* resType = getType(node.d_resultType);
+    llvm::Type* resType = d_utils->getType(node.d_resultType);
     llvm::Value* res = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
-    llvm::FunctionCallee fct = getOrCreateFct(node.d_fctInfo);
+    llvm::FunctionCallee fct = d_utils->getOrCreateFct(node.d_fctInfo);
     // Visit arguments.
     std::vector<llvm::Value*> args({res});
     for (IAstExpression* expr : node.d_args->d_args) {
@@ -283,12 +237,13 @@ void CodeGenVisitor::visit(AstFctCall& node) {
     if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
         d_result = d_builder->CreateLoad(d_result);
     }
+    d_unwind->add(node, d_result);
 }
 
 void CodeGenVisitor::visit(AstIf& node) {
-    llvm::BasicBlock* trueBranch = llvm::BasicBlock::Create(d_module->llvmContext(), "if_true", d_currFct);
-    llvm::BasicBlock* falseBranch = llvm::BasicBlock::Create(d_module->llvmContext(), "if_false", d_currFct);
-    llvm::BasicBlock* cntBranch = llvm::BasicBlock::Create(d_module->llvmContext(), "if_cnt", d_currFct);
+    llvm::BasicBlock* trueBranch = createBlock("if_true");
+    llvm::BasicBlock* falseBranch = createBlock("if_false");
+    llvm::BasicBlock* cntBranch = createBlock("if_cnt");
     // Generate condition.
     llvm::Value* cond = visitExpression(*node.d_args->d_args[0]);
     d_builder->CreateCondBr(cond, trueBranch, falseBranch);
@@ -307,6 +262,7 @@ void CodeGenVisitor::visit(AstIf& node) {
     phiRes->addIncoming(trueVal, trueBranch);
     phiRes->addIncoming(falseVal, falseBranch);
     d_result = phiRes;
+    d_unwind->add(node, d_result);
 }
 
 } // namespace jex

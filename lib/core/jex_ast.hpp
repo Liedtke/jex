@@ -49,6 +49,7 @@ public:
     : IAstNode(loc)
     , d_resultType(type) {
     }
+    virtual bool isTemporary() const = 0;
 };
 
 class AstBinaryExpr : public IAstExpression {
@@ -67,6 +68,11 @@ public:
 
     void accept(IAstVisitor& visitor) override {
         visitor.visit(*this);
+    }
+
+    bool isTemporary() const override {
+        // Operators are handled via function calls and every function has to return a temporary.
+        return true;
     }
 };
 
@@ -97,6 +103,10 @@ public:
     void accept(IAstVisitor& visitor) override {
         visitor.visit(*this);
     }
+
+    bool isTemporary() const override {
+        return false;
+    }
 };
 
 class AstIdentifier : public IAstExpression  {
@@ -111,6 +121,10 @@ public:
 
     void accept(IAstVisitor& visitor) override {
         visitor.visit(*this);
+    }
+
+    bool isTemporary() const override {
+        return false;
     }
 };
 
@@ -144,6 +158,11 @@ public:
     void accept(IAstVisitor& visitor) override {
         visitor.visit(*this);
     }
+
+    bool isTemporary() const override {
+        // Every function has to return a temporary.
+        return true;
+    }
 };
 
 class AstIf : public AstFctCall {
@@ -154,6 +173,12 @@ public:
 
     void accept(IAstVisitor& visitor) override {
         visitor.visit(*this);
+    }
+
+    bool isTemporary() const override {
+        // An if() isn't a regular function, it doesn't return but just takes one of two values.
+        // Returns a temporary if any of the values is a temporary.
+        return d_args->d_args.size() == 3 && (d_args->d_args[1]->isTemporary() || d_args->d_args[2]->isTemporary());
     }
 };
 
@@ -172,6 +197,10 @@ public:
 
     void accept(IAstVisitor& visitor) override {
         visitor.visit(*this);
+    }
+
+    bool isTemporary() const override {
+        return false;
     }
 };
 

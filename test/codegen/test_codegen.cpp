@@ -451,10 +451,16 @@ begin:                                            ; preds = %entry
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
   call void @__assign_String(%String* %varPtrTyped, %String* %res_substr)
+  br label %unwind
+
+unwind:                                           ; preds = %begin
+  call void @__dtor_String(%String* %res_substr)
   ret %String* %varPtrTyped
 }
 
 declare void @_substr_String_Integer_Integer(%String*, %String*, i64, i64)
+
+declare void @__dtor_String(%String*)
 
 declare void @__assign_String(%String*, %String*)
 
@@ -477,8 +483,6 @@ entry:
   call void @__dtor_String(%String* %varPtrTyped)
   ret void
 }
-
-declare void @__dtor_String(%String*)
 )IR";
     ASSERT_EQ(expected, result);
 }

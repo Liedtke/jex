@@ -111,4 +111,17 @@ TEST(Backend, stringExpression) {
     ASSERT_EQ("Hello World!", *fctA(ctx->getDataPtr()));
 }
 
+TEST(Backend, stringExpressionWithTemporary) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : String = substr(\"Hello World!\", 6, 5);", OptLevel::O0);
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
+    // Evaluate a.
+    const uintptr_t fctAddr = compiled.getFctPtr("a");
+    ASSERT_NE(0, fctAddr);
+    auto fctA = reinterpret_cast<std::string* (*)(char*)>(fctAddr);
+    ASSERT_EQ("World", *fctA(ctx->getDataPtr()));
+}
+
 } // namespace jex
