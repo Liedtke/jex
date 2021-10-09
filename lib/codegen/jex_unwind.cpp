@@ -20,7 +20,6 @@ Unwind::Unwind(CompileEnv& env, CodeModule& module, CodeGenUtils& utils, llvm::F
 , d_fct(fct)
 , d_builder(std::make_unique<llvm::IRBuilder<>>(module.llvmContext()))
 , d_unwindEntry(llvm::BasicBlock::Create(d_module.llvmContext(), "unwind", d_fct)) {
-    // FIXME: Use backwards insertion.
     d_builder->SetInsertPoint(d_unwindEntry);
 }
 
@@ -32,7 +31,8 @@ void Unwind::add(IAstExpression& node, llvm::Value* value) {
     const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + type->name(), {});
     assert(dtor.d_retType == type && "destructor has invalid return type");
     llvm::FunctionCallee dtorCallee = d_utils.getOrCreateFct(&dtor);
-    d_builder->CreateCall(dtorCallee, {value});
+    llvm::Instruction* inst = d_builder->CreateCall(dtorCallee, {value});
+    d_builder->SetInsertPoint(inst); // Backwards insertion.
 }
 
 void Unwind::finalize(llvm::BasicBlock* insertPoint, llvm::Value* retVal) {

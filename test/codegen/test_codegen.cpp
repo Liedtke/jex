@@ -421,7 +421,7 @@ TEST(Codegen, stringExpression) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : String = substr(\"Hello World!\", 6, 5);");
+    "var a : String = substr(substr(\"Hello World!\", 6, 5), 0, 1);");
     parser.parse();
     TypeInference typeInference(compileEnv);
     compileEnv.getRoot()->accept(typeInference);
@@ -438,22 +438,25 @@ source_filename = "test"
 %String = type { i64, i64, i64, i64 }
 %Rctx = type opaque
 
-@strLit_l1_c25 = external constant %String
+@strLit_l1_c32 = external constant %String
 
 define %String* @a(%Rctx* %rctx) {
 entry:
   %res_substr = alloca %String, align 8
+  %res_substr1 = alloca %String, align 8
   br label %begin
 
 begin:                                            ; preds = %entry
-  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c25, i64 6, i64 5)
+  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c32, i64 6, i64 5)
+  call void @_substr_String_Integer_Integer(%String* %res_substr1, %String* %res_substr, i64 0, i64 1)
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
-  call void @__assign_String(%String* %varPtrTyped, %String* %res_substr)
+  call void @__assign_String(%String* %varPtrTyped, %String* %res_substr1)
   br label %unwind
 
 unwind:                                           ; preds = %begin
+  call void @__dtor_String(%String* %res_substr1)
   call void @__dtor_String(%String* %res_substr)
   ret %String* %varPtrTyped
 }

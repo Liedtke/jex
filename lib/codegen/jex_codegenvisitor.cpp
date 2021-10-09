@@ -222,15 +222,16 @@ void CodeGenVisitor::visit(AstBinaryExpr& node) {
 }
 
 void CodeGenVisitor::visit(AstFctCall& node) {
-    // Generate alloca to store the result.
-    llvm::Type* resType = d_utils->getType(node.d_resultType);
-    llvm::Value* res = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
-    llvm::FunctionCallee fct = d_utils->getOrCreateFct(node.d_fctInfo);
     // Visit arguments.
-    std::vector<llvm::Value*> args({res});
+    std::vector<llvm::Value*> args({nullptr}); // First arg will be result alloca.
     for (IAstExpression* expr : node.d_args->d_args) {
         args.push_back(visitExpression(*expr));
     }
+    // Generate alloca to store the result (after argument visit for better code readability).
+    llvm::Type* resType = d_utils->getType(node.d_resultType);
+    llvm::Value* res = new llvm::AllocaInst(resType, 0, "res_" + node.d_fctInfo->d_name, &d_currFct->getEntryBlock());
+    args[0] = res;
+    llvm::FunctionCallee fct = d_utils->getOrCreateFct(node.d_fctInfo);
     // Call the function.
     d_builder->CreateCall(fct.getFunctionType(), fct.getCallee(), args);
     d_result = res;
