@@ -490,4 +490,117 @@ entry:
     ASSERT_EQ(expected, result);
 }
 
+TEST(Codegen, unwindingIfExpression) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : String = if(1 < 2, substr(substr(\"Hello World!\", 6, 5), 0, 1), \"Another string\");");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    compileEnv.getRoot()->accept(typeInference);
+    CodeGen codeGen(compileEnv, OptLevel::O0);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%String = type { i64, i64, i64, i64 }
+%Rctx = type opaque
+
+@strLit_l1_c42 = external constant %String
+@strLit_l1_c72 = external constant %String
+
+define %String* @a(%Rctx* %rctx) {
+entry:
+  %res_operator_lt = alloca i1, align 1
+  %res_substr = alloca %String, align 8
+  %res_substr2 = alloca %String, align 8
+  %to_tmp = alloca %String, align 8
+  %unw_flag = alloca i1, align 1
+  br label %begin
+
+begin:                                            ; preds = %entry
+  call void @_operator_lt_Integer_Integer__intrinsic(i1* %res_operator_lt, i64 1, i64 2)
+  %0 = load i1, i1* %res_operator_lt, align 1
+  br i1 %0, label %if_true, label %if_false
+
+if_true:                                          ; preds = %begin
+  store i1 true, i1* %unw_flag, align 1
+  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c42, i64 6, i64 5)
+  call void @_substr_String_Integer_Integer(%String* %res_substr2, %String* %res_substr, i64 0, i64 1)
+  br label %if_cnt
+
+if_false:                                         ; preds = %begin
+  store i1 false, i1* %unw_flag, align 1
+  call void @__copyCtor_String(%String* %to_tmp, %String* @strLit_l1_c72)
+  br label %if_cnt
+
+if_cnt:                                           ; preds = %if_false, %if_true
+  %if_res = phi %String* [ %res_substr2, %if_true ], [ %to_tmp, %if_false ]
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @__assign_String(%String* %varPtrTyped, %String* %if_res)
+  br label %unwind4
+
+unwind4:                                          ; preds = %if_cnt
+  %flag_loaded = load i1, i1* %unw_flag, align 1
+  br i1 %flag_loaded, label %unwind1, label %unwind3
+
+unwind3:                                          ; preds = %unwind4
+  call void @__dtor_String(%String* %to_tmp)
+  br label %unwind
+
+unwind1:                                          ; preds = %unwind4
+  call void @__dtor_String(%String* %res_substr2)
+  call void @__dtor_String(%String* %res_substr)
+  br label %unwind
+
+unwind:                                           ; preds = %unwind3, %unwind1
+  ret %String* %varPtrTyped
+}
+
+define internal void @_operator_lt_Integer_Integer__intrinsic(i1* %0, i64 %1, i64 %2) {
+entry:
+  %result = icmp slt i64 %1, %2
+  store i1 %result, i1* %0, align 1
+  ret void
+}
+
+declare void @_substr_String_Integer_Integer(%String*, %String*, i64, i64)
+
+declare void @__dtor_String(%String*)
+
+declare void @__copyCtor_String(%String*, %String*)
+
+declare void @__assign_String(%String*, %String*)
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @__ctor_String(%String* %varPtrTyped)
+  ret void
+}
+
+declare void @__ctor_String(%String*)
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %String*
+  call void @__dtor_String(%String* %varPtrTyped)
+  ret void
+}
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
 } // namespace jex

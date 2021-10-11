@@ -124,4 +124,30 @@ TEST(Backend, stringExpressionWithTemporary) {
     ASSERT_EQ("World", *fctA(ctx->getDataPtr()));
 }
 
+TEST(Backend, stringExpressionWithConditionalTemporary) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : String = if(1 < 2, substr(substr(\"Hello World!\", 6, 5), 0, 1), \"Another string large enough to create an allocation\");", OptLevel::O0);
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
+    // Evaluate a.
+    const uintptr_t fctAddr = compiled.getFctPtr("a");
+    ASSERT_NE(0, fctAddr);
+    auto fctA = reinterpret_cast<std::string* (*)(char*)>(fctAddr);
+    ASSERT_EQ("W", *fctA(ctx->getDataPtr()));
+}
+
+TEST(Backend, stringExpressionWithConditionalTemporaryNotCreated) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : String = if(1 > 2, substr(substr(\"Hello World!\", 6, 5), 0, 1), \"Another string large enough to create an allocation\");", OptLevel::O0);
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
+    // Evaluate a.
+    const uintptr_t fctAddr = compiled.getFctPtr("a");
+    ASSERT_NE(0, fctAddr);
+    auto fctA = reinterpret_cast<std::string* (*)(char*)>(fctAddr);
+    ASSERT_EQ("Another string large enough to create an allocation", *fctA(ctx->getDataPtr()));
+}
+
 } // namespace jex

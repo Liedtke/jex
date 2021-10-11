@@ -47,9 +47,9 @@ private:
     llvm::Value* visitExpression(IAstExpression& node);
     llvm::Value* getVarPtr(const Symbol* varSym);
     void createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type);
+    void createCopyCtor(llvm::Value* result, llvm::Value* source, TypeInfoId type);
     void createInit(const Symbol* sym);
     void createDestruct(const Symbol* sym);
-    void pushUnwind(const IAstExpression& node, llvm::Value* value);
     llvm::BasicBlock* createBlock(const char* name);
 
     template<typename Iter>

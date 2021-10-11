@@ -15,12 +15,27 @@ class CompileEnv;
 class IAstExpression;
 
 class Unwind : NoCopy {
+    struct CondBranch {
+        llvm::BranchInst* branchInst;
+        llvm::Value* flagAlloca = nullptr;
+        llvm::BasicBlock* unwindBlockA = nullptr;
+        llvm::BasicBlock* unwindBlockB = nullptr;
+        bool isA = true;
+
+        CondBranch(llvm::BranchInst* branchInst) : branchInst(branchInst) {
+        }
+    };
+
     CompileEnv& d_env;
     CodeModule& d_module;
     CodeGenUtils& d_utils;
     llvm::Function* d_fct;
     std::unique_ptr<llvm::IRBuilder<>> d_builder;
-    llvm::BasicBlock* d_unwindEntry;
+    llvm::BasicBlock* d_unwindBegin; // Current non-branching start of unwinding.
+    llvm::BasicBlock* d_unwindEnd; // Last unwind block.
+    llvm::BasicBlock* d_newestBlock; // Latest created block, only used for ordering.
+    std::stack<CondBranch> d_branches;
+    bool d_hasAnyUnwind = false;
 
 public:
     Unwind(CompileEnv& env, CodeModule& module, CodeGenUtils& utils, llvm::Function* fct);
@@ -28,9 +43,16 @@ public:
     void add(IAstExpression& node, llvm::Value* value);
     void finalize(llvm::BasicBlock* insertPoint, llvm::Value* retVal);
 
-    llvm::BasicBlock* getEntryBlock() const {
-        return d_unwindEntry;
+    void initCondBranch(llvm::BranchInst* branchInst);
+    void switchCondBranch(llvm::BranchInst* branchInst);
+    void leaveCondBranch(llvm::BranchInst* branchInst);
+
+    llvm::BasicBlock* getNewestBlock() const {
+        return d_newestBlock;
     }
+
+private:
+    llvm::BasicBlock* createBasicBlock(const char* name);
 };
 
 
