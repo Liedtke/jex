@@ -520,7 +520,6 @@ entry:
   %res_operator_lt = alloca i1, align 1
   %res_substr = alloca %String, align 8
   %res_substr2 = alloca %String, align 8
-  %to_tmp = alloca %String, align 8
   %unw_flag = alloca i1, align 1
   br label %begin
 
@@ -537,26 +536,21 @@ if_true:                                          ; preds = %begin
 
 if_false:                                         ; preds = %begin
   store i1 false, i1* %unw_flag, align 1
-  call void @__copyCtor_String(%String* %to_tmp, %String* @strLit_l1_c72)
   br label %if_cnt
 
 if_cnt:                                           ; preds = %if_false, %if_true
-  %if_res = phi %String* [ %res_substr2, %if_true ], [ %to_tmp, %if_false ]
+  %if_res = phi %String* [ %res_substr2, %if_true ], [ @strLit_l1_c72, %if_false ]
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
   call void @__assign_String(%String* %varPtrTyped, %String* %if_res)
-  br label %unwind4
+  br label %unwind3
 
-unwind4:                                          ; preds = %if_cnt
+unwind3:                                          ; preds = %if_cnt
   %flag_loaded = load i1, i1* %unw_flag, align 1
-  br i1 %flag_loaded, label %unwind1, label %unwind3
+  br i1 %flag_loaded, label %unwind1, label %unwind
 
-unwind3:                                          ; preds = %unwind4
-  call void @__dtor_String(%String* %to_tmp)
-  br label %unwind
-
-unwind1:                                          ; preds = %unwind4
+unwind1:                                          ; preds = %unwind3
   call void @__dtor_String(%String* %res_substr2)
   call void @__dtor_String(%String* %res_substr)
   br label %unwind
@@ -575,8 +569,6 @@ entry:
 declare void @_substr_String_Integer_Integer(%String*, %String*, i64, i64)
 
 declare void @__dtor_String(%String*)
-
-declare void @__copyCtor_String(%String*, %String*)
 
 declare void @__assign_String(%String*, %String*)
 

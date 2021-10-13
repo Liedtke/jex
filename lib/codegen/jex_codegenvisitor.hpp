@@ -47,7 +47,6 @@ private:
     llvm::Value* visitExpression(IAstExpression& node);
     llvm::Value* getVarPtr(const Symbol* varSym);
     void createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type);
-    void createCopyCtor(llvm::Value* result, llvm::Value* source, TypeInfoId type);
     void createInit(const Symbol* sym);
     void createDestruct(const Symbol* sym);
     llvm::BasicBlock* createBlock(const char* name);

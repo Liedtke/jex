@@ -177,8 +177,8 @@ public:
 
     bool isTemporary() const override {
         // An if() isn't a regular function, it doesn't return but just takes one of two values.
-        // Returns a temporary if any of the values is a temporary.
-        return d_args->d_args.size() == 3 && (d_args->d_args[1]->isTemporary() || d_args->d_args[2]->isTemporary());
+        // Returns a temporary if both of the values are temporaries.
+        return d_args->d_args.size() == 3 && d_args->d_args[1]->isTemporary() && d_args->d_args[2]->isTemporary();
     }
 };
 

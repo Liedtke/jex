@@ -143,15 +143,6 @@ void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, Type
     d_builder->CreateCall(assignCallee, {result, source});
 }
 
-void CodeGenVisitor::createCopyCtor(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
-    assert(type->kind() == TypeKind::Complex && "CopyCtor should only be called for complex types");
-    assert(result->getType() == source->getType() && "CopyCtor expects two pointers of the same type");
-    const FctInfo& assign = d_env.fctLibrary().getFct("_copyCtor", {type});
-    assert(assign.d_retType == type && "Return type of copyCtor has to be equal to its parameter type");
-    llvm::FunctionCallee assignCallee = d_utils->getOrCreateFct(&assign);
-    d_builder->CreateCall(assignCallee, {result, source});
-}
-
 void CodeGenVisitor::visit(AstVariableDef& node) {
     assert(d_currFct == nullptr);
     assert(!d_unwind);
@@ -258,36 +249,16 @@ void CodeGenVisitor::visit(AstIf& node) {
     llvm::Value* cond = visitExpression(*node.d_args->d_args[0]);
     assert(cond->getType()->isIntegerTy(1));
     llvm::BranchInst* branchInst = d_builder->CreateCondBr(cond, trueBranch, falseBranch);
-    IAstExpression& trueExpr = *node.d_args->d_args[1];
-    IAstExpression& falseExpr = *node.d_args->d_args[2];
 
     // Generate true branch.
     d_builder->SetInsertPoint(trueBranch);
     d_unwind->initCondBranch(branchInst);
-    llvm::Value* trueVal = visitExpression(trueExpr);
-    if (node.d_resultType->kind() == TypeKind::Complex && !trueExpr.isTemporary() && falseExpr.isTemporary()) {
-        // Make it a temporary.
-        llvm::Value* res = new llvm::AllocaInst(d_utils->getType(trueExpr.d_resultType), 0,
-            "to_tmp", &d_currFct->getEntryBlock());
-        createCopyCtor(res, trueVal, trueExpr.d_resultType);
-        trueVal = res;
-        assert(trueExpr.d_resultType->callConv() == TypeInfo::CallConv::ByPointer);
-        d_unwind->add(node, trueVal);
-    }
+    llvm::Value* trueVal = visitExpression(*node.d_args->d_args[1]);
     d_builder->CreateBr(cntBranch);
     // Generate false branch.
     d_builder->SetInsertPoint(falseBranch);
     d_unwind->switchCondBranch(branchInst);
-    llvm::Value* falseVal = visitExpression(falseExpr);
-    if (node.d_resultType->kind() == TypeKind::Complex && !falseExpr.isTemporary() && trueExpr.isTemporary()) {
-        // Make it a temporary.
-        llvm::Value* res = new llvm::AllocaInst(d_utils->getType(falseExpr.d_resultType), 0,
-            "to_tmp", &d_currFct->getEntryBlock());
-        createCopyCtor(res, falseVal, falseExpr.d_resultType);
-        falseVal = res;
-        assert(falseExpr.d_resultType->callConv() == TypeInfo::CallConv::ByPointer);
-        d_unwind->add(node, falseVal);
-    }
+    llvm::Value* falseVal = visitExpression(*node.d_args->d_args[2]);
     d_builder->CreateBr(cntBranch);
     // Generate merged branch (continue).
     d_builder->SetInsertPoint(cntBranch);
