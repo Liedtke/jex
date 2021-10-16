@@ -5,7 +5,6 @@
 #include <jex_registry.hpp>
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 namespace jex {
 
