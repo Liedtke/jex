@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wimplicit-fallthrough")
 
+option(CODE_COVERAGE "Enable coverage instrumentation")
+option(ASAN "Enable address sanitizer instrumentation")
+
 if(CODE_COVERAGE)
     message(STATUS "Building with coverage instrumentation")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -g -O0")
