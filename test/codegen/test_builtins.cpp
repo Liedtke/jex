@@ -1,4 +1,5 @@
 #include <jex_builtins.hpp>
+#include <jex_executioncontext.hpp>
 
 #include <test_base.hpp>
 
@@ -9,21 +10,21 @@
 
 namespace jex {
 
-using EvalVariant = std::variant<int64_t, double, bool>;
+using EvalVariant = std::variant<int64_t, double, bool, std::string>;
 using TestEvalT = std::pair<const char*, EvalVariant>;
 class TestEval : public testing::TestWithParam<TestEvalT> {};
 
 static void testEval(const char *code, EvalVariant exp, bool useIntrinsics) {
     Environment env;
     env.addModule(BuiltInsModule());
-    CompileResult compiled = compile(env, code, OptLevel::O2, useIntrinsics);
-    auto ctx = std::make_unique<char[]>(compiled.getContextSize());
+    CompileResult compiled = compile(env, code, OptLevel::O1, useIntrinsics);
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
     ASSERT_NE(0, fctAddr);
     auto fctA = reinterpret_cast<void* (*)(char*)>(fctAddr);
     std::visit([&](auto exp) {
-        auto act = *reinterpret_cast<decltype(exp)*>(fctA(ctx.get()));
+        auto act = *reinterpret_cast<decltype(exp)*>(fctA(ctx->getDataPtr()));
         if constexpr (std::is_same_v<decltype(exp), double>) {
             ASSERT_DOUBLE_EQ(exp, act) << code;
         } else {
@@ -46,6 +47,10 @@ TEST_P(TestEval, testNonIntrinsic) {
 
 constexpr int64_t operator"" _i64(unsigned long long in) {
     return static_cast<int64_t>(in);
+}
+
+const std::string operator"" _s(const char *in, unsigned long len) {
+    return {in, len};
 }
 
 static TestEvalT evals[] = {
@@ -111,9 +116,16 @@ static TestEvalT evals[] = {
     {"Bool = 1.2345 >= 1.2344", true},
     {"Bool = 1.2344 >= 1.2345", false},
     {"Bool = 1.2345 <= 1.2345", true},
+    // String operations
+    {"String = \"Testing memory management for a long string\"", "Testing memory management for a long string"_s},
+    {"String = substr(\"Hello World!\", 6, 5)", "World"_s},
+    {"String = substr(\"A long string not fitting into the std::string buffer\", 0, 100)",
+     "A long string not fitting into the std::string buffer"_s},
+    {"String = if(true, if (false, \"test\", substr(\"A long string not fitting into the std::string buffer\", 0, 100)), \"test\")",
+     "A long string not fitting into the std::string buffer"_s},
 };
 
-INSTANTIATE_TEST_SUITE_P(SuiteEval,
+INSTANTIATE_TEST_SUITE_P(SuiteBuiltins,
                          TestEval,
                          testing::ValuesIn(evals));
 

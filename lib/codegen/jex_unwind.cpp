@@ -19,10 +19,10 @@ Unwind::Unwind(CompileEnv& env, CodeModule& module, CodeGenUtils& utils, llvm::F
 , d_utils(utils)
 , d_fct(fct)
 , d_builder(std::make_unique<llvm::IRBuilder<>>(module.llvmContext()))
-, d_unwindBegin(llvm::BasicBlock::Create(d_module.llvmContext(), "unwind", d_fct))
-, d_unwindEnd(d_unwindBegin)
-, d_newestBlock(d_unwindBegin) {
-    d_builder->SetInsertPoint(d_unwindBegin);
+, d_unwind()
+, d_newestBlock() {
+    d_unwind.begin = d_unwind.end = createBasicBlock("unwind");
+    d_builder->SetInsertPoint(d_unwind.begin);
 }
 
 void Unwind::add(IAstExpression& node, llvm::Value* value) {
@@ -31,14 +31,14 @@ void Unwind::add(IAstExpression& node, llvm::Value* value) {
     }
     d_hasAnyUnwind = true;
     if (d_branches.empty()) {
-        d_builder->SetInsertPoint(d_unwindBegin, d_unwindBegin->getFirstInsertionPt());
+        d_builder->SetInsertPoint(d_unwind.begin, d_unwind.begin->getFirstInsertionPt());
     } else {
         CondBranch& branch = d_branches.top();
-        llvm::BasicBlock** block = branch.isA ? &branch.unwindBlockA : &branch.unwindBlockB;
-        if (*block == nullptr) {
-            *block = createBasicBlock("unwind");
+        BlockSeq& blockSeq = branch.isA ? branch.unwindA : branch.unwindB;
+        if (!blockSeq) {
+            blockSeq = BlockSeq(createBasicBlock("unwind"));
         }
-        d_builder->SetInsertPoint(*block, (*block)->getFirstInsertionPt());
+        d_builder->SetInsertPoint(blockSeq.begin, blockSeq.begin->getFirstInsertionPt());
     }
     TypeInfoId type = node.d_resultType;
     const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + type->name(), {});
@@ -52,15 +52,16 @@ void Unwind::finalize(llvm::BasicBlock* insertPoint, llvm::Value* retVal) {
     d_builder->SetInsertPoint(insertPoint);
     // If there isn't any unwinding, remove the unwinding completely for better code readability.
     if (!d_hasAnyUnwind) {
-        assert(d_unwindBegin == d_unwindEnd);
-        assert(d_unwindBegin->empty());
+        assert(d_unwind.begin == d_unwind.end);
+        assert(d_unwind.begin->empty());
         d_builder->CreateRet(retVal);
-        d_unwindEnd->eraseFromParent();
-        d_unwindEnd = nullptr;
+        d_unwind.end->eraseFromParent();
+        d_unwind.begin = nullptr;
+        d_unwind.end = nullptr;
         return;
     }
-    d_builder->CreateBr(d_unwindBegin);
-    d_builder->SetInsertPoint(d_unwindEnd);
+    d_builder->CreateBr(d_unwind.begin);
+    d_builder->SetInsertPoint(d_unwind.end);
     d_builder->CreateRet(retVal);
 }
 
@@ -84,7 +85,7 @@ void Unwind::leaveCondBranch(llvm::BranchInst* branchInst) {
     CondBranch& branch = d_branches.top();
     d_branches.pop();
     // Generate unwind coding if required.
-    if (branch.unwindBlockA || branch.unwindBlockB) {
+    if (branch.unwindA || branch.unwindB) {
         // Boolean flag whether block A was hit.
         llvm::Type* boolTy = llvm::Type::getInt1Ty(d_module.llvmContext());
         llvm::Value* flag = new llvm::AllocaInst(boolTy, 0, "unw_flag", &d_fct->getEntryBlock());
@@ -95,28 +96,28 @@ void Unwind::leaveCondBranch(llvm::BranchInst* branchInst) {
         new llvm::StoreInst(trueVal, flag, &branch.branchInst->getSuccessor(0)->front());
         llvm::Value* falseVal = llvm::ConstantInt::get(d_module.llvmContext(), llvm::APInt(1, 0));
         new llvm::StoreInst(falseVal, flag, &branch.branchInst->getSuccessor(1)->front());
-        llvm::BasicBlock** previousUnwind = &d_unwindBegin;
+        BlockSeq* outerUnwind = &d_unwind;
         if (!d_branches.empty()) {
             CondBranch& outerBranch = d_branches.top();
-            previousUnwind = outerBranch.isA ? &outerBranch.unwindBlockA : &outerBranch.unwindBlockB;
-            if (*previousUnwind == nullptr) {
-                *previousUnwind = createBasicBlock("unwind");
+            outerUnwind = outerBranch.isA ? &outerBranch.unwindA : &outerBranch.unwindB;
+            if (!*outerUnwind) {
+                *outerUnwind = BlockSeq(createBasicBlock("unwind"));
             }
         }
-        llvm::BasicBlock* unwindA = *previousUnwind;
-        llvm::BasicBlock* unwindB = *previousUnwind;
-        if (branch.unwindBlockA) {
-            unwindA = branch.unwindBlockA;
-            llvm::BranchInst::Create(d_unwindBegin, branch.unwindBlockA);
+        llvm::BasicBlock* unwindA = outerUnwind->begin;
+        llvm::BasicBlock* unwindB = outerUnwind->begin;
+        if (branch.unwindA) {
+            unwindA = branch.unwindA.begin;
+            llvm::BranchInst::Create(outerUnwind->begin, branch.unwindA.end);
         }
-        if (branch.unwindBlockB) {
-            unwindB = branch.unwindBlockB;
-            llvm::BranchInst::Create(d_unwindBegin, branch.unwindBlockB);
+        if (branch.unwindB) {
+            unwindB = branch.unwindB.begin;
+            llvm::BranchInst::Create(outerUnwind->begin, branch.unwindB.begin);
         }
         llvm::BasicBlock* newBlock = createBasicBlock("unwind");
         llvm::Value* flagLoaded = new llvm::LoadInst(flag->getType()->getPointerElementType(), flag, "flag_loaded", newBlock);
         llvm::BranchInst::Create(unwindA, unwindB, flagLoaded, newBlock);
-        *previousUnwind = newBlock;
+        outerUnwind->begin = newBlock;
     }
 }
 

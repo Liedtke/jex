@@ -18,9 +18,11 @@ class ConstantStore {
         Dtor dtor;
 
         Constant(Constant&&) = default;
+        Constant& operator=(Constant&&) = default;
+
         ~Constant() {
             // Destruct constant if destructor is set.
-            if (dtor != nullptr) {
+            if (valuePtr && dtor != nullptr) {
                 dtor(valuePtr.get());
             }
         }

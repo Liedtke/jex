@@ -15,14 +15,25 @@ class CompileEnv;
 class IAstExpression;
 
 class Unwind : NoCopy {
+    struct BlockSeq {
+        llvm::BasicBlock* begin = nullptr;
+        llvm::BasicBlock* end = nullptr;
+
+        BlockSeq() = default;
+        explicit BlockSeq(llvm::BasicBlock* block) : begin(block), end(block) {
+        }
+
+        operator bool() {
+            return begin != nullptr;
+        }
+    };
     struct CondBranch {
         llvm::BranchInst* branchInst;
-        llvm::Value* flagAlloca = nullptr;
-        llvm::BasicBlock* unwindBlockA = nullptr;
-        llvm::BasicBlock* unwindBlockB = nullptr;
+        BlockSeq unwindA;
+        BlockSeq unwindB;
         bool isA = true;
 
-        CondBranch(llvm::BranchInst* branchInst) : branchInst(branchInst) {
+        explicit CondBranch(llvm::BranchInst* branchInst) : branchInst(branchInst), unwindA(), unwindB() {
         }
     };
 
@@ -31,8 +42,7 @@ class Unwind : NoCopy {
     CodeGenUtils& d_utils;
     llvm::Function* d_fct;
     std::unique_ptr<llvm::IRBuilder<>> d_builder;
-    llvm::BasicBlock* d_unwindBegin; // Current non-branching start of unwinding.
-    llvm::BasicBlock* d_unwindEnd; // Last unwind block.
+    BlockSeq d_unwind;
     llvm::BasicBlock* d_newestBlock; // Latest created block, only used for ordering.
     std::stack<CondBranch> d_branches;
     bool d_hasAnyUnwind = false;

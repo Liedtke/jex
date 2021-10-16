@@ -255,11 +255,13 @@ void CodeGenVisitor::visit(AstIf& node) {
     d_unwind->initCondBranch(branchInst);
     llvm::Value* trueVal = visitExpression(*node.d_args->d_args[1]);
     d_builder->CreateBr(cntBranch);
+    trueBranch = d_builder->GetInsertBlock();
     // Generate false branch.
     d_builder->SetInsertPoint(falseBranch);
     d_unwind->switchCondBranch(branchInst);
     llvm::Value* falseVal = visitExpression(*node.d_args->d_args[2]);
     d_builder->CreateBr(cntBranch);
+    falseBranch = d_builder->GetInsertBlock();
     // Generate merged branch (continue).
     d_builder->SetInsertPoint(cntBranch);
     d_unwind->leaveCondBranch(branchInst);
