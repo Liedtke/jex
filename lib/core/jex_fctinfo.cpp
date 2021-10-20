@@ -13,7 +13,8 @@ static std::string createMangledName(const FctInfo* fctInfo) {
     return name;
 }
 
-FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType, std::vector<TypeInfoId> params, IntrinsicFct intrinsicFct)
+FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType,
+                 std::vector<TypeInfoId> params, IntrinsicFct intrinsicFct, FctFlags flags)
 : d_name(std::move(name))
 , d_mangledName()
 , d_intrinsicName()
@@ -21,7 +22,8 @@ FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfo
 , d_fctWrapper(fctWrapper)
 , d_intrinsicFct(intrinsicFct)
 , d_retType(retType)
-, d_paramTypes(std::move(params)) {
+, d_paramTypes(std::move(params))
+, d_flags(flags) {
     d_mangledName = createMangledName(this);
     d_intrinsicName = d_mangledName + "__intrinsic";
 }

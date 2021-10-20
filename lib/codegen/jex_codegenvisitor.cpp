@@ -45,7 +45,7 @@ void CodeGenVisitor::createInit(const Symbol* sym) {
         return;
     }
     // Call constructor.
-    const FctInfo& ctor = d_env.fctLibrary().getFct("_ctor_" + type->name(), {});
+    const FctInfo& ctor = d_env.fctLibrary().getConstructor(type);
     assert(ctor.d_retType == type && "constructor has invalid return type");
     llvm::FunctionCallee ctorCallee = d_utils->getOrCreateFct(&ctor);
     if (type->callConv() == TypeInfo::CallConv::ByValue) {
@@ -62,7 +62,7 @@ void CodeGenVisitor::createDestruct(const Symbol* sym) {
     assert(type->kind() == TypeKind::Complex &&
            "The context may only contain value and complex types");
     // Call destructor.
-    const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + type->name(), {});
+    const FctInfo& dtor = d_env.fctLibrary().getDestructor(type);
     assert(dtor.d_retType == type && "destructor has invalid return type");
     llvm::FunctionCallee dtorCallee = d_utils->getOrCreateFct(&dtor);
     d_builder->CreateCall(dtorCallee, {getVarPtr(sym)});
@@ -137,7 +137,7 @@ llvm::Value* CodeGenVisitor::getVarPtr(const Symbol* varSym) {
 void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, TypeInfoId type) {
     assert(type->kind() == TypeKind::Complex && "Assign should only be called for complex types");
     assert(result->getType() == source->getType() && "Assign expects two pointers of the same type");
-    const FctInfo& assign = d_env.fctLibrary().getFct("_assign", {type});
+    const FctInfo& assign = d_env.fctLibrary().getAssign(type);
     assert(assign.d_retType == type && "Return type of assign has to be equal to its parameter type");
     llvm::FunctionCallee assignCallee = d_utils->getOrCreateFct(&assign);
     d_builder->CreateCall(assignCallee, {result, source});

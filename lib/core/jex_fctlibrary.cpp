@@ -50,4 +50,16 @@ const FctInfo& FctLibrary::getFct(const std::string& name,
     throw InternalError(err.str());
 }
 
+const FctInfo& FctLibrary::getConstructor(TypeInfoId type) const {
+    return getFct("_ctor_" + type->name(), {});
+}
+
+const FctInfo& FctLibrary::getDestructor(TypeInfoId type) const {
+    return getFct("_dtor_" + type->name(), {});
+}
+
+const FctInfo& FctLibrary::getAssign(TypeInfoId type) const {
+    return getFct("_assign", {type});
+}
+
 } // namespace jex

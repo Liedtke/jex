@@ -3,6 +3,7 @@ set(core_sources
     jex_astvisitor.cpp
     jex_basicastvisitor.cpp
     jex_compileenv.cpp
+    jex_constantfolding.cpp
     jex_constantstore.cpp
     jex_environment.cpp
     jex_errorhandling.cpp

@@ -37,6 +37,9 @@ void BasicAstVisitor::visit(AstVariableDef& node) {
     node.d_expr->accept(*this);
 }
 
+void BasicAstVisitor::visit(AstConstantExpr& node) {
+}
+
 void BasicAstVisitor::visit(AstRoot& node) {
     for (AstVariableDef* def : node.d_varDefs) {
         def->accept(*this);
