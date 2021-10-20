@@ -11,6 +11,7 @@ class AstIf;
 class AstIdentifier;
 class AstArgList;
 class AstVariableDef;
+class AstConstantExpr;
 class AstRoot;
 
 class IAstVisitor {
@@ -23,6 +24,7 @@ public:
     virtual void visit(AstIf& node) = 0;
     virtual void visit(AstIdentifier& node) = 0;
     virtual void visit(AstArgList& node) = 0;
+    virtual void visit(AstConstantExpr& node) = 0;
     virtual void visit(AstVariableDef& node) = 0;
     virtual void visit(AstRoot& node) = 0;
 };

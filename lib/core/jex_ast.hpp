@@ -50,6 +50,28 @@ public:
     , d_resultType(type) {
     }
     virtual bool isTemporary() const = 0;
+    virtual bool isConstant() const {
+        return false;
+    }
+};
+
+class AstConstantExpr : public IAstExpression {
+public:
+    std::string d_constantName;
+
+    AstConstantExpr(IAstExpression& replaced);
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+
+    bool isConstant() const override {
+        return true;
+    }
+
+    bool isTemporary() const override {
+        return false;
+    }
 };
 
 class AstBinaryExpr : public IAstExpression {
@@ -106,6 +128,10 @@ public:
 
     bool isTemporary() const override {
         return false;
+    }
+
+    bool isConstant() const override {
+        return true;
     }
 };
 

@@ -27,6 +27,10 @@ public:
     ~FctLibrary();
     void registerFct(FctInfo&& fctInfo);
     const FctInfo& getFct(const std::string& name, const std::vector<TypeInfoId>& paramTypes) const;
+    const FctInfo& getConstructor(TypeInfoId type) const;
+    const FctInfo& getDestructor(TypeInfoId type) const;
+    const FctInfo& getAssign(TypeInfoId type) const;
+
 
     FctsByName::const_iterator begin() const {
         return d_fctsByName.begin();

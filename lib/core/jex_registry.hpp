@@ -103,6 +103,7 @@ struct FctDesc {
     IntrinsicFct intrinsicFct;
     std::string retTypeName;
     std::vector<std::string> argTypeNames;
+    FctFlags flags;
 
     template<typename... T, size_t... I>
     static void wrapperInner(void(*fct)(typename ArgRet::RetType, T...),
@@ -117,12 +118,13 @@ struct FctDesc {
         wrapperInner(reinterpret_cast<FctType>(fct), args, std::index_sequence_for<ArgT...>());
     }
 
-    FctDesc(std::string name, FctType fctPtr, IntrinsicFct intrinsicFct = nullptr)
+    FctDesc(std::string name, FctType fctPtr, IntrinsicFct intrinsicFct = nullptr, FctFlags flags = FctFlags::None)
     : name(std::move(name))
     , fctPtr(fctPtr)
     , intrinsicFct(std::move(intrinsicFct))
     , retTypeName(ArgRet::name)
-    , argTypeNames{ArgT::name...} {
+    , argTypeNames{ArgT::name...}
+    , flags(flags) {
     }
 };
 
@@ -162,7 +164,7 @@ public:
             [this](const std::string& name) { return d_types.getType(name); });
         // Add function to function library.
         d_fcts.registerFct(FctInfo(desc.name, reinterpret_cast<void*>(desc.fctPtr),
-                           FctDesc<T...>::wrapper, retTypeInfo, paramTypeInfos, desc.intrinsicFct));
+                           FctDesc<T...>::wrapper, retTypeInfo, paramTypeInfos, desc.intrinsicFct, desc.flags));
     }
 };
 
