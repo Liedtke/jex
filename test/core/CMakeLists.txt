@@ -1,4 +1,5 @@
 add_executable(test_core
+    test_base.cpp
     test_constantfolding.cpp
     test_lexer.cpp
     test_parser.cpp

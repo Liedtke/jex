@@ -83,8 +83,10 @@ void ConstantFolding::visit(AstBinaryExpr& node) {
         void* args[] = {iterator->second.getPtr(), getPtrFor(node.d_lhs), getPtrFor(node.d_rhs)};
         node.d_fctInfo->call(args);
         // Set destructor for memory management.
-        void* fctPtr = d_env.fctLibrary().getDestructor(node.d_resultType).d_fctPtr;
-        iterator->second.getConstant().dtor = reinterpret_cast<Constant::Dtor>(fctPtr);
+        if (node.d_resultType->kind() == TypeKind::Complex) {
+            void* fctPtr = d_env.fctLibrary().getDestructor(node.d_resultType).d_fctPtr;
+            iterator->second.getConstant().dtor = reinterpret_cast<Constant::Dtor>(fctPtr);
+        }
         d_foldedExpr = constNode;
     } else {
         // Move inner constants to permanent constant store if any.

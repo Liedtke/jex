@@ -27,6 +27,10 @@ public:
         return valuePtr.get();
     }
 
+    const void* getPtr() const {
+        return valuePtr.get();
+    }
+
     static Constant allocate(size_t size) {
         return Constant{std::make_unique<uint8_t[]>(size), nullptr};
     }
@@ -72,6 +76,10 @@ public:
     }
     auto end() {
         return d_constants.end();
+    }
+
+    const Constant& constantByName(const std::string& name) {
+        return d_constants.at(name);
     }
 };
 

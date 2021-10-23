@@ -107,7 +107,7 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(FloatCmp("operator_ge", cmp<std::greater_equal<>>, FloatCmpIntr::generate<llvm::CmpInst::Predicate::FCMP_OGE>, FctFlags::Pure));
 
     // === String ===
-    registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr, nullptr, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr, NO_INTRINSIC, FctFlags::Pure));
 }
 
 } // namespace jex

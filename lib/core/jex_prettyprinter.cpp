@@ -94,6 +94,10 @@ void PrettyPrinter::visit(AstVariableDef& node) {
     d_str << ";\n";
 }
 
+void PrettyPrinter::visit(AstConstantExpr& node) {
+    d_str << "[const " << node.d_constantName << "]";
+}
+
 void PrettyPrinter::visit(AstRoot& node) {
     for (AstVariableDef* def : node.d_varDefs) {
         def->accept(*this);
