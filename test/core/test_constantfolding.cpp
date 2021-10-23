@@ -61,28 +61,38 @@ const std::string operator"" _s(const char *in, unsigned long len) {
 static TestConstFoldingT tests[] = {
     {   // Test folding of simple expression.
         "var x: Integer = 1 + 2 + 4 + (2 * 1) + (1 + 0);",
-        "var x: Integer = (([const const_Integer_l1_c18] + (2 * 1)) + [const const_Integer_l1_c41]);\n",
+        "var x: Integer = (([const_Integer_l1_c18] + (2 * 1)) + [const_Integer_l1_c41]);\n",
         {{"const_Integer_l1_c18", 7_i64}, {"const_Integer_l1_c41", 1_i64}}
     },
     {   // Test folding of if expression true branch.
         "var x: Integer = if(true, (1+2)*3, 2+1);",
-        "var x: Integer = ([const const_Integer_l1_c28] * 3);\n",
+        "var x: Integer = ([const_Integer_l1_c28] * 3);\n",
         {{"const_Integer_l1_c28", 3_i64}}
     },
     {   // Test folding of if expression false branch, continued folding.
         "var x: Integer = if(false, 2*3, 1+2) + 3;",
-        "var x: Integer = [const const_Integer_l1_c18];\n",
+        "var x: Integer = [const_Integer_l1_c18];\n",
         {{"const_Integer_l1_c18", 6_i64}}
     },
     {   // Test folding of nested if.
         "var x: Integer = if(false, 2*3, if(true, 1+2, 3+4) + 5) + 6;",
-        "var x: Integer = [const const_Integer_l1_c18];\n",
+        "var x: Integer = [const_Integer_l1_c18];\n",
         {{"const_Integer_l1_c18", 14_i64}}
     },
     {   // Test folding of if branches with non-const condition.
         "var x: Integer = if(2*2 == 3, 1+1, 2+2);",
-        "var x: Integer = if(((2 * 2) == 3), [const const_Integer_l1_c31], [const const_Integer_l1_c36]);\n",
+        "var x: Integer = if(((2 * 2) == 3), [const_Integer_l1_c31], [const_Integer_l1_c36]);\n",
         {{"const_Integer_l1_c31", 2_i64}, {"const_Integer_l1_c36", 4_i64}}
+    },
+    {   // Test folding of complex type.
+        "var x: String = substr(\"test\", 2, 2);",
+        "var x: String = [const_String_l1_c17];\n",
+        {{"const_String_l1_c17", "st"}}
+    },
+    {   // Test folding of complex type nested.
+        "var x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
+        "var x: String = [const_String_l1_c17];\n",
+        {{"const_String_l1_c17", "decent"}}
     },
 };
 

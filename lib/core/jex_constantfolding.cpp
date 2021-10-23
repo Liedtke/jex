@@ -72,26 +72,53 @@ bool ConstantFolding::tryFoldAndStore(IAstExpression*& expr) {
     return false;
 }
 
-void ConstantFolding::visit(AstBinaryExpr& node) {
-    bool isConst = tryFold(node.d_lhs) & tryFold(node.d_rhs);
-    if (isConst && node.d_fctInfo->isPure()) {
-        AstConstantExpr* constNode = d_env.createNode<AstConstantExpr>(node);
+void ConstantFolding::foldFunctionCall(IAstExpression& callExpr, const FctInfo& fctInfo,
+                                       const std::vector<IAstExpression*>& args) {
+    AstConstantExpr* constNode = d_env.createNode<AstConstantExpr>(callExpr);
         [[maybe_unused]] auto[iterator, inserted] =
-            d_constants.emplace(constNode, Constant::allocate(node.d_resultType->size()));
+            d_constants.emplace(constNode, Constant::allocate(callExpr.d_resultType->size()));
         assert(inserted);
         // Evaluate function.
-        void* args[] = {iterator->second.getPtr(), getPtrFor(node.d_lhs), getPtrFor(node.d_rhs)};
-        node.d_fctInfo->call(args);
+        std::vector<void*> argPtrs;
+        argPtrs.reserve(1 + args.size());
+        argPtrs.push_back(iterator->second.getPtr());
+        for (IAstExpression* expr : args) {
+            argPtrs.push_back(getPtrFor(expr));
+        }
+        fctInfo.call(argPtrs.data());
         // Set destructor for memory management.
-        if (node.d_resultType->kind() == TypeKind::Complex) {
-            void* fctPtr = d_env.fctLibrary().getDestructor(node.d_resultType).d_fctPtr;
+        if (callExpr.d_resultType->kind() == TypeKind::Complex) {
+            void* fctPtr = d_env.fctLibrary().getDestructor(callExpr.d_resultType).d_fctPtr;
             iterator->second.getConstant().dtor = reinterpret_cast<Constant::Dtor>(fctPtr);
         }
         d_foldedExpr = constNode;
+}
+
+void ConstantFolding::visit(AstBinaryExpr& node) {
+    bool isConst = tryFold(node.d_lhs) & tryFold(node.d_rhs);
+    if (isConst && node.d_fctInfo->isPure()) {
+        foldFunctionCall(node, *node.d_fctInfo, {node.d_lhs, node.d_rhs});
     } else {
         // Move inner constants to permanent constant store if any.
         storeIfConstant(node.d_lhs);
         storeIfConstant(node.d_rhs);
+    }
+}
+
+void ConstantFolding::visit(AstFctCall& node) {
+    // Fold all arguments.
+    bool isConst = true;
+    for (IAstExpression*& arg : node.d_args->d_args) {
+        isConst &= tryFold(arg);
+    }
+    // Fold call itself.
+    if (isConst && node.d_fctInfo->isPure()) {
+        foldFunctionCall(node, *node.d_fctInfo, node.d_args->d_args);
+    } else {
+        // Move inner constants to permanent constant store if any.
+        for (IAstExpression*& arg : node.d_args->d_args) {
+            storeIfConstant(arg);
+        }
     }
 }
 
@@ -116,14 +143,6 @@ void ConstantFolding::visit(AstIf& node) {
 
 void ConstantFolding::visit(AstIdentifier& node) {
     // Never const currently.
-}
-
-void ConstantFolding::visit(AstFctCall& node) {
-    // FIXME: Implement constant folding for functions.
-}
-
-void ConstantFolding::visit(AstArgList& node) {
-    // FIXME: Implement constant folding for functions.
 }
 
 void ConstantFolding::visit(AstVariableDef& node) {
