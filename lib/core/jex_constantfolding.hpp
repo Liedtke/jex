@@ -46,13 +46,14 @@ private:
     void visit(AstFctCall& node) override;
     void visit(AstIf& node) override;
     void visit(AstIdentifier& node) override;
-    void visit(AstArgList& node) override;
     void visit(AstVariableDef& node) override;
 
     bool tryFold(IAstExpression*& expr);
     bool tryFoldAndStore(IAstExpression*& expr);
     void* getPtrFor(IAstExpression* expr);
     void storeIfConstant(IAstExpression* expr);
+    void foldFunctionCall(IAstExpression& callExpr, const FctInfo& fctInfo,
+                          const std::vector<IAstExpression*>& args);
 };
 
 } // namespace jex

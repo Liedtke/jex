@@ -95,7 +95,7 @@ void PrettyPrinter::visit(AstVariableDef& node) {
 }
 
 void PrettyPrinter::visit(AstConstantExpr& node) {
-    d_str << "[const " << node.d_constantName << "]";
+    d_str << '[' << node.d_constantName << ']';
 }
 
 void PrettyPrinter::visit(AstRoot& node) {
