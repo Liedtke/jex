@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jex_environment.hpp>
+#include <jex_registry.hpp>
 
 #include <gtest/gtest.h>
 
@@ -11,12 +12,22 @@
 
 namespace jex::test {
 
-static inline void registerBuiltIns(Environment& env) {
-    TypeSystem& types = env.types();
-    types.registerType(TypeKind::Value, "Bool", 1, 1);
-    types.registerType(TypeKind::Value, "Integer", 8, 8);
-    types.registerType(TypeKind::Value, "Float", 8, 8);
-    types.registerType(TypeKind::Value, "String", 8, 8);
+static constexpr char IntegerName[] = "Integer";
+using ArgInteger = ArgValue<int64_t, IntegerName>;
+static constexpr char FloatName[] = "Float";
+using ArgFloat = ArgValue<double, FloatName>;
+static constexpr char BoolName[] = "Bool";
+using ArgBool = ArgValue<bool, BoolName>;
+static constexpr char StringName[] = "String";
+using ArgString = ArgObject<std::string, StringName>;
+
+class TestModule : public Module {
+    void registerTypes(Registry& registry) const override;
+    void registerFcts(Registry& registry) const override;
+};
+
+inline void registerBuiltIns(Environment& env) {
+    env.addModule(TestModule());
 }
 
 }

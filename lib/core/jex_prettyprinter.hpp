@@ -21,7 +21,10 @@ public:
     void visit(AstIdentifier& node) override;
     void visit(AstArgList& node) override;
     void visit(AstVariableDef& node) override;
+    void visit(AstConstantExpr& node) override;
     void visit(AstRoot& node) override;
+
+    void run();
 };
 
 } // namespace jex

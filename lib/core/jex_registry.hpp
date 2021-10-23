@@ -128,6 +128,8 @@ struct FctDesc {
     }
 };
 
+static FctInfo::IntrinsicFct NO_INTRINSIC = nullptr;
+
 class Registry {
     TypeSystem& d_types;
     FctLibrary& d_fcts;
