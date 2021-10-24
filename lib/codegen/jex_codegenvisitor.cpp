@@ -195,11 +195,10 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
             TypeInfoId strType = d_env.typeSystem().getType("String");
             std::string constantName = llvm::formatv("strLit_l{0}_c{1}", node.d_loc.begin.line, node.d_loc.begin.col);
             const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + strType->name(), {});
-            const std::string* constStr = d_env.constants().emplace<std::string>(constantName, dtor, val);
+            d_env.constants().emplace<std::string>(constantName, dtor, val);
             auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
             llvm::Value* var = new llvm::GlobalVariable(d_module->llvmModule(), d_utils->getType(strType),
                 /*isConstant*/true, linkage, nullptr, constantName);
-            (void)constStr; // FIXME: Store mapping from name to constant pointer somewhere to link later on.
             return var;
         }
     }, node.d_value);
@@ -270,6 +269,16 @@ void CodeGenVisitor::visit(AstIf& node) {
     phiRes->addIncoming(trueVal, trueBranch);
     phiRes->addIncoming(falseVal, falseBranch);
     d_result = phiRes;
+}
+
+void CodeGenVisitor::visit(AstConstantExpr& node) {
+    // TODO: Convert to llvm::Constant for value types with explicit llvm type.
+    auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
+    d_result = new llvm::GlobalVariable(d_module->llvmModule(), d_utils->getType(node.d_resultType),
+        /*isConstant*/true, linkage, nullptr, node.d_constantName);
+    if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
+        d_result = d_builder->CreateLoad(d_result);
+    }
 }
 
 } // namespace jex

@@ -54,10 +54,6 @@ constexpr int64_t operator"" _i64(unsigned long long in) {
     return static_cast<int64_t>(in);
 }
 
-const std::string operator"" _s(const char *in, unsigned long len) {
-    return {in, len};
-}
-
 static TestConstFoldingT tests[] = {
     {   // Test folding of simple expression.
         "var x: Integer = 1 + 2 + 4 + (2 * 1) + (1 + 0);",
@@ -78,6 +74,11 @@ static TestConstFoldingT tests[] = {
         "var x: Integer = if(false, 2*3, if(true, 1+2, 3+4) + 5) + 6;",
         "var x: Integer = [const_Integer_l1_c18];\n",
         {{"const_Integer_l1_c18", 14_i64}}
+    },
+    {   // Test folding of nested if condition.
+        "var x: Integer = if(if(false, true, false), 2*3, (1+1)*2);",
+        "var x: Integer = ([const_Integer_l1_c51] * 2);\n",
+        {{"const_Integer_l1_c51", 2_i64}}
     },
     {   // Test folding of if branches with non-const condition.
         "var x: Integer = if(2*2 == 3, 1+1, 2+2);",

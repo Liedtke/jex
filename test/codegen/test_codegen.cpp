@@ -3,6 +3,7 @@
 #include <jex_codemodule.hpp>
 #include <jex_codegen.hpp>
 #include <jex_compileenv.hpp>
+#include <jex_constantfolding.hpp>
 #include <jex_environment.hpp>
 #include <jex_parser.hpp>
 #include <jex_registry.hpp>
@@ -22,7 +23,7 @@ TEST(Codegen, empty) {
     Parser parser(compileEnv, "");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -57,7 +58,7 @@ TEST(Codegen, simpleVarDef) {
     "var b : Float = 123.456;\n");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -123,7 +124,7 @@ TEST(Codegen, operatorCall) {
     "var a : Integer = 123 + 5;");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -183,7 +184,7 @@ TEST(Codegen, operatorCallNoIntrinsic) {
     "var a : Float = 123.2 + 5.5;");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -238,7 +239,7 @@ TEST(Codegen, operatorCallOptimized) {
     "var a : Integer = 123 + 5 + (3 + 8);");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O3);
     codeGen.createIR();
     // print module
@@ -288,7 +289,7 @@ TEST(Codegen, ifExpression) {
     "var a : Integer = if(1 < 1, 1+1, 2+2);");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -361,7 +362,7 @@ TEST(Codegen, stringLiteral) {
     "var a : String = \"Hello World!\";");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -424,7 +425,7 @@ TEST(Codegen, stringExpression) {
     "var a : String = substr(substr(\"Hello World!\", 6, 5), 0, 1);");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -498,7 +499,7 @@ TEST(Codegen, unwindingIfExpression) {
     "var a : String = if(1 < 2, substr(substr(\"Hello World!\", 6, 5), 0, 1), \"Another string\");");
     parser.parse();
     TypeInference typeInference(compileEnv);
-    compileEnv.getRoot()->accept(typeInference);
+    typeInference.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
     // print module
@@ -589,6 +590,61 @@ entry:
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
   call void @__dtor_String(%String* %varPtrTyped)
+  ret void
+}
+)IR";
+    ASSERT_EQ(expected, result);
+}
+
+TEST(Codegen, constFoldedValue) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : Integer = 1 + 2 * (4 - 2);");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    typeInference.run();
+    ConstantFolding constFolding(compileEnv);
+    constFolding.run();
+    CodeGen codeGen(compileEnv, OptLevel::O0);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << codeGen.getLlvmModule();
+    const char* expected =
+R"IR(; ModuleID = 'test'
+source_filename = "test"
+
+%Rctx = type opaque
+
+@const_Integer_l1_c19 = external constant i64
+
+define i64* @a(%Rctx* %rctx) {
+entry:
+  br label %begin
+
+begin:                                            ; preds = %entry
+  %0 = load i64, i64* @const_Integer_l1_c19, align 4
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to i64*
+  store i64 %0, i64* %varPtrTyped, align 4
+  ret i64* %varPtrTyped
+}
+
+define void @__init_rctx(%Rctx* %rctx) {
+entry:
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to i64*
+  store i64 0, i64* %varPtrTyped, align 4
+  ret void
+}
+
+define void @__destruct_rctx(%Rctx* %rctx) {
+entry:
   ret void
 }
 )IR";

@@ -17,9 +17,9 @@ class ConstantOrLiteral {
     Constant d_constant;
     AstLiteralExpr* d_literal = nullptr;
 public:
-    ConstantOrLiteral(Constant&& constant) : d_constant(std::move(constant)) {
+    explicit ConstantOrLiteral(Constant&& constant) : d_constant(std::move(constant)) {
     }
-    ConstantOrLiteral(AstLiteralExpr& literal) : d_constant{}, d_literal(&literal) {
+    explicit ConstantOrLiteral(AstLiteralExpr& literal) : d_constant{}, d_literal(&literal) {
     }
 
     void* getPtr();
@@ -35,7 +35,7 @@ class ConstantFolding : public BasicAstVisitor, NoCopy {
     IAstExpression* d_foldedExpr = nullptr;
     std::unordered_map<IAstExpression*, ConstantOrLiteral> d_constants;
 public:
-    ConstantFolding(CompileEnv& env) : d_env(env) {
+    explicit ConstantFolding(CompileEnv& env) : d_env(env) {
     }
 
     void run();

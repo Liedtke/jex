@@ -42,6 +42,7 @@ public:
     void visit(AstBinaryExpr& node) override;
     void visit(AstFctCall& node) override;
     void visit(AstIf& node) override;
+    void visit(AstConstantExpr& node) override;
 
 private:
     llvm::Value* visitExpression(IAstExpression& node);

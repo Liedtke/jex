@@ -14,10 +14,10 @@ using EvalVariant = std::variant<int64_t, double, bool, std::string>;
 using TestEvalT = std::pair<const char*, EvalVariant>;
 class TestEval : public testing::TestWithParam<TestEvalT> {};
 
-static void testEval(const char *code, EvalVariant exp, bool useIntrinsics) {
+static void testEval(const char *code, EvalVariant exp, bool useIntrinsics, bool runConstFolding) {
     Environment env;
     env.addModule(BuiltInsModule());
-    CompileResult compiled = compile(env, code, OptLevel::O1, useIntrinsics);
+    CompileResult compiled = compile(env, code, OptLevel::O1, useIntrinsics, runConstFolding);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -36,13 +36,19 @@ static void testEval(const char *code, EvalVariant exp, bool useIntrinsics) {
 TEST_P(TestEval, testIntrinsic) {
     std::string code("var a : ");
     code = code + GetParam().first + ";";
-    testEval(code.c_str(), GetParam().second, true);
+    testEval(code.c_str(), GetParam().second, true, false);
 }
 
 TEST_P(TestEval, testNonIntrinsic) {
     std::string code("var a : ");
     code = code + GetParam().first + ";";
-    testEval(code.c_str(), GetParam().second, false);
+    testEval(code.c_str(), GetParam().second, false, false);
+}
+
+TEST_P(TestEval, testConstFolded) {
+    std::string code("var a : ");
+    code = code + GetParam().first + ";";
+    testEval(code.c_str(), GetParam().second, true, true);
 }
 
 constexpr int64_t operator"" _i64(unsigned long long in) {
