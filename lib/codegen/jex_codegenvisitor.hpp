@@ -51,6 +51,8 @@ private:
     void createInit(const Symbol* sym);
     void createDestruct(const Symbol* sym);
     llvm::BasicBlock* createBlock(const char* name);
+    llvm::Constant* createConstant(TypeInfoId typeId, const std::string& constantName);
+    llvm::Constant* createConstant(llvm::Type* type, void*& valPtr, size_t& space, int level);
 
     template<typename Iter>
     void createInitDestructFct(Iter symBegin, Iter symEnd, const char* prefix,

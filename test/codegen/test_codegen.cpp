@@ -16,6 +16,46 @@
 #include <gtest/gtest.h>
 
 namespace jex {
+namespace {
+
+/// Test struct for constant folding containing all types supported for
+/// const folded value creation.
+struct ConstStruct {
+    bool a = true;
+    int32_t b = -2;
+    uint8_t c = 3;
+    uint16_t d = 4;
+    int64_t e = -5;
+    float f = 1.23;
+    double g = -4.56;
+};
+
+static constexpr char ConstStructName[] = "ConstStruct";
+using ArgConstStruct = ArgValue<ConstStruct, ConstStructName>;
+
+class ConstStructModule : public Module {
+    void registerTypes(Registry& registry) const override {
+        registry.registerType<ArgConstStruct>(
+            [](llvm::LLVMContext& ctx) {
+                return llvm::StructType::create({
+                    llvm::Type::getInt1Ty(ctx),
+                    llvm::Type::getInt32Ty(ctx),
+                    llvm::Type::getInt8Ty(ctx),
+                    llvm::Type::getInt16Ty(ctx),
+                    llvm::Type::getInt64Ty(ctx),
+                    llvm::Type::getFloatTy(ctx),
+                    llvm::Type::getDoubleTy(ctx)
+                }, "ConstStruct");
+            });
+    }
+
+    void registerFcts(Registry& registry) const override {
+        auto createConstStruct = [](ConstStruct* res) { new(res) ConstStruct(); };
+        registry.registerFct(FctDesc<ArgConstStruct>("createConstStruct", createConstStruct, NO_INTRINSIC, FctFlags::Pure));
+    }
+};
+
+} // unnamed namespace
 
 TEST(Codegen, empty) {
     Environment env;
@@ -612,40 +652,55 @@ TEST(Codegen, constFoldedValue) {
     // print module
     std::string result;
     llvm::raw_string_ostream irstream(result);
-    irstream << codeGen.getLlvmModule();
+    irstream << *codeGen.getLlvmModule().getFunction("a");
     const char* expected =
-R"IR(; ModuleID = 'test'
-source_filename = "test"
-
-%Rctx = type opaque
-
-@const_Integer_l1_c19 = external constant i64
-
-define i64* @a(%Rctx* %rctx) {
+R"IR(define i64* @a(%Rctx* %rctx) {
 entry:
   br label %begin
 
 begin:                                            ; preds = %entry
-  %0 = load i64, i64* @const_Integer_l1_c19, align 4
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to i64*
-  store i64 %0, i64* %varPtrTyped, align 4
+  store i64 5, i64* %varPtrTyped, align 4
   ret i64* %varPtrTyped
 }
-
-define void @__init_rctx(%Rctx* %rctx) {
-entry:
-  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
-  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
-  %varPtrTyped = bitcast i8* %varPtr to i64*
-  store i64 0, i64* %varPtrTyped, align 4
-  ret void
+)IR";
+    ASSERT_EQ(expected, result);
 }
 
-define void @__destruct_rctx(%Rctx* %rctx) {
+TEST(Codegen, constFoldedStruct) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    env.addModule(ConstStructModule());
+    CompileEnv compileEnv(env);
+    Parser parser(compileEnv,
+    "var a : ConstStruct = createConstStruct();");
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    typeInference.run();
+    ConstantFolding constFolding(compileEnv);
+    constFolding.run();
+    CodeGen codeGen(compileEnv, OptLevel::O0);
+    codeGen.createIR();
+    // print module
+    std::string result;
+    llvm::raw_string_ostream irstream(result);
+    irstream << *codeGen.getLlvmModule().getFunction("a");
+    const char* expected =
+R"IR(define %ConstStruct* @a(%Rctx* %rctx) {
 entry:
-  ret void
+  %const_ConstStruct_l1_c23 = alloca %ConstStruct, align 8
+  br label %begin
+
+begin:                                            ; preds = %entry
+  store %ConstStruct { i1 true, i32 -2, i8 3, i16 4, i64 -5, float 0x3FF3AE1480000000, double -4.560000e+00 }, %ConstStruct* %const_ConstStruct_l1_c23, align 8
+  %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+  %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+  %varPtrTyped = bitcast i8* %varPtr to %ConstStruct*
+  %0 = load %ConstStruct, %ConstStruct* %const_ConstStruct_l1_c23, align 8
+  store %ConstStruct %0, %ConstStruct* %varPtrTyped, align 8
+  ret %ConstStruct* %varPtrTyped
 }
 )IR";
     ASSERT_EQ(expected, result);

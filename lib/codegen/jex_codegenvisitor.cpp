@@ -271,8 +271,76 @@ void CodeGenVisitor::visit(AstIf& node) {
     d_result = phiRes;
 }
 
+template <typename ConstantT, typename ElemT>
+static llvm::Constant* createConstantScalar(llvm::Type* type, void*& valPtr, size_t& space) {
+    void* address = std::align(alignof(ElemT), sizeof(ElemT), valPtr, space);
+    assert(address);
+    valPtr = static_cast<char*>(valPtr) + sizeof(ElemT);
+    return ConstantT::get(type, *reinterpret_cast<ElemT*>(address));
+}
+
+llvm::Constant* CodeGenVisitor::createConstant(llvm::Type* type, void*& valPtr, size_t& space, int level) {
+    if (type->isIntegerTy()) {
+        auto size = type->getPrimitiveSizeInBits().getFixedSize();
+        switch (size) {
+            case 1:
+                return createConstantScalar<llvm::ConstantInt, bool>(type, valPtr, space);
+            case 8:
+                return createConstantScalar<llvm::ConstantInt, int8_t>(type, valPtr, space);
+            case 16:
+                return createConstantScalar<llvm::ConstantInt, int16_t>(type, valPtr, space);
+            case 32:
+                return createConstantScalar<llvm::ConstantInt, int32_t>(type, valPtr, space);
+            case 64:
+                return createConstantScalar<llvm::ConstantInt, int64_t>(type, valPtr, space);
+            default:
+                return nullptr;
+        }
+    } else if (type->isFloatTy()) {
+        return createConstantScalar<llvm::ConstantFP, float>(type, valPtr, space);
+    } else if (type->isDoubleTy()) {
+        return createConstantScalar<llvm::ConstantFP, double>(type, valPtr, space);
+    } else if (type->isStructTy() && level == 0) {
+        // Struct types only supported on one level to avoid more complex alignment rules
+        // for now.
+        llvm::StructType* structType = llvm::cast<llvm::StructType>(type);
+        std::vector<llvm::Constant*> elemValues;
+        elemValues.reserve(structType->getNumElements());
+        for (llvm::Type* elemType : structType->elements()) {
+            llvm::Constant* elemValue = createConstant(elemType, valPtr, space, level + 1);
+            if (elemValue == nullptr) {
+                return nullptr; // Couldn't create inner type.
+            }
+            elemValues.push_back(elemValue);
+        }
+        return llvm::ConstantStruct::get(structType, elemValues);
+    }
+    return nullptr;
+}
+
+llvm::Constant* CodeGenVisitor::createConstant(TypeInfoId typeId, const std::string& constantName) {
+    // Const cast needed as std::align only works on non-const pointers.
+    void* valPtr = const_cast<void*>(d_env.constants().constantByName(constantName).getPtr());
+    size_t totalSize = typeId->size();
+    return createConstant(d_utils->getType(typeId), valPtr, totalSize, 0);
+}
+
 void CodeGenVisitor::visit(AstConstantExpr& node) {
-    // TODO: Convert to llvm::Constant for value types with explicit llvm type.
+    // For value type with explicitly registered type, try to build llvm::Constant.
+    // This will allow further optimizations on LLVM side and better IR readability.
+    if (node.d_resultType->kind() == TypeKind::Value && node.d_resultType->createTypeFct()) {
+        d_result = createConstant(node.d_resultType, node.d_constantName);
+        if (d_result != nullptr) {
+            if (node.d_resultType->callConv() == TypeInfo::CallConv::ByPointer) {
+                // Store on stack to be able to pass it by pointer.
+                llvm::Value* alloca = new llvm::AllocaInst(d_result->getType(), 0,
+                    node.d_constantName, &d_currFct->getEntryBlock());
+                d_builder->CreateStore(d_result, alloca);
+                d_result = alloca;
+            }
+            return;
+        }
+    }
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
     d_result = new llvm::GlobalVariable(d_module->llvmModule(), d_utils->getType(node.d_resultType),
         /*isConstant*/true, linkage, nullptr, node.d_constantName);
