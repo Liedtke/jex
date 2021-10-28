@@ -24,7 +24,7 @@ public:
 
     // Overload operator delete without size argument. Otherwise ASAN complains
     // about mismatching sizes (as operator new modifies the allocation size).
-    void operator delete(void* ptr) noexcept {
+    void operator delete(void* ptr) noexcept { // NOLINT
         ::operator delete(ptr);
     }
 

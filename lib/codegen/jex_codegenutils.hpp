@@ -17,8 +17,7 @@ class CodeGenUtils {
 public:
     CodeGenUtils(CompileEnv& env, CodeModule& module) : d_env(env), d_module(module) {
     }
-    ~CodeGenUtils() {
-    }
+    ~CodeGenUtils() = default;
 
     llvm::StructType* createOpaqueStructType(TypeInfoId type);
     llvm::Type* getType(TypeInfoId type);

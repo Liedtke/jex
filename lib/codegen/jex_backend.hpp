@@ -35,8 +35,8 @@ class CompileResult {
     CompileResult(std::unique_ptr<std::set<MsgInfo>> messages);
 
 public:
-    CompileResult();
-    CompileResult(CompileResult&& other);
+    CompileResult() = default;
+    CompileResult(CompileResult&& other) noexcept;
     CompileResult(const CompileResult& other) = delete;
     CompileResult& operator=(const CompileResult& other) = delete;
     ~CompileResult();

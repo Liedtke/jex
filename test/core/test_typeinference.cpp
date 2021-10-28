@@ -17,9 +17,9 @@ namespace jex {
 
 namespace {
 
-static constexpr char typeName[] = "UInt32";
+constexpr char typeName[] = "UInt32";
 using ArgUInt32 = ArgValue<uint32_t, typeName>;
-static constexpr char typeNameInteger[] = "Integer";
+constexpr char typeNameInteger[] = "Integer";
 using ArgInteger = ArgValue<int64_t, typeNameInteger>;
 void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
 void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE

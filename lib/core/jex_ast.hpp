@@ -36,7 +36,7 @@ public:
     IAstNode(const Location& loc)
     : d_loc(loc) {
     }
-    virtual ~IAstNode() {}
+    virtual ~IAstNode() = default;
 
     virtual void accept(IAstVisitor& visitor) = 0;
 };

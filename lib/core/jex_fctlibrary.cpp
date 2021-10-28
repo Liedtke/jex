@@ -7,11 +7,7 @@
 
 namespace jex {
 
-FctLibrary::FctLibrary() {
-}
-
-FctLibrary::~FctLibrary() {
-}
+FctLibrary::~FctLibrary() = default;
 
 void FctLibrary::registerFct(FctInfo&& fctInfo) {
     std::vector<FctInfo*>& overloads = d_fctsByName[fctInfo.d_name];

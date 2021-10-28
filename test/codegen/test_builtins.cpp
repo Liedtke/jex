@@ -14,7 +14,7 @@ using EvalVariant = std::variant<int64_t, double, bool, std::string>;
 using TestEvalT = std::pair<const char*, EvalVariant>;
 class TestEval : public testing::TestWithParam<TestEvalT> {};
 
-static void testEval(const char *code, EvalVariant exp, bool useIntrinsics, bool runConstFolding) {
+static void testEval(const char *code, const EvalVariant& exp, bool useIntrinsics, bool runConstFolding) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env, code, OptLevel::O1, useIntrinsics, runConstFolding);
@@ -55,7 +55,7 @@ constexpr int64_t operator"" _i64(unsigned long long in) {
     return static_cast<int64_t>(in);
 }
 
-const std::string operator"" _s(const char *in, unsigned long len) {
+std::string operator"" _s(const char *in, unsigned long len) {
     return {in, len};
 }
 
@@ -127,7 +127,7 @@ static TestEvalT evals[] = {
     {"String = substr(\"Hello World!\", 6, 5)", "World"_s},
     {"String = substr(\"A long string not fitting into the std::string buffer\", 0, 100)",
      "A long string not fitting into the std::string buffer"_s},
-    {"String = if(true, if (false, \"test\", substr(\"A long string not fitting into the std::string buffer\", 0, 100)), \"test\")",
+    {R"(String = if(true, if (false, "test", substr("A long string not fitting into the std::string buffer", 0, 100)), "test"))",
      "A long string not fitting into the std::string buffer"_s},
 };
 

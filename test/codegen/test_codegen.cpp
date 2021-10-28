@@ -30,7 +30,7 @@ struct ConstStruct {
     double g = -4.56;
 };
 
-static constexpr char ConstStructName[] = "ConstStruct";
+constexpr char ConstStructName[] = "ConstStruct";
 using ArgConstStruct = ArgValue<ConstStruct, ConstStructName>;
 
 class ConstStructModule : public Module {
@@ -536,7 +536,7 @@ TEST(Codegen, unwindingIfExpression) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : String = if(1 < 2, substr(substr(\"Hello World!\", 6, 5), 0, 1), \"Another string\");");
+    R"(var a : String = if(1 < 2, substr(substr("Hello World!", 6, 5), 0, 1), "Another string");)");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();

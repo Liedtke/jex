@@ -11,8 +11,7 @@ CodeModule::CodeModule(const CompileEnv& env)
 , d_llvmModule(std::make_unique<llvm::Module>(env.fileName(), *d_llvmContext)) {
 }
 
-CodeModule::~CodeModule() {
-}
+CodeModule::~CodeModule() = default;
 
 std::unique_ptr<llvm::LLVMContext> CodeModule::releaseContext() {
     return std::move(d_llvmContext);

@@ -124,7 +124,7 @@ static TestSingleToken tokenTests[] = {
     // string literals
     {"\"\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 2}}, ""}},
     {"\"Hello!\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 8}}, "Hello!"}},
-    {"\"\\n\\t\"", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 6}}, "\n\t"}},
+    {R"("\n\t")", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 6}}, "\n\t"}},
     {R"jex("'\'\"\?\\\a\b\f\n\r\t\v")jex", Token{Token::Kind::LiteralString, Location{{1, 1}, {1, 25}}, "'\'\"\?\\\a\b\f\n\r\t\v"}},
     {" : ", Token{Token::Kind::Colon, Location{{1, 2}, {1, 2}}, ":"}},
     {" ; ", Token{Token::Kind::Semicolon, Location{{1, 2}, {1, 2}}, ";"}},
@@ -157,7 +157,7 @@ static TestException exceptionTests[] = {
     {"/* hello", "1.1-1.8: Error: Unterminated comment"},
     {"/*/", "1.1-1.3: Error: Unterminated comment"},
     {"/** /", "1.1-1.5: Error: Unterminated comment"},
-    {"\"t\\&\"", "1.2-1.3: Error: Invalid escape sequence '\\&'"},
+    {R"("t\&")", "1.2-1.3: Error: Invalid escape sequence '\\&'"},
     {"\"hello", "1.1-1.6: Error: Unterminated string literal"},
     {"\"\\", "1.1-1.3: Error: Unterminated string literal"},
 };

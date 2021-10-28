@@ -108,7 +108,7 @@ struct FctDesc {
     template<typename... T, size_t... I>
     static void wrapperInner(void(*fct)(typename ArgRet::RetType, T...),
                              void* const* args,
-                             std::index_sequence<I...>) {
+                             std::index_sequence<I...> /*indices*/) {
         fct(reinterpret_cast<typename ArgRet::RetType>(args[0]),
             typePtrToParamType<ArgT>(reinterpret_cast<typename ArgT::Type*>(args[I+1]))...);
     }
@@ -141,14 +141,14 @@ public:
     }
 
     template <typename ArgT>
-    void registerType(TypeInfo::CreateTypeFct fct = nullptr, bool isZeroInitialized = false) {
+    void registerType(const TypeInfo::CreateTypeFct& fct = nullptr, bool isZeroInitialized = false) {
         d_types.registerType(ArgT::kind, ArgT::name, sizeof(typename ArgT::Type),
                              alignof(typename ArgT::Type), fct, isZeroInitialized, ArgT::callConv);
         std::string typeName(ArgT::name);
-        registerFct(FctDesc<ArgT>(( "_ctor_" + typeName).c_str(), GenericLifetimeFcts<ArgT>::defaultConstructor));
+        registerFct(FctDesc<ArgT>("_ctor_" + typeName, GenericLifetimeFcts<ArgT>::defaultConstructor));
         if constexpr (ArgT::kind == TypeKind::Complex) {
             using LT = GenericLifetimeFctsComplex<ArgT>;
-            registerFct(FctDesc<ArgT>(("_dtor_" + typeName).c_str(), LT::destructor));
+            registerFct(FctDesc<ArgT>("_dtor_" + typeName, LT::destructor));
             registerFct(FctDesc<ArgT, ArgT>("_assign", LT::assign));
             registerFct(FctDesc<ArgT, ArgT>("_moveAssign", LT::moveAssign));
             registerFct(FctDesc<ArgT, ArgT>("_copyCtor", LT::copyConstructor));

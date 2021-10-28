@@ -23,7 +23,7 @@ private:
     std::unordered_map<std::string_view, FctInfo*> d_fctByMangledName;
 
 public:
-    FctLibrary();
+    FctLibrary() = default;
     ~FctLibrary();
     void registerFct(FctInfo&& fctInfo);
     const FctInfo& getFct(const std::string& name, const std::vector<TypeInfoId>& paramTypes) const;

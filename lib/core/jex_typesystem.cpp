@@ -27,7 +27,7 @@ TypeInfoId TypeSystem::getType(std::string_view name) const {
 }
 
 TypeInfoId TypeSystem::registerType(TypeKind typeId, std::string name, size_t size, size_t alignment,
-                                    TypeInfo::CreateTypeFct createTypeFct,
+                                    const TypeInfo::CreateTypeFct& createTypeFct,
                                     bool isZeroInitialized,
                                     TypeInfo::CallConv callConv) {
     if (d_typesByName.find(name) != d_typesByName.end()) {
