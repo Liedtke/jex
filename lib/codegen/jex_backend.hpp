@@ -6,6 +6,7 @@
 #include <iosfwd>
 #include <memory>
 #include <set>
+#include <string_view>
 
 namespace llvm::orc {
     class LLJIT;
