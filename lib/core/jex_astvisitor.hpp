@@ -16,7 +16,7 @@ class AstRoot;
 
 class IAstVisitor {
 public:
-    virtual ~IAstVisitor() {}
+    virtual ~IAstVisitor() = default;
 
     virtual void visit(AstLiteralExpr& node) = 0;
     virtual void visit(AstBinaryExpr& node) = 0;

@@ -37,7 +37,7 @@ public:
      * been registered, throws an InternalError.
      */
     TypeInfoId registerType(TypeKind typeId, std::string name, size_t size, size_t alignment,
-                            TypeInfo::CreateTypeFct createTypeFct = nullptr,
+                            const TypeInfo::CreateTypeFct& createTypeFct = nullptr,
                             bool isZeroInitialized = false,
                             TypeInfo::CallConv callConv = TypeInfo::CallConv::ByValue);
 

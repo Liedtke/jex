@@ -45,7 +45,7 @@ public:
     TypeInfoId d_retType;
     std::vector<TypeInfoId> d_paramTypes;
     FctFlags d_flags;
-public:
+
     FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType, std::vector<TypeInfoId> params,
             IntrinsicFct intrinsicFct = nullptr, FctFlags flags = FctFlags::None);
 

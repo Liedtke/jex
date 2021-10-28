@@ -20,7 +20,7 @@ FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfo
 , d_intrinsicName()
 , d_fctPtr(fctPtr)
 , d_fctWrapper(fctWrapper)
-, d_intrinsicFct(intrinsicFct)
+, d_intrinsicFct(std::move(intrinsicFct))
 , d_retType(retType)
 , d_paramTypes(std::move(params))
 , d_flags(flags) {

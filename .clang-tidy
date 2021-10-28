@@ -1,0 +1,8 @@
+Checks:          'clang-diagnostic-*,clang-analyzer-*,modernize-*,bugprone-*.,cert-*,concurrent-*,misc-*,performance-*,readability-*,-modernize-use-trailing-return-type,-performance-no-int-to-ptr,-readability-redundant-member-init,-readability-function-cognitive-complexity,-cert-err58-cpp,-readability-else-after-return,-performance-trivially-destructible,-readability-magic-numbers,-misc-no-recursion,-readability-qualified-auto,-readability-implicit-bool-conversion,-modernize-use-auto,-modernize-avoid-c-arrays,-modernize-use-default-member-init,-modernize-use-nodiscard,-misc-non-private-member-variables-in-classes,-readability-make-member-function-const'
+WarningsAsErrors: ''
+HeaderFilterRegex: 'jex_*'
+AnalyzeTemporaryDtors: false
+FormatStyle:     none
+CheckOptions:
+  - key:    modernize-use-override.IgnoreDestructors
+    value:  true

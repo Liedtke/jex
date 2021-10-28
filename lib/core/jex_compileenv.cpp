@@ -22,8 +22,7 @@ CompileEnv::CompileEnv(const Environment& env, bool useIntrinsics)
 , d_constants(std::make_unique<ConstantStore>()) {
 };
 
-CompileEnv::~CompileEnv() {
-}
+CompileEnv::~CompileEnv() = default;
 
 const MsgInfo& CompileEnv::createError(const Location& loc, std::string msg) {
     auto inserted = d_messages->emplace(MsgInfo::Kind::Error, loc, std::move(msg));

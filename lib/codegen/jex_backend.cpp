@@ -36,8 +36,7 @@ static T checked(llvm::Expected<T> expectedObj, const char* errPrefix) {
 }
 
 
-CompileResult::CompileResult() = default;
-CompileResult::CompileResult(CompileResult&& other) = default;
+CompileResult::CompileResult(CompileResult&& other) noexcept = default;
 CompileResult::~CompileResult() = default;
 
 CompileResult::CompileResult(std::unique_ptr<std::set<MsgInfo>> messages,
@@ -73,8 +72,7 @@ Backend::Backend(CompileEnv& env)
     initialize();
 }
 
-Backend::~Backend() {
-}
+Backend::~Backend() = default;
 
 CompileResult Backend::jit(std::unique_ptr<CodeModule> module) {
     // Create lljit and add IR module.

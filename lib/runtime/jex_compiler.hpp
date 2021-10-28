@@ -10,8 +10,9 @@ class CompileResult;
 class Environment;
 
 class Compiler {
-    Compiler() = delete;
 public:
+    Compiler() = delete;
+
     static CompileResult compile(Environment& env,
                                  const std::string& source,
                                  OptLevel optLevel = OptLevel::O2,

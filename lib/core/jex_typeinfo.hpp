@@ -89,7 +89,7 @@ public:
     , d_name(std::move(name))
     , d_size(size)
     , d_alignment(alignment)
-    , d_createType(createType)
+    , d_createType(std::move(createType))
     , d_isZeroInitialized(isZeroInitialized)
     , d_callConv(callConv) {
     }

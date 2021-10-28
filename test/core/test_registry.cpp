@@ -10,9 +10,9 @@ namespace jex {
 
 namespace {
 
-static constexpr char typeName[] = "UInt32";
+constexpr char typeName[] = "UInt32";
 using ArgUInt32 = ArgValue<uint32_t, typeName>;
-static constexpr char typeNameBool[] = "Boolean";
+constexpr char typeNameBool[] = "Boolean";
 using ArgBool = ArgValue<bool, typeNameBool>;
 
 void pass(uint32_t* res, uint32_t in) {
@@ -135,18 +135,18 @@ TEST(Registry, registerComplexType) {
         TestClass(const TestClass& other) : counts(other.counts) {
             ++counts->copyCtor;
         }
-        TestClass(TestClass&& other) : counts(other.counts) {
+        TestClass(TestClass&& other) noexcept : counts(other.counts) {
             ++counts->moveCtor;
         }
         ~TestClass() {
             ++counts->dtor;
         }
-        TestClass& operator=(const TestClass& other) {
+        TestClass& operator=(const TestClass& other) { // NOLINT
             counts = other.counts;
             ++counts->assign;
             return *this;
         }
-        TestClass& operator=(TestClass&& other) {
+        TestClass& operator=(TestClass&& other) noexcept {
             counts = other.counts;
             ++counts->moveAssign;
             return *this;

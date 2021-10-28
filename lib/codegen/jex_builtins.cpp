@@ -44,7 +44,7 @@ struct CmpIntrinsics {
     }
 };
 
-static void substr(std::string* res, const std::string* in, int64_t pos, int64_t count) {
+void substr(std::string* res, const std::string* in, int64_t pos, int64_t count) {
     assert(res != nullptr);
     assert(pos >= 0); // TODO: Figure out how to support error handling in expressions.
     assert(count >= 0);

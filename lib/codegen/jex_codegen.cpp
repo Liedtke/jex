@@ -25,8 +25,7 @@ CodeGen::CodeGen(CompileEnv& env, OptLevel optLevel)
 , d_optLevel(optLevel) {
 }
 
-CodeGen::~CodeGen() {
-}
+CodeGen::~CodeGen() = default;
 
 const llvm::Module& CodeGen::getLlvmModule() const {
     return d_module->llvmModule();

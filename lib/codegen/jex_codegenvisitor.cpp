@@ -26,8 +26,7 @@ CodeGenVisitor::CodeGenVisitor(CompileEnv& env)
 : d_env(env) {
 }
 
-CodeGenVisitor::~CodeGenVisitor() {
-}
+CodeGenVisitor::~CodeGenVisitor() = default;
 
 llvm::BasicBlock* CodeGenVisitor::createBlock(const char* name) {
     assert(d_currFct);

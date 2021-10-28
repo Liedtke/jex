@@ -37,7 +37,7 @@ public:
 
     template<typename T>
     static Constant create(T value, Dtor dtor = nullptr) {
-        Constant constant = allocate(sizeof(T));
+        Constant constant = allocate(sizeof(T)); // NOLINT
         new (constant.getPtr()) T(std::move(value));
         constant.dtor = dtor;
         return constant;
@@ -51,8 +51,7 @@ class ConstantStore {
     std::unordered_map<std::string, Constant> d_constants;
 
 public:
-    ConstantStore() {
-    }
+    ConstantStore() = default;
 
     template <typename T, typename... Args>
     const T* emplace(std::string name, const FctInfo& dtor, Args&&... args) {
@@ -67,7 +66,7 @@ public:
     }
 
     void insert(std::string name, Constant constant) {
-        [[maybe_unused]] auto[iter, inserted] = d_constants.emplace(name, std::move(constant));
+        [[maybe_unused]] auto[iter, inserted] = d_constants.emplace(std::move(name), std::move(constant));
         assert(inserted && "constant name must be unique");
     }
 

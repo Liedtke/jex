@@ -10,7 +10,7 @@ ExecutionContext::ExecutionContext(const CompileResult& compiled)
 : d_dtor(reinterpret_cast<LifetimeFct>(compiled.getFctPtr("__destruct_rctx")))
 , d_size(compiled.getContextSize()) {
     // Initialize all context variables.
-    LifetimeFct ctor = reinterpret_cast<LifetimeFct>(compiled.getFctPtr("__init_rctx"));
+    auto ctor = reinterpret_cast<LifetimeFct>(compiled.getFctPtr("__init_rctx"));
     ctor(getDataPtr());
 }
 

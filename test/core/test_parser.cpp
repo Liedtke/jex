@@ -163,7 +163,7 @@ static TestExp successTests[] = {
     {"var a: Type = \"\";",
      "var a: Type = \"\";\n"},
     // Note: The pretty printer doesn't escape currently.
-    {"var a: Type = \"Hello\\nWorld!\";",
+    {R"(var a: Type = "Hello\nWorld!";)",
      "var a: Type = \"Hello\nWorld!\";\n"},
     {"var a: Type = 123;\nvar b: Type = a;",
      "var a: Type = 123;\nvar b: Type = a;\n"},
