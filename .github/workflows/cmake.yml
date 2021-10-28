@@ -48,3 +48,6 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.matrix.config.build_type}}
 
+    - if: matrix.config.name == 'Debug' && github.event.issue.pull_request
+      name: clang-tidy review
+      uses: ZedThree/clang-tidy-review@v0.7.0
