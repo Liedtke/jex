@@ -5,6 +5,7 @@
 #include <jex_compileenv.hpp>
 
 #include "llvm/Passes/PassBuilder.h"
+#include "llvm/Support/raw_os_ostream.h"
 
 namespace jex {
 
@@ -38,6 +39,12 @@ void CodeGen::createIR() {
     assert(!d_env.hasErrors());
     d_module = codeGenVisitor.releaseModule();
     optimize();
+}
+
+void CodeGen::printIR(std::ostream& out) {
+    assert(d_module && "createIR has to be executed before printing");
+    llvm::raw_os_ostream irstream(out);
+    irstream << d_module->llvmModule();
 }
 
 void CodeGen::optimize() {
