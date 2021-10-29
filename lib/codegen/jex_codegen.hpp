@@ -14,7 +14,7 @@ class CodeModule;
 class CompileEnv;
 
 enum class OptLevel {
-    O0, O1, O2, O3
+    O0 = 0, O1, O2, O3
 };
 
 class CodeGen : NoCopy {
@@ -27,9 +27,8 @@ public:
     ~CodeGen();
 
     void createIR();
-
+    void printIR(std::ostream& out);
     const llvm::Module& getLlvmModule() const;
-
     std::unique_ptr<CodeModule> releaseModule();
 
 private:

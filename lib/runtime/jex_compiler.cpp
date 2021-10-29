@@ -6,23 +6,25 @@
 #include <jex_codegen.hpp>
 #include <jex_codemodule.hpp>
 #include <jex_backend.hpp>
+#include <jex_builtins.hpp>
+#include <jex_environment.hpp>
 #include <jex_errorhandling.hpp>
 
 namespace jex {
 
-CompileResult Compiler::compile(Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics) {
+static void parseAndCheck(CompileEnv& compileEnv, const std::string& source) {
+    Parser parser(compileEnv, source.c_str());
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    typeInference.run();
+}
+
+CompileResult Compiler::compile(const Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics) {
     CompileEnv compileEnv(env, useIntrinsics);
     try {
-        // 1) Parse.
-        Parser parser(compileEnv, source.c_str());
-        parser.parse();
-        // 2) Type inference.
-        TypeInference typeInference(compileEnv);
-        typeInference.run();
-        // 3) Code generation (LLVM IR).
+        parseAndCheck(compileEnv, source);
         CodeGen codeGen(compileEnv, optLevel);
         codeGen.createIR();
-        // 4) Create llvm JIT.
         Backend backend(compileEnv);
         return backend.jit(codeGen.releaseModule());
     } catch (const CompileError&) {
@@ -30,6 +32,14 @@ CompileResult Compiler::compile(Environment& env, const std::string& source, Opt
         assert(!compileEnv.messages().empty());
         return CompileResult(compileEnv.releaseMessages());
     }
+}
+
+void Compiler::printIR(std::ostream& out, const Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics) {
+    CompileEnv compileEnv(env, useIntrinsics);
+    parseAndCheck(compileEnv, source);
+    CodeGen codeGen(compileEnv, optLevel);
+    codeGen.createIR();
+    codeGen.printIR(out);
 }
 
 } // namespace jex
