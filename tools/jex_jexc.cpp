@@ -19,13 +19,13 @@ int main(int /*argc*/, char *argv[]) {
     std::string source((std::istreambuf_iterator<char>(fileStream)),
                         std::istreambuf_iterator<char>());
     if (!fileStream.good()) {
-        std::cout << "Error: Couldn't read " << parser.d_fileName.value() << ".\n";
+        std::cerr << "Error: Couldn't read " << parser.d_fileName.value() << ".\n";
         return -1;
     }
     if (parser.d_printIR) {
         Environment env;
         env.addModule(BuiltInsModule());
-        Compiler::printIR(std::cout, env, source, parser.d_optLevel, parser.d_useIntrinsics);
+        Compiler::printIR(std::cout, env, source, parser.d_optLevel, parser.d_useIntrinsics, parser.d_enableConstFolding);
     }
     return 0;
 }
