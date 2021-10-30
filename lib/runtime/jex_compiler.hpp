@@ -16,13 +16,15 @@ public:
     static CompileResult compile(const Environment& env,
                                  const std::string& source,
                                  OptLevel optLevel = OptLevel::O2,
-                                 bool useIntrinsics = true);
+                                 bool useIntrinsics = true,
+                                 bool enableConstantFolding = true);
 
     static void printIR(std::ostream& out,
                         const Environment& env,
                         const std::string& source,
                         OptLevel optLevel = OptLevel::O2,
-                        bool useIntrinsics = true);
+                        bool useIntrinsics = true,
+                        bool enableConstantFolding = true);
 };
 
 } // namespace jex

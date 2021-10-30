@@ -5,6 +5,7 @@
 #include <jex_typeinference.hpp>
 #include <jex_codegen.hpp>
 #include <jex_codemodule.hpp>
+#include <jex_constantfolding.hpp>
 #include <jex_backend.hpp>
 #include <jex_builtins.hpp>
 #include <jex_environment.hpp>
@@ -12,17 +13,21 @@
 
 namespace jex {
 
-static void parseAndCheck(CompileEnv& compileEnv, const std::string& source) {
+static void parseAndCheck(CompileEnv& compileEnv, const std::string& source, bool enableConstantFolding) {
     Parser parser(compileEnv, source.c_str());
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
+    if (enableConstantFolding) {
+        ConstantFolding constFolding(compileEnv);
+        constFolding.run();
+    }
 }
 
-CompileResult Compiler::compile(const Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics) {
+CompileResult Compiler::compile(const Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics, bool enableConstantFolding) {
     CompileEnv compileEnv(env, useIntrinsics);
     try {
-        parseAndCheck(compileEnv, source);
+        parseAndCheck(compileEnv, source, enableConstantFolding);
         CodeGen codeGen(compileEnv, optLevel);
         codeGen.createIR();
         Backend backend(compileEnv);
@@ -34,9 +39,9 @@ CompileResult Compiler::compile(const Environment& env, const std::string& sourc
     }
 }
 
-void Compiler::printIR(std::ostream& out, const Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics) {
+void Compiler::printIR(std::ostream& out, const Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics, bool enableConstantFolding) {
     CompileEnv compileEnv(env, useIntrinsics);
-    parseAndCheck(compileEnv, source);
+    parseAndCheck(compileEnv, source, enableConstantFolding);
     CodeGen codeGen(compileEnv, optLevel);
     codeGen.createIR();
     codeGen.printIR(out);

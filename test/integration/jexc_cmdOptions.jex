@@ -1,0 +1,23 @@
+// Test 1: No constant folding, intrinsics enabled, no optimization --> call to intrinsic function
+// RUN: %jexc -f %s -l -c | FileCheck-12 %s -check-prefix=CHECK-1
+// CHECK-1: call void @_operator_add_Integer_Integer__intrinsic(i64* %res_operator_add, i64 1, i64 2)
+// CHECK-1: define internal void @_operator_add_Integer_Integer__intrinsic(i64* %0, i64 %1, i64 %2) {
+
+// Test 2: No constant folding, intrinsics disabled, no optimization --> call to non-intrinsic function
+// RUN: %jexc -f %s -l -c -i | FileCheck-12 %s -check-prefix=CHECK-2
+// CHECK-2: call void @_operator_add_Integer_Integer(i64* %res_operator_add, i64 1, i64 2)
+// CHECK-2: declare void @_operator_add_Integer_Integer(i64*, i64, i64)
+
+// Test 3: Constant folding, intrinsics disabled, no optimization --> call is constant folded
+// RUN: %jexc -f %s -l -i | FileCheck-12 %s -check-prefix=CHECK-3
+// CHECK-3: store i64 3, i64* %varPtrTyped, align 4
+
+// Test 4: Constant folding, intrinsics enabled, no optimization --> call is constant folded
+// RUN: %jexc -f %s -l | FileCheck-12 %s -check-prefix=CHECK-4
+// CHECK-4: store i64 3, i64* %varPtrTyped, align 4
+
+// Test 5: No constant folding, intrinsics enabled, optimization --> optimizer folds addition
+// RUN: %jexc -f %s -l -c -O 2 | FileCheck-12 %s -check-prefix=CHECK-5
+// CHECK-5: store i64 3, i64* %varPtrTyped, align 4
+
+var a: Integer = 1 + 2;
