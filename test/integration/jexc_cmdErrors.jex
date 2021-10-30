@@ -1,0 +1,16 @@
+// RUN: (%jexc || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-1
+// CHECK-1: Missing file name.
+// RUN: (%jexc -f _invalid_file.txt || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-2
+// CHECK-2: Error: Couldn't read _invalid_file.txt.
+// RUN: (%jexc -f %s -O || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-3
+// CHECK-3: Error: Missing parameter for option 'opt-level'.
+// RUN: (%jexc -f %s -O x || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-4
+// CHECK-4: Error while parsing option 'opt-level': stoi.
+// RUN: (%jexc -f %s -O 4 || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-5
+// CHECK-5: Error while parsing option 'opt-level': Invalid range.
+// RUN: (%jexc -f %s invalid || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-6
+// CHECK-6: Error: Invalid option 'invalid'.
+// RUN: (%jexc -f %s -_ || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-7
+// CHECK-7: Error: Invalid option '-_'.
+// RUN: (%jexc -f %s --invalid || true) 2>&1 | FileCheck-12 %s -check-prefix=CHECK-8
+// CHECK-8: Error: Invalid option '--invalid'.

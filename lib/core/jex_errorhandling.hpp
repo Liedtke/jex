@@ -47,7 +47,6 @@ public:
     : std::runtime_error(error) {
     }
 
-    static CompileError create(const Location& loc, std::string msg);
     static CompileError create(const MsgInfo& msgInfo);
 };
 
