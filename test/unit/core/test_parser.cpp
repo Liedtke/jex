@@ -118,6 +118,9 @@ static TestExp successTests[] = {
      "var a: Type = 123;\n"},
     {"var a: Type = 9223372036854775807;",
      "var a: Type = 9223372036854775807;\n"},
+    // Too large for a positive number but fits into a negative value.
+    {"var a: Type = -9223372036854775808;",
+     "var a: Type = -9223372036854775808;\n"},
     {"var a: Type = 1.23;",
      "var a: Type = 1.23;\n"},
     {"var a: Type = 10.123e-45;",

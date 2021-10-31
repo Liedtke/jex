@@ -39,7 +39,7 @@ private:
     IAstExpression* parseUnaryMinus();
     IAstExpression* parseBinOpRhs(int prec, IAstExpression* lhs);
     AstLiteralExpr* parseLiteralBool();
-    AstLiteralExpr* parseLiteralInt();
+    AstLiteralExpr* parseLiteralInt(bool isNegative = false);
     AstLiteralExpr* parseLiteralFloat();
     AstLiteralExpr* parseLiteralString();
     IAstExpression* parseParensExpr();

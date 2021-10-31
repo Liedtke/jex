@@ -190,7 +190,12 @@ IAstExpression* Parser::parsePrimary() {
 IAstExpression* Parser::parseUnaryMinus() {
     Token minus = d_currToken;
     getNextToken(); // consume '-'
-    IAstExpression* inner = parsePrimary(); // Unary minus has highest precedence currently.
+    if (d_currToken.kind == Token::Kind::LiteralInt) {
+        // Special handling for literal int to support int64::min().
+        return parseLiteralInt(true);
+    }
+    // Unary minus has highest precedence currently.
+    IAstExpression* inner = parsePrimary();;
     Location loc = Location::combine(inner->d_loc, minus.location);
     TypeInfoId unresolved = d_env.typeSystem().unresolved();
     return d_env.createNode<AstUnaryExpr>(loc, unresolved, OpType::UMinus, inner);
@@ -222,12 +227,14 @@ IAstExpression* Parser::parseExpression() {
     return parseBinOpRhs(0, lhs);
 }
 
-AstLiteralExpr* Parser::parseLiteralInt() {
+AstLiteralExpr* Parser::parseLiteralInt(bool isNegative) {
     assert(d_currToken.kind == Token::Kind::LiteralInt);
+    std::string str(isNegative ? "-" : "");
+    str += d_currToken.text;
     try {
         std::size_t pos;
-        const int64_t value = std::stoll(std::string(d_currToken.text), &pos);
-        assert(pos == d_currToken.text.size());
+        const int64_t value = std::stoll(str, &pos);
+        assert(pos == str.size());
         TypeInfoId type = d_env.typeSystem().getType("Integer");
         AstLiteralExpr* res = d_env.createNode<AstLiteralExpr>(d_currToken.location, type, value);
         getNextToken(); // consume literal
