@@ -23,7 +23,6 @@ constexpr char typeNameInteger[] = "Integer";
 using ArgInteger = ArgValue<int64_t, typeNameInteger>;
 void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
 void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
-
 } // anonymous namespace
 
 template <typename ParamT>
@@ -51,6 +50,8 @@ public:
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_gt", add));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_le", add));
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ge", add));
+        // Add unary operators.
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("operator_uminus", pass));
     }
 
     void SetUp() override {
@@ -112,6 +113,9 @@ static TestErrorT errorTests[] = {
         {"1.1-1.30: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
     {"var a: Integer = if(true, x, x, x);",
         {"1.18-1.33: Error: 'if' function requires exactly 3 arguments, 4 given"}},
+    {"var a: Bool = -(x+1);",
+        // No further errors are reported as the inner call is unresolved.
+        {"1.17-1.19: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInferenceError,
@@ -137,6 +141,8 @@ static const char* successTests[] = {
     "var a: UInt32 = x == x != x < x <= x > x >= x;", // resolve operators nested comparisons
     "var a: UInt32 = if(true, x, x+x);",
     "var a: UInt32 = if(true, if(false, x*x, x+x), x);",
+    "var a: UInt32 = -x;",
+    "var a: UInt32 = --------x;",
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInference,

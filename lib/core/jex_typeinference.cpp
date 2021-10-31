@@ -123,6 +123,18 @@ void TypeInference::visit(AstBinaryExpr& node) {
     node.d_fctInfo = resolveFct(node, fctName, argTypes);
 }
 
+void TypeInference::visit(AstUnaryExpr& node) {
+    BasicAstVisitor::visit(node); // resolve arguments
+    TypeInfoId innerType = node.d_expr->d_resultType;
+    if (!d_env.typeSystem().isResolved(innerType)) {
+        // There is already a type inference error, don't report errors resulting from that.
+        assert(d_env.hasErrors());
+        return;
+    }
+    const char* fctName = opTypeToString(node.d_op);
+    node.d_fctInfo = resolveFct(node, fctName, {innerType});
+}
+
 const FctInfo* TypeInference::resolveFct(IAstExpression& node, std::string_view name, const std::vector<TypeInfoId>& paramTypes) {
     try {
         const FctInfo& fctInfo = d_env.fctLibrary().getFct(std::string(name), paramTypes);
