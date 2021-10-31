@@ -27,6 +27,9 @@ enum class OpType {
     GT,
     LE,
     GE,
+    BitAnd,
+    BitOr,
+    BitXor,
     UMinus,
 };
 

@@ -47,6 +47,12 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "operator '<='";
         case Token::Kind::OpGE:
             return str << "operator '>='";
+        case Token::Kind::OpBitAnd:
+            return str << "operator '&'";
+        case Token::Kind::OpBitOr:
+            return str << "operator '|'";
+        case Token::Kind::OpBitXor:
+            return str << "operator '^'";
         case Token::Kind::ParensL:
             return str << "'('";
         case Token::Kind::ParensR:
@@ -198,6 +204,15 @@ Token Lexer::getNext() {
                 }
                 // TODO: add not operator '!'.
                 return setToken(Token::Kind::Invalid);
+            case '&':
+                advance();
+                return setToken(Token::Kind::OpBitAnd);
+            case '|':
+                advance();
+                return setToken(Token::Kind::OpBitOr);
+            case '^':
+                advance();
+                return setToken(Token::Kind::OpBitXor);
         }
 
         // parse numeric literals

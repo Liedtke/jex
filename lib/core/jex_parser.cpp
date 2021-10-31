@@ -36,6 +36,12 @@ OpType getOp(const Token& op, CompileEnv& env) {
             return OpType::LE;
         case Token::Kind::OpGE:
             return OpType::GE;
+        case Token::Kind::OpBitAnd:
+            return OpType::BitAnd;
+        case Token::Kind::OpBitOr:
+            return OpType::BitOr;
+        case Token::Kind::OpBitXor:
+            return OpType::BitXor;
         default: // LCOV_EXCL_LINE
             env.throwError(op.location, "Invalid operator '" + std::string(op.text) + "'"); // LCOV_EXCL_LINE
     }
@@ -44,21 +50,25 @@ OpType getOp(const Token& op, CompileEnv& env) {
 } // anonymous namespace
 
 void Parser::initPrecs() {
+    // bitwise
+    d_precs[Token::Kind::OpBitOr] = 10;
+    d_precs[Token::Kind::OpBitXor] = 11;
+    d_precs[Token::Kind::OpBitAnd] = 12;
     // == !=
-    d_precs[Token::Kind::OpEQ] = 10;
-    d_precs[Token::Kind::OpNE] = 10;
+    d_precs[Token::Kind::OpEQ] = 20;
+    d_precs[Token::Kind::OpNE] = 20;
     // < <= > >=
-    d_precs[Token::Kind::OpLT] = 20;
-    d_precs[Token::Kind::OpLE] = 20;
-    d_precs[Token::Kind::OpGT] = 20;
-    d_precs[Token::Kind::OpGE] = 20;
+    d_precs[Token::Kind::OpLT] = 30;
+    d_precs[Token::Kind::OpLE] = 30;
+    d_precs[Token::Kind::OpGT] = 30;
+    d_precs[Token::Kind::OpGE] = 30;
     // + -
-    d_precs[Token::Kind::OpAdd] = 30;
-    d_precs[Token::Kind::OpSub] = 30;
+    d_precs[Token::Kind::OpAdd] = 40;
+    d_precs[Token::Kind::OpSub] = 40;
     // * / %
-    d_precs[Token::Kind::OpMul] = 40;
-    d_precs[Token::Kind::OpDiv] = 40;
-    d_precs[Token::Kind::OpMod] = 40;
+    d_precs[Token::Kind::OpMul] = 50;
+    d_precs[Token::Kind::OpDiv] = 50;
+    d_precs[Token::Kind::OpMod] = 50;
 }
 
 int Parser::getPrec() const {

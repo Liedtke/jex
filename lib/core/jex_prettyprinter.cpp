@@ -52,6 +52,15 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
         case OpType::GE:
             d_str << " >= ";
             break;
+        case OpType::BitAnd:
+            d_str << " & ";
+            break;
+        case OpType::BitOr:
+            d_str << " | ";
+            break;
+        case OpType::BitXor:
+            d_str << " ^ ";
+            break;
         default: // LCOV_EXCL_LINE
             assert(false && "Invalid op type for binary expression"); // LCOV_EXCL_LINE
     }

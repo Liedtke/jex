@@ -39,6 +39,12 @@ static const char* opTypeToString(OpType op) {
             return "operator_ge";
         case OpType::UMinus:
             return "operator_uminus";
+        case OpType::BitAnd:
+            return "operator_bitand";
+        case OpType::BitOr:
+            return "operator_bitor";
+        case OpType::BitXor:
+            return "operator_bitxor";
     }
     throw InternalError("Unsupported operator in TypeInference::opTypeToString"); // LCOV_EXCL_LINE
 }
