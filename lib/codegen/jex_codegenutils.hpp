@@ -9,6 +9,7 @@ namespace jex {
 class CompileEnv;
 class CodeModule;
 class FctInfo;
+struct ParamInfo;
 
 class CodeGenUtils {
     CompileEnv& d_env;
@@ -22,6 +23,7 @@ public:
     llvm::StructType* createOpaqueStructType(TypeInfoId type);
     llvm::Type* getType(TypeInfoId type);
     llvm::Type* getParamType(TypeInfoId type);
+    llvm::Type* getParamType(const ParamInfo& param);
     llvm::Type* getReturnType(TypeInfoId type);
     llvm::FunctionCallee getOrCreateFct(const FctInfo* fctInfo);
 };

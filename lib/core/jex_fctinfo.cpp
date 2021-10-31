@@ -7,14 +7,14 @@ namespace jex {
 static std::string createMangledName(const FctInfo* fctInfo) {
     std::string name("_");
     name += fctInfo->d_name;
-    for (TypeInfoId type : fctInfo->d_paramTypes) {
-        name += "_" + type->name();
+    for (const ParamInfo& param : fctInfo->d_params) {
+        name += (param.isVarArg ? "_vararg_" : "_") + param.type->name();
     }
     return name;
 }
 
 FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType,
-                 std::vector<TypeInfoId> params, IntrinsicFct intrinsicFct, FctFlags flags)
+                 std::vector<ParamInfo> params, IntrinsicFct intrinsicFct, FctFlags flags)
 : d_name(std::move(name))
 , d_mangledName()
 , d_intrinsicName()
@@ -22,39 +22,58 @@ FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfo
 , d_fctWrapper(fctWrapper)
 , d_intrinsicFct(std::move(intrinsicFct))
 , d_retType(retType)
-, d_paramTypes(std::move(params))
+, d_params(std::move(params))
 , d_flags(flags) {
     d_mangledName = createMangledName(this);
     d_intrinsicName = d_mangledName + "__intrinsic";
 }
 
-bool FctInfo::matches(const std::vector<TypeInfoId>& params) const {
-    if (params.size() != d_paramTypes.size()) {
+bool FctInfo::matches(const std::vector<TypeInfoId>& argTypes) const {
+    std::vector<ParamInfo> params;
+    for (TypeInfoId type : argTypes) {
+        params.push_back({type, false});
+    }
+    return equals(params);
+}
+
+bool FctInfo::equals(const std::vector<ParamInfo>& params) const {
+    if (params.size() != d_params.size()) {
         return false;
     }
-    for (size_t i = 0; i < d_paramTypes.size(); ++i) {
-        // Current check: Signatures only match if exactly equivalent.
-        // This means that no implicit conversions are supported.
-        if (params[i] != d_paramTypes[i]) {
+    for (size_t i = 0; i < d_params.size(); ++i) {
+        if (params[i] != d_params[i]) {
             return false;
         }
     }
-    // All parameters match.
+    // All parameters are equal.
     return true;
 }
 
-void FctInfo::printParamTypes(std::ostream& str, const std::vector<TypeInfoId>& paramTypes) {
-    for (const TypeInfoId& ti : paramTypes) {
-        if (&ti != paramTypes.data()) {
+void FctInfo::printParamTypes(std::ostream& str, const std::vector<ParamInfo>& params) {
+    for (const ParamInfo& param: params) {
+        if (&param != params.data()) {
             str << ", ";
         }
-        str << ti->name();
+        if (param.isVarArg) {
+            str << "_VarArg<" << param.type->name() << ">";
+        } else {
+            str << param.type->name();
+        }
+    }
+}
+
+void FctInfo::printParamTypes(std::ostream& str, const std::vector<TypeInfoId>& paramTypes) {
+    for (const TypeInfoId& type: paramTypes) {
+        if (&type != paramTypes.data()) {
+            str << ", ";
+        }
+        str << type->name();
     }
 }
 
 std::ostream& operator<<(std::ostream& str, const FctInfo& fctInfo) {
     return str << fctInfo.d_retType->name() << ' ' << fctInfo.d_name << '(';
-    FctInfo::printParamTypes(str, fctInfo.d_paramTypes);
+    FctInfo::printParamTypes(str, fctInfo.d_params);
     return str << ')';
 }
 

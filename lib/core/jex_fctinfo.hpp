@@ -28,6 +28,18 @@ inline FctFlags operator&(FctFlags lhs, FctFlags rhs) {
     return static_cast<FctFlags>(static_cast<T>(lhs) & static_cast<T>(rhs));
 }
 
+struct ParamInfo {
+    TypeInfoId type;
+    bool isVarArg;
+
+    bool operator==(const ParamInfo& other) const {
+        return type == other.type && isVarArg == other.isVarArg;
+    }
+    bool operator!=(const ParamInfo& other) const {
+        return !(*this == other);
+    }
+};
+
 /**
  * Represents a function in the function library and defines its properties and behavior.
  */
@@ -43,13 +55,14 @@ public:
     FctWrapper d_fctWrapper;
     IntrinsicFct d_intrinsicFct;
     TypeInfoId d_retType;
-    std::vector<TypeInfoId> d_paramTypes;
+    std::vector<ParamInfo> d_params;
     FctFlags d_flags;
 
-    FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType, std::vector<TypeInfoId> params,
+    FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfoId retType, std::vector<ParamInfo> params,
             IntrinsicFct intrinsicFct = nullptr, FctFlags flags = FctFlags::None);
 
-    bool matches(const std::vector<TypeInfoId>& params) const;
+    bool matches(const std::vector<TypeInfoId>& argTypes) const;
+    bool equals(const std::vector<ParamInfo>& params) const;
 
     void call(void* const* args) const {
         d_fctWrapper(d_fctPtr, args);
@@ -59,6 +72,7 @@ public:
         return hasFlag(FctFlags::Pure);
     }
 
+    static void printParamTypes(std::ostream& str, const std::vector<ParamInfo>& params);
     static void printParamTypes(std::ostream& str, const std::vector<TypeInfoId>& paramTypes);
 
 private:

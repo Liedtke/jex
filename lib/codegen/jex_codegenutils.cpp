@@ -38,6 +38,13 @@ llvm::Type* CodeGenUtils::getParamType(TypeInfoId type) {
     }
 }
 
+llvm::Type* CodeGenUtils::getParamType(const ParamInfo& param) {
+    if (param.isVarArg) {
+        return nullptr; // FIXME
+    }
+    return getParamType(param.type);
+}
+
 llvm::Type* CodeGenUtils::getReturnType(TypeInfoId type) {
     return getType(type)->getPointerTo();
 }
@@ -47,8 +54,8 @@ llvm::FunctionCallee CodeGenUtils::getOrCreateFct(const FctInfo* fctInfo) {
     llvm::Type* voidTy = llvm::Type::getVoidTy(d_module.llvmContext());
     std::vector<llvm::Type*> params;
     params.push_back(getReturnType(fctInfo->d_retType));
-    for (TypeInfoId paramType : fctInfo->d_paramTypes) {
-        params.push_back(getParamType(paramType));
+    for (const ParamInfo& param : fctInfo->d_params) {
+        params.push_back(getParamType(param));
     }
     llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
     if (d_env.useIntrinsics() && fctInfo->d_intrinsicFct) {

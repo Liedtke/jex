@@ -95,7 +95,7 @@ TEST(FctLibrary, getFctSignatureChecks) {
     ASSERT_EQ("pass", fct.d_name);
     ASSERT_EQ(reinterpret_cast<void*>(pass), fct.d_fctPtr);
     ASSERT_EQ(typeUInt32, fct.d_retType);
-    ASSERT_EQ(std::vector{typeUInt32}, fct.d_paramTypes);
+    ASSERT_EQ((std::vector{ParamInfo{typeUInt32, false}}), fct.d_params);
 }
 
 TEST(Registry, wrapperSimple) {
