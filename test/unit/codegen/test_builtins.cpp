@@ -60,6 +60,19 @@ std::string operator"" _s(const char *in, unsigned long len) {
 }
 
 static TestEvalT evals[] = {
+    // Bool arithmetics
+    {"Bool = true & true", true},
+    {"Bool = true & false", false},
+    {"Bool = false & true", false},
+    {"Bool = false & false", false},
+    {"Bool = true | true", true},
+    {"Bool = true | false", true},
+    {"Bool = false | true", true},
+    {"Bool = false | false", false},
+    {"Bool = true ^ true", false},
+    {"Bool = true ^ false", true},
+    {"Bool = false ^ true", true},
+    {"Bool = false ^ false", false},
     // Integer arithmetics
     {"Integer = 1 + 2", 3_i64},
     {"Integer = (10 + 6) + (7 + 3)", 26_i64},
@@ -75,6 +88,15 @@ static TestEvalT evals[] = {
     {"Integer = -5", -5_i64},
     {"Integer = -5 + 2", -3_i64},
     {"Integer = --10", 10_i64},
+    {"Integer = 1 & 3", 1_i64},
+    {"Integer = 1 & 2", 0_i64},
+    {"Integer = -1 & 2", 2_i64},
+    {"Integer = 1 | 3", 3_i64},
+    {"Integer = 1 | 2", 3_i64},
+    {"Integer = -1 | 2", -1_i64},
+    {"Integer = 1 ^ 3", 2_i64},
+    {"Integer = 1 ^ 2", 3_i64},
+    {"Integer = -1 ^ 2", -3_i64},
     // Float arithmetics
     {"Float = 1.1 + 2.2", 3.3},
     {"Float = 1.1 - 2.2", -1.1},
@@ -84,7 +106,7 @@ static TestEvalT evals[] = {
     {"Float = 12.3 / 0.0", std::numeric_limits<double>::infinity()},
     {"Float = -1.234", -1.234},
     {"Float = --1.234", 1.234},
-    // Bool comarisons
+    // Bool comparisons
     {"Bool = true == true", true},
     {"Bool = true == false", false},
     {"Bool = false == true", false},

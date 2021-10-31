@@ -89,6 +89,9 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     using IntegerCmpIntr = CmpIntrinsics<llvm::ICmpInst>;
     registry.registerFct(BoolCmp("operator_eq", cmp<std::equal_to<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_EQ>, FctFlags::Pure));
     registry.registerFct(BoolCmp("operator_ne", cmp<std::not_equal_to<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_NE>, FctFlags::Pure));
+    registry.registerFct(BoolCmp("operator_bitand", op<std::bit_and<>>, generateOp<llvm::BinaryOperator::And>, FctFlags::Pure));
+    registry.registerFct(BoolCmp("operator_bitor", op<std::bit_or<>>, generateOp<llvm::BinaryOperator::Or>, FctFlags::Pure));
+    registry.registerFct(BoolCmp("operator_bitxor", op<std::bit_xor<>>, generateOp<llvm::BinaryOperator::Xor>, FctFlags::Pure));
 
     // === Integer ===
     // Arithmetics
@@ -98,6 +101,9 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(IntegerArithm("operator_mul", op<std::multiplies<>>, generateOp<llvm::BinaryOperator::Mul>, FctFlags::Pure));
     registry.registerFct(IntegerArithm("operator_div", op<std::divides<>>, generateOp<llvm::BinaryOperator::SDiv>, FctFlags::Pure));
     registry.registerFct(IntegerArithm("operator_mod", op<std::modulus<>>, generateOp<llvm::BinaryOperator::SRem>, FctFlags::Pure));
+    registry.registerFct(IntegerArithm("operator_bitand", op<std::bit_and<>>, generateOp<llvm::BinaryOperator::And>, FctFlags::Pure));
+    registry.registerFct(IntegerArithm("operator_bitor", op<std::bit_or<>>, generateOp<llvm::BinaryOperator::Or>, FctFlags::Pure));
+    registry.registerFct(IntegerArithm("operator_bitxor", op<std::bit_xor<>>, generateOp<llvm::BinaryOperator::Xor>, FctFlags::Pure));
     registry.registerFct(FctDesc<ArgInteger, ArgInteger>("operator_uminus", unaryOp<std::negate<>>, generateUnaryNeg, FctFlags::Pure));
     // Comparisons
     using IntegerCmp = FctDesc<ArgBool, ArgInteger, ArgInteger>;
