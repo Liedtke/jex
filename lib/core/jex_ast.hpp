@@ -30,6 +30,9 @@ enum class OpType {
     BitAnd,
     BitOr,
     BitXor,
+    Shl,
+    Shrs,
+    Shrz,
     UMinus,
 };
 

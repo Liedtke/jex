@@ -31,6 +31,32 @@ void unaryOp(T* res, T arg) {
     *res = Op()(arg);
 }
 
+void shiftLeft(int64_t* res, int64_t val, int64_t shiftBy) {
+    assert(res != nullptr);
+    assert(shiftBy >= 0);
+    assert(shiftBy < 64);
+    *res = val << shiftBy;
+}
+
+void shiftRightSigned(int64_t* res, int64_t val, int64_t shiftBy) {
+    assert(res != nullptr);
+    assert(shiftBy >= 0);
+    assert(shiftBy < 64);
+    auto uval = static_cast<uint64_t>(val);
+    if (val < 0) {
+        *res = static_cast<int64_t>(uval >> shiftBy | ~(~0ULL >> shiftBy));
+    } else {
+        *res = static_cast<int64_t>(uval >> shiftBy);
+    }
+}
+
+void shiftRightZero(int64_t* res, int64_t val, int64_t shiftBy) {
+    assert(res != nullptr);
+    assert(shiftBy >= 0);
+    assert(shiftBy < 64);
+    *res = static_cast<int64_t>(static_cast<uint64_t>(val) >> shiftBy);
+}
+
 template <llvm::Instruction::BinaryOps op>
 void generateOp(IntrinsicGen& gen) {
     llvm::IRBuilder<>& builder = gen.builder();
@@ -104,6 +130,9 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(IntegerArithm("operator_bitand", op<std::bit_and<>>, generateOp<llvm::BinaryOperator::And>, FctFlags::Pure));
     registry.registerFct(IntegerArithm("operator_bitor", op<std::bit_or<>>, generateOp<llvm::BinaryOperator::Or>, FctFlags::Pure));
     registry.registerFct(IntegerArithm("operator_bitxor", op<std::bit_xor<>>, generateOp<llvm::BinaryOperator::Xor>, FctFlags::Pure));
+    registry.registerFct(IntegerArithm("operator_shl", shiftLeft, generateOp<llvm::BinaryOperator::Shl>, FctFlags::Pure));
+    registry.registerFct(IntegerArithm("operator_shrs", shiftRightSigned, generateOp<llvm::BinaryOperator::AShr>, FctFlags::Pure));
+    registry.registerFct(IntegerArithm("operator_shrz", shiftRightZero, generateOp<llvm::BinaryOperator::LShr>, FctFlags::Pure));
     registry.registerFct(FctDesc<ArgInteger, ArgInteger>("operator_uminus", unaryOp<std::negate<>>, generateUnaryNeg, FctFlags::Pure));
     // Comparisons
     using IntegerCmp = FctDesc<ArgBool, ArgInteger, ArgInteger>;

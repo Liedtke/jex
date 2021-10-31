@@ -42,6 +42,12 @@ OpType getOp(const Token& op, CompileEnv& env) {
             return OpType::BitOr;
         case Token::Kind::OpBitXor:
             return OpType::BitXor;
+        case Token::Kind::OpShl:
+            return OpType::Shl;
+        case Token::Kind::OpShrs:
+            return OpType::Shrs;
+        case Token::Kind::OpShrz:
+            return OpType::Shrz;
         default: // LCOV_EXCL_LINE
             env.throwError(op.location, "Invalid operator '" + std::string(op.text) + "'"); // LCOV_EXCL_LINE
     }
@@ -62,13 +68,17 @@ void Parser::initPrecs() {
     d_precs[Token::Kind::OpLE] = 30;
     d_precs[Token::Kind::OpGT] = 30;
     d_precs[Token::Kind::OpGE] = 30;
+    // shl, shrs, shrz
+    d_precs[Token::Kind::OpShl] = 40;
+    d_precs[Token::Kind::OpShrs] = 40;
+    d_precs[Token::Kind::OpShrz] = 40;
     // + -
-    d_precs[Token::Kind::OpAdd] = 40;
-    d_precs[Token::Kind::OpSub] = 40;
+    d_precs[Token::Kind::OpAdd] = 50;
+    d_precs[Token::Kind::OpSub] = 50;
     // * / %
-    d_precs[Token::Kind::OpMul] = 50;
-    d_precs[Token::Kind::OpDiv] = 50;
-    d_precs[Token::Kind::OpMod] = 50;
+    d_precs[Token::Kind::OpMul] = 60;
+    d_precs[Token::Kind::OpDiv] = 60;
+    d_precs[Token::Kind::OpMod] = 60;
 }
 
 int Parser::getPrec() const {

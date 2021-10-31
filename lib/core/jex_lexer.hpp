@@ -38,6 +38,9 @@ public:
         OpBitAnd, // &
         OpBitOr,  // |
         OpBitXor, // ^
+        OpShl,    // shl
+        OpShrs,   // shrs
+        OpShrz,   // shrz
         Comma,
         Colon,
         Semicolon,

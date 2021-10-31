@@ -62,6 +62,12 @@ static TestExp errorTests[] = {
     {"var a: Type = 1+*", "1.17-1.17: Error: Unexpected operator '*', expecting literal, identifier, '-' or '('"},
     {"var a: Type = 1*/", "1.17-1.17: Error: Unexpected operator '/', expecting literal, identifier, '-' or '('"},
     {"var a: Type = (%", "1.16-1.16: Error: Unexpected operator '%', expecting literal, identifier, '-' or '('"},
+    {"var a: Type = (&", "1.16-1.16: Error: Unexpected operator '&', expecting literal, identifier, '-' or '('"},
+    {"var a: Type = (|", "1.16-1.16: Error: Unexpected operator '|', expecting literal, identifier, '-' or '('"},
+    {"var a: Type = (^", "1.16-1.16: Error: Unexpected operator '^', expecting literal, identifier, '-' or '('"},
+    {"var a: Type = shl", "1.15-1.17: Error: Unexpected operator 'shl', expecting literal, identifier, '-' or '('"},
+    {"var a: Type = shrs", "1.15-1.18: Error: Unexpected operator 'shrs', expecting literal, identifier, '-' or '('"},
+    {"var a: Type = shrz", "1.15-1.18: Error: Unexpected operator 'shrz', expecting literal, identifier, '-' or '('"},
     {"var a: Type = 1*-", "1.18-1.18: Error: Unexpected end of file, expecting literal, identifier, '-' or '('"},
     {"var a: Type = ()", "1.16-1.16: Error: Unexpected ')', expecting literal, identifier, '-' or '('"},
     {"var a: Type = 1(", "1.16-1.16: Error: Unexpected '(', expecting ';'"},
@@ -216,6 +222,13 @@ static TestExp successTests[] = {
      "var a: Type = (1 & (2 + 3));\n"},
     {"var a: Type = 1 & 2 == 3;",
      "var a: Type = (1 & (2 == 3));\n"},
+    // Shift operators
+    {"var a: Type = 1 shl 2 shrz 3 shrs 4;",
+     "var a: Type = (((1 shl 2) shrz 3) shrs 4);\n"},
+    {"var a: Type = 1 shl 2 + 3;",
+     "var a: Type = (1 shl (2 + 3));\n"},
+    {"var a: Type = 1 shl 2 == 3;",
+     "var a: Type = ((1 shl 2) == 3);\n"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

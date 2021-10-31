@@ -45,6 +45,12 @@ static const char* opTypeToString(OpType op) {
             return "operator_bitor";
         case OpType::BitXor:
             return "operator_bitxor";
+        case OpType::Shl:
+            return "operator_shl";
+        case OpType::Shrs:
+            return "operator_shrs";
+        case OpType::Shrz:
+            return "operator_shrz";
     }
     throw InternalError("Unsupported operator in TypeInference::opTypeToString"); // LCOV_EXCL_LINE
 }

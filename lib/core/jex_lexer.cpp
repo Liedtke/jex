@@ -53,6 +53,12 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "operator '|'";
         case Token::Kind::OpBitXor:
             return str << "operator '^'";
+        case Token::Kind::OpShl:
+            return str << "operator 'shl'";
+        case Token::Kind::OpShrs:
+            return str << "operator 'shrs'";
+        case Token::Kind::OpShrz:
+            return str << "operator 'shrz'";
         case Token::Kind::ParensL:
             return str << "'('";
         case Token::Kind::ParensR:
@@ -236,11 +242,21 @@ Token Lexer::getNext() {
                 advance();
             }
             std::string_view text = std::string_view(d_tokenBegin, d_cursor - d_tokenBegin);
+            // TODO: use unordered_map or similar for lookup of reserved keywords.
             if (text == "var") {
                 return setToken(Token::Kind::Var);
             }
             if (text == "true" || text == "false") {
                 return setToken(Token::Kind::LiteralBool);
+            }
+            if (text == "shl") {
+                return setToken(Token::Kind::OpShl);
+            }
+            if (text == "shrz") {
+                return setToken(Token::Kind::OpShrz);
+            }
+            if (text == "shrs") {
+                return setToken(Token::Kind::OpShrs);
             }
             return setToken(Token::Kind::Ident);
         }
