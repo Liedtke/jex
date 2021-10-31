@@ -1,0 +1,20 @@
+// RUN: %jexc -f %s -l -c | FileCheck-12 %s
+
+// Special case for integer: Negative literals are parsed together.
+// CHECK: store i64 -1, i64* %varPtrTyped, align 4
+var a: Integer = -1;
+
+// Float: Positive literal plus operator_uminus call.
+// CHECK: %0 = load double, double* %res_operator_uminus, align 8
+// CHECK: store double %0, double* %varPtrTyped, align 8
+// CHECK:      define internal void @_operator_uminus_Float__intrinsic(double* %0, double %1) {
+// CHECK-NEXT: entry:
+// CHECK-NEXT:   %result = fneg double %1
+// CHECK-NEXT:   store double %result, double* %0, align 8
+// CHECK-NEXT:   ret void
+// CHECK-NEXT: }
+var b: Float = -1.0;
+
+// Double negate for Integer: Negative integer used in call to operator_uminus.
+// CHECK: call void @_operator_uminus_Integer__intrinsic(i64* %res_operator_uminus, i64 -1)
+var c: Integer = --1;
