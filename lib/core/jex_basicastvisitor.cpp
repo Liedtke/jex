@@ -12,6 +12,10 @@ void BasicAstVisitor::visit(AstBinaryExpr& node) {
     node.d_rhs->accept(*this);
 }
 
+void BasicAstVisitor::visit(AstUnaryExpr& node) {
+    node.d_expr->accept(*this);
+}
+
 void BasicAstVisitor::visit(AstFctCall& node) {
     node.d_fct->accept(*this);
     node.d_args->accept(*this);

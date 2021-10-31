@@ -26,7 +26,8 @@ enum class OpType {
     LT,
     GT,
     LE,
-    GE
+    GE,
+    UMinus,
 };
 
 class IAstNode : NoCopy {
@@ -86,6 +87,28 @@ public:
     , d_op(op)
     , d_lhs(lhs)
     , d_rhs(rhs) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+
+    bool isTemporary() const override {
+        // Operators are handled via function calls and every function has to return a temporary.
+        return true;
+    }
+};
+
+class AstUnaryExpr : public IAstExpression {
+public:
+    OpType d_op;
+    IAstExpression* d_expr;
+    const FctInfo* d_fctInfo = nullptr;
+
+    AstUnaryExpr(const Location& loc, TypeInfoId resultType, OpType op, IAstExpression* expr)
+    : IAstExpression(loc, resultType)
+    , d_op(op)
+    , d_expr(expr) {
     }
 
     void accept(IAstVisitor& visitor) override {

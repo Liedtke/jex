@@ -52,9 +52,17 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
         case OpType::GE:
             d_str << " >= ";
             break;
+        default: // LCOV_EXCL_LINE
+            assert(false && "Invalid op type for binary expression"); // LCOV_EXCL_LINE
     }
     node.d_rhs->accept(*this);
     d_str << ")";
+}
+
+void PrettyPrinter::visit(AstUnaryExpr& node) {
+    assert(node.d_op == OpType::UMinus);
+    d_str << '-';
+    node.d_expr->accept(*this);
 }
 
 void PrettyPrinter::visit(AstFctCall& node) {

@@ -8,6 +8,7 @@ class BasicAstVisitor : public IAstVisitor {
 public:
     void visit(AstLiteralExpr& node) override;
     void visit(AstBinaryExpr& node) override;
+    void visit(AstUnaryExpr& node) override;
     void visit(AstFctCall& node) override;
     void visit(AstIf& node) override;
     void visit(AstIdentifier& node) override;

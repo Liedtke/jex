@@ -37,6 +37,8 @@ static const char* opTypeToString(OpType op) {
             return "operator_le";
         case OpType::GE:
             return "operator_ge";
+        case OpType::UMinus:
+            return "operator_uminus";
     }
     throw InternalError("Unsupported operator in TypeInference::opTypeToString"); // LCOV_EXCL_LINE
 }

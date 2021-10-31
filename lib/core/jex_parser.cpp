@@ -179,10 +179,21 @@ IAstExpression* Parser::parsePrimary() {
             return parseParensExpr();
         case Token::Kind::Ident:
             return parseIdentOrCall();
+        case Token::Kind::OpSub:
+            return parseUnaryMinus();
         default:
             // TODO: extend expectation list
-            throwUnexpected("literal, identifier or '('");
+            throwUnexpected("literal, identifier, '-' or '('");
     }
+}
+
+IAstExpression* Parser::parseUnaryMinus() {
+    Token minus = d_currToken;
+    getNextToken(); // consume '-'
+    IAstExpression* inner = parsePrimary(); // Unary minus has highest precedence currently.
+    Location loc = Location::combine(inner->d_loc, minus.location);
+    TypeInfoId unresolved = d_env.typeSystem().unresolved();
+    return d_env.createNode<AstUnaryExpr>(loc, unresolved, OpType::UMinus, inner);
 }
 
 IAstExpression* Parser::parseBinOpRhs(int prec, IAstExpression* lhs) {

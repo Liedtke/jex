@@ -36,6 +36,7 @@ private:
     int getPrec() const;
     Token& getNextToken();
     IAstExpression* parsePrimary();
+    IAstExpression* parseUnaryMinus();
     IAstExpression* parseBinOpRhs(int prec, IAstExpression* lhs);
     AstLiteralExpr* parseLiteralBool();
     AstLiteralExpr* parseLiteralInt();
