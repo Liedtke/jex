@@ -72,6 +72,9 @@ static TestEvalT evals[] = {
     {"Integer = 10 % 2", 0_i64},
     {"Integer = 10 % (0-2)", 0_i64},
     {"Integer = 5 % 100", 5_i64},
+    {"Integer = -5", -5_i64},
+    {"Integer = -5 + 2", -3_i64},
+    {"Integer = --10", 10_i64},
     // Float arithmetics
     {"Float = 1.1 + 2.2", 3.3},
     {"Float = 1.1 - 2.2", -1.1},
@@ -79,6 +82,8 @@ static TestEvalT evals[] = {
     {"Float = 1e300 * 1e300", std::numeric_limits<double>::infinity()},
     {"Float = 12.3 / 4.56", 12.3 / 4.56},
     {"Float = 12.3 / 0.0", std::numeric_limits<double>::infinity()},
+    {"Float = -1.234", -1.234},
+    {"Float = --1.234", 1.234},
     // Bool comarisons
     {"Bool = true == true", true},
     {"Bool = true == false", false},

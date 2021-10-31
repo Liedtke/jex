@@ -25,6 +25,12 @@ void cmp(bool* res, T a, T b) {
     *res = Op()(a, b);
 }
 
+template <typename Op, typename T>
+void unaryOp(T* res, T arg) {
+    assert(res != nullptr);
+    *res = Op()(arg);
+}
+
 template <llvm::Instruction::BinaryOps op>
 void generateOp(IntrinsicGen& gen) {
     llvm::IRBuilder<>& builder = gen.builder();
@@ -43,6 +49,18 @@ struct CmpIntrinsics {
         builder.CreateStore(result, gen.fct().getArg(0));
     }
 };
+
+void generateUnaryNeg(IntrinsicGen& gen) {
+    llvm::IRBuilder<>& builder = gen.builder();
+    llvm::Value* result = builder.CreateNeg(gen.fct().getArg(1), "result");
+    builder.CreateStore(result, gen.fct().getArg(0));
+}
+
+void generateUnaryFNeg(IntrinsicGen& gen) {
+    llvm::IRBuilder<>& builder = gen.builder();
+    llvm::Value* result = builder.CreateFNeg(gen.fct().getArg(1), "result");
+    builder.CreateStore(result, gen.fct().getArg(0));
+}
 
 void substr(std::string* res, const std::string* in, int64_t pos, int64_t count) {
     assert(res != nullptr);
@@ -80,6 +98,7 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(IntegerArithm("operator_mul", op<std::multiplies<>>, generateOp<llvm::BinaryOperator::Mul>, FctFlags::Pure));
     registry.registerFct(IntegerArithm("operator_div", op<std::divides<>>, generateOp<llvm::BinaryOperator::SDiv>, FctFlags::Pure));
     registry.registerFct(IntegerArithm("operator_mod", op<std::modulus<>>, generateOp<llvm::BinaryOperator::SRem>, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgInteger, ArgInteger>("operator_uminus", unaryOp<std::negate<>>, generateUnaryNeg, FctFlags::Pure));
     // Comparisons
     using IntegerCmp = FctDesc<ArgBool, ArgInteger, ArgInteger>;
     registry.registerFct(IntegerCmp("operator_eq", cmp<std::equal_to<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_EQ>, FctFlags::Pure));
@@ -96,6 +115,7 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(FloatArithm("operator_sub", op<std::minus<>>, generateOp<llvm::BinaryOperator::FSub>, FctFlags::Pure));
     registry.registerFct(FloatArithm("operator_mul", op<std::multiplies<>>, generateOp<llvm::BinaryOperator::FMul>, FctFlags::Pure));
     registry.registerFct(FloatArithm("operator_div", op<std::divides<>>, generateOp<llvm::BinaryOperator::FDiv>, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgFloat, ArgFloat>("operator_uminus", unaryOp<std::negate<>>, generateUnaryFNeg, FctFlags::Pure));
     // Comparisons
     using FloatCmp = FctDesc<ArgBool, ArgFloat, ArgFloat>;
     using FloatCmpIntr = CmpIntrinsics<llvm::FCmpInst>;
