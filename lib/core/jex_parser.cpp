@@ -143,6 +143,7 @@ AstArgList* Parser::parseArgList() {
                 getNextToken(); // consume ','
                 break;
             case Token::Kind::ParensR:
+                argList->d_loc = Location::combine(argList->d_loc, d_currToken.location);
                 getNextToken(); // consume ')'
                 return argList;
             default:

@@ -29,11 +29,21 @@ FctInfo::FctInfo(std::string name, void* fctPtr, FctWrapper fctWrapper, TypeInfo
 }
 
 bool FctInfo::matches(const std::vector<TypeInfoId>& argTypes) const {
-    std::vector<ParamInfo> params;
-    for (TypeInfoId type : argTypes) {
-        params.push_back({type, false});
+    auto argIter = argTypes.begin();
+    for (const ParamInfo& param : d_params) {
+        if (argIter == argTypes.end()) {
+            return false;
+        }
+        if (*argIter != param.type) {
+            return false;
+        }
+        ++argIter;
+        // Implement VarArg as greedy for now.
+        while (param.isVarArg && *argIter == param.type) {
+            ++argIter;
+        }
     }
-    return equals(params);
+    return argIter == argTypes.end();
 }
 
 bool FctInfo::equals(const std::vector<ParamInfo>& params) const {

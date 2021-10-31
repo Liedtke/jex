@@ -23,6 +23,8 @@ constexpr char typeNameInteger[] = "Integer";
 using ArgInteger = ArgValue<int64_t, typeNameInteger>;
 void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
 void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
+void max(uint32_t* res, const VarArg<uint32_t>* args) {} // LCOV_EXCL_LINE
+void max(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
 } // anonymous namespace
 
 template <typename ParamT>
@@ -52,6 +54,10 @@ public:
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ge", add));
         // Add unary operators.
         registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("operator_uminus", pass));
+        // Function with var arg.
+        registry.registerFct(FctDesc<ArgUInt32, ArgVarArg<ArgUInt32>>("max", max));
+        // Same function without var arg for exactly 2 arguments.
+        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("max", max));
     }
 
     void SetUp() override {
@@ -103,19 +109,24 @@ static TestErrorT errorTests[] = {
         "1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'",
     }},
     {"var a: UInt32 = if(x, x, x);",
-        {"1.17-1.26: Error: 'if' function requires first argument to be of type 'Bool', 'UInt32' given"}},
+        {"1.17-1.27: Error: 'if' function requires first argument to be of type 'Bool', 'UInt32' given"}},
     {"var a: UInt32 = if(true, x, true);",
-        {"1.17-1.32: Error: 'if' function requires second and third argument to have the same type, 'UInt32' and 'Bool' given"}},
+        {"1.17-1.33: Error: 'if' function requires second and third argument to have the same type, 'UInt32' and 'Bool' given"}},
     {"var a: Bool = if(true, x, x+1);",
         // No further errors are reported as the inner call is unresolved.
         {"1.27-1.29: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
     {"var a: Integer = if(true, x, x);",
-        {"1.1-1.30: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
+        {"1.1-1.31: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
     {"var a: Integer = if(true, x, x, x);",
-        {"1.18-1.33: Error: 'if' function requires exactly 3 arguments, 4 given"}},
+        {"1.18-1.34: Error: 'if' function requires exactly 3 arguments, 4 given"}},
     {"var a: Bool = -(x+1);",
         // No further errors are reported as the inner call is unresolved.
         {"1.17-1.19: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
+    // Var Args: At minimum one argument required.
+    {"var a: UInt32 = max();",
+        {"1.17-1.21: Error: No matching candidate found for function 'max()'"}},
+    {"var a: UInt32 = max(1);",
+        {"1.17-1.22: Error: No matching candidate found for function 'max(Integer)'"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInferenceError,
@@ -143,6 +154,9 @@ static const char* successTests[] = {
     "var a: UInt32 = if(true, if(false, x*x, x+x), x);",
     "var a: UInt32 = -x;",
     "var a: UInt32 = --------x;",
+    "var a: UInt32 = max(x, x);", // special registered function
+    "var a: UInt32 = max(x, x, x);", // var arg
+    "var a: UInt32 = max(x);", // var arg
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInference,

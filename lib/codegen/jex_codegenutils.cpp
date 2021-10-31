@@ -40,7 +40,16 @@ llvm::Type* CodeGenUtils::getParamType(TypeInfoId type) {
 
 llvm::Type* CodeGenUtils::getParamType(const ParamInfo& param) {
     if (param.isVarArg) {
-        return nullptr; // FIXME
+        std::string name("_vararg_");
+        name += param.type->name();
+        llvm::Type* varArgTy = llvm::StructType::getTypeByName(d_module.llvmContext(), name);
+        if (varArgTy) {
+            return varArgTy;
+        }
+        // Create type.
+        llvm::Type* elemPtrTy = getType(param.type)->getPointerTo();
+        llvm::Type* i64Ty = llvm::Type::getInt64Ty(d_module.llvmContext());
+        return llvm::StructType::create({elemPtrTy, i64Ty}, name)->getPointerTo();
     }
     return getParamType(param.type);
 }

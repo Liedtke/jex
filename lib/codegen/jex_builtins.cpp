@@ -57,6 +57,18 @@ void shiftRightZero(int64_t* res, int64_t val, int64_t shiftBy) {
     *res = static_cast<int64_t>(static_cast<uint64_t>(val) >> shiftBy);
 }
 
+template <typename T>
+void max(T* res, const VarArg<T>* args) {
+    assert(args->size() != 0);
+    T maxVal = *args->begin();
+    for (T val : *args) {
+        if (val > maxVal) {
+            maxVal = val;
+        }
+    }
+    *res = maxVal;
+}
+
 template <llvm::Instruction::BinaryOps op>
 void generateOp(IntrinsicGen& gen) {
     llvm::IRBuilder<>& builder = gen.builder();
@@ -142,6 +154,9 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(IntegerCmp("operator_gt", cmp<std::greater<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_SGT>, FctFlags::Pure));
     registry.registerFct(IntegerCmp("operator_le", cmp<std::less_equal<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_SLE>, FctFlags::Pure));
     registry.registerFct(IntegerCmp("operator_ge", cmp<std::greater_equal<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_SGE>, FctFlags::Pure));
+
+    // TODO: Add Intrinsics, add constant folding.
+    registry.registerFct(FctDesc<ArgInteger, ArgVarArg<ArgInteger>>("max", max, NO_INTRINSIC, FctFlags::None));
 
     // === Float ===
     // Arithmetics

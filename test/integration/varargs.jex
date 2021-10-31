@@ -1,0 +1,4 @@
+// RUN: %jexc -f %s -l -c | FileCheck-12 %s
+// CHECK: something
+
+var a: Integer = max(1, 2, 3);

@@ -12,10 +12,21 @@
 namespace jex {
 
 // Variable argument (at least 1).
-template <typename ArgT>
-struct VarArg {
-    typename ArgT::Type* args = nullptr;
-    size_t argc = 0;
+template <typename T>
+class VarArg {
+    const T* args = nullptr;
+    uint64_t argc = 0;
+
+public:
+    const T* begin() const {
+        return args;
+    }
+    const T* end() const {
+        return args + argc;
+    }
+    size_t size() const {
+        return argc;
+    }
 };
 
 template<typename T, const char* _name>
@@ -28,13 +39,13 @@ struct Arg {
     using ParamType = std::conditional_t<callConv == TypeInfo::CallConv::ByPointer, const T*, T>;
 };
 
-template <typename T, const char* _name>
+template <typename T, const char* _name, TypeInfo::CallConv callConv = (sizeof(T) > 8 ? TypeInfo::CallConv::ByPointer : TypeInfo::CallConv::ByValue)>
 struct ArgValue : public Arg<T, _name> {
     static constexpr TypeKind kind = TypeKind::Value;
 };
 
 template <typename ArgT>
-struct ArgVarArg : public ArgValue<VarArg<typename ArgT::Type>, ArgT::name> {
+struct ArgVarArg : public ArgValue<VarArg<typename ArgT::Type>, ArgT::name, TypeInfo::CallConv::ByPointer> {
     using RetType = void; // VarArg returns are not supported.
     using InnerArg = ArgT;
 };
