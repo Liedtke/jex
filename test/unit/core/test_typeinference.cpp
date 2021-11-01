@@ -27,7 +27,7 @@ void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
 void max(uint32_t* res, const VarArg<uint32_t>* args) {} // LCOV_EXCL_LINE
 void max(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
 
-static void registerTestFcts(Environment& env) {
+void registerTestFcts(Environment& env) {
     Registry registry(env);
     registry.registerType<ArgUInt32>();
     registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass));

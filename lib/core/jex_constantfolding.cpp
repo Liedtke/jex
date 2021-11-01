@@ -162,7 +162,7 @@ void ConstantFolding::visit(AstVarArg& node) {
         const size_t arraySize = node.d_resultType->size() * node.d_args.size();
         size_t allocSizeForArray = align + arraySize;
         // This could be optimized to check for the actually needed alignment gap.
-        Constant constant = Constant::allocate(varArgStructSize + allocSizeForArray);
+        Constant constant = Constant::allocate(varArgStructSize + allocSizeForArray); // NOLINT
         void* ptr = static_cast<char*>(constant.getPtr()) + varArgStructSize;
         void* arrayPtr = std::align(node.d_resultType->alignment(), arraySize, ptr, allocSizeForArray);
         // Initialize VarArg object.
