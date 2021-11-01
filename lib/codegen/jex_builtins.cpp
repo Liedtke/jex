@@ -155,8 +155,8 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(IntegerCmp("operator_le", cmp<std::less_equal<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_SLE>, FctFlags::Pure));
     registry.registerFct(IntegerCmp("operator_ge", cmp<std::greater_equal<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_SGE>, FctFlags::Pure));
 
-    // TODO: Add Intrinsics, add constant folding.
-    registry.registerFct(FctDesc<ArgInteger, ArgVarArg<ArgInteger>>("max", max, NO_INTRINSIC, FctFlags::None));
+    // TODO: Add Intrinsics.
+    registry.registerFct(FctDesc<ArgInteger, ArgVarArg<ArgInteger>>("max", max, NO_INTRINSIC, FctFlags::Pure));
 
     // === Float ===
     // Arithmetics

@@ -12,6 +12,31 @@ namespace jex {
 
 class IntrinsicGen;
 
+// Object representing an argument with variable amount of elements (at least 1).
+template <typename T>
+class VarArg {
+    const T* args = nullptr;
+    uint64_t argc = 0;
+
+public:
+    VarArg() = default;
+    VarArg(const T* args, uint64_t argc)
+    : args(args)
+    , argc(argc) {
+    }
+
+    const T* begin() const {
+        return args;
+    }
+    const T* end() const {
+        return args + argc;
+    }
+    size_t size() const {
+        return argc;
+    }
+};
+
+
 enum class FctFlags {
     None = 0,
     // Function is deterministic and free of side-effects. These functions can be constant folded.

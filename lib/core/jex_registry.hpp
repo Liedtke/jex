@@ -11,24 +11,6 @@
 
 namespace jex {
 
-// Variable argument (at least 1).
-template <typename T>
-class VarArg {
-    const T* args = nullptr;
-    uint64_t argc = 0;
-
-public:
-    const T* begin() const {
-        return args;
-    }
-    const T* end() const {
-        return args + argc;
-    }
-    size_t size() const {
-        return argc;
-    }
-};
-
 template<typename T, const char* _name>
 struct Arg {
     static constexpr char const* name = _name;
