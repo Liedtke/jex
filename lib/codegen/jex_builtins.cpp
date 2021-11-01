@@ -62,11 +62,53 @@ void max(T* res, const VarArg<T>* args) {
     assert(args->size() != 0);
     T maxVal = *args->begin();
     for (T val : *args) {
-        if (val > maxVal) {
+        if (!(val < maxVal)) {
             maxVal = val;
         }
     }
     *res = maxVal;
+}
+
+void generateMax(IntrinsicGen& gen) {
+    llvm::Type* elemType = gen.fct().getArg(0)->getType()->getPointerElementType();
+    llvm::IRBuilder<>& builder = gen.builder();
+    // Extract argc and array pointer from vararg struct.
+    llvm::Value* varArg = gen.fct().getArg(1);
+    llvm::Value* idx0 = llvm::ConstantInt::get(gen.llvmContext(), llvm::APInt(32, 0));
+    llvm::Value* idx1 = llvm::ConstantInt::get(gen.llvmContext(), llvm::APInt(32, 1));
+    llvm::Value* argcPtr = builder.CreateInBoundsGEP(varArg, {idx0, idx1}, "argcPtr");
+    llvm::Value* argc = builder.CreateLoad(argcPtr, "argc");
+    llvm::Value* arrayBegin = builder.CreateLoad(builder.CreateGEP(varArg, {idx0, idx0}), "arrayBegin");
+    llvm::Value* arrayEnd = builder.CreateGEP(arrayBegin, argc, "arrayEnd");
+    // Set max to first element.
+    llvm::Value* firstVal = builder.CreateLoad(arrayBegin);
+    llvm::Value* secondElemPtr = builder.CreateGEP(arrayBegin, idx1, "secondElemPtr");
+    // Check if there is more than one element.
+    llvm::Value* hasMultiElems = builder.CreateICmpNE(argc, llvm::ConstantInt::get(gen.llvmContext(), llvm::APInt(64, 1)));
+    auto* blockLoopEntry = llvm::BasicBlock::Create(gen.llvmContext(), "loopEntry", &gen.fct());
+    auto* blockExit = llvm::BasicBlock::Create(gen.llvmContext(), "loopExit", &gen.fct());
+    llvm::BasicBlock* initBlock = builder.GetInsertBlock();
+    builder.CreateCondBr(hasMultiElems, blockLoopEntry, blockExit);
+    // Generate loop.
+    builder.SetInsertPoint(blockLoopEntry);
+    llvm::PHINode* elemPtrPhi = builder.CreatePHI(arrayBegin->getType(), 2, "elemPtr");
+    elemPtrPhi->addIncoming(secondElemPtr, initBlock);
+    llvm::PHINode* maxValPhi = builder.CreatePHI(elemType, 2, "maxVal");
+    maxValPhi->addIncoming(firstVal, initBlock);
+    llvm::Value* val = builder.CreateLoad(elemPtrPhi, "val");
+    llvm::Value* isGreater = builder.CreateICmpSGT(val, maxValPhi, "valIsGreater");
+    llvm::Value* newMax = builder.CreateSelect(isGreater, val, maxValPhi, "newMax");
+    maxValPhi->addIncoming(newMax, blockLoopEntry);
+    llvm::Value* nextElemPtr = builder.CreateGEP(elemPtrPhi, idx1, "nextElemPtr");
+    elemPtrPhi->addIncoming(nextElemPtr, blockLoopEntry);
+    llvm::Value* hasMore = builder.CreateICmpNE(nextElemPtr, arrayEnd);
+    builder.CreateCondBr(hasMore, blockLoopEntry, blockExit);
+    // End of loop: Store maxVal in result.
+    builder.SetInsertPoint(blockExit);
+    llvm::PHINode* maxVal = builder.CreatePHI(elemType, 2, "finalMax");
+    maxVal->addIncoming(firstVal, initBlock);
+    maxVal->addIncoming(newMax, blockLoopEntry);
+    builder.CreateStore(maxVal, gen.fct().getArg(0));
 }
 
 template <llvm::Instruction::BinaryOps op>
@@ -155,8 +197,7 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(IntegerCmp("operator_le", cmp<std::less_equal<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_SLE>, FctFlags::Pure));
     registry.registerFct(IntegerCmp("operator_ge", cmp<std::greater_equal<>>, IntegerCmpIntr::generate<llvm::CmpInst::Predicate::ICMP_SGE>, FctFlags::Pure));
 
-    // TODO: Add Intrinsics.
-    registry.registerFct(FctDesc<ArgInteger, ArgVarArg<ArgInteger>>("max", max, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgInteger, ArgVarArg<ArgInteger>>("max", max, generateMax, FctFlags::Pure));
 
     // === Float ===
     // Arithmetics
@@ -175,6 +216,8 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(FloatCmp("operator_gt", cmp<std::greater<>>, FloatCmpIntr::generate<llvm::CmpInst::Predicate::FCMP_OGT>, FctFlags::Pure));
     registry.registerFct(FloatCmp("operator_le", cmp<std::less_equal<>>, FloatCmpIntr::generate<llvm::CmpInst::Predicate::FCMP_OLE>, FctFlags::Pure));
     registry.registerFct(FloatCmp("operator_ge", cmp<std::greater_equal<>>, FloatCmpIntr::generate<llvm::CmpInst::Predicate::FCMP_OGE>, FctFlags::Pure));
+
+    registry.registerFct(FctDesc<ArgFloat, ArgVarArg<ArgFloat>>("max", max, NO_INTRINSIC, FctFlags::Pure));
 
     // === String ===
     registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr, NO_INTRINSIC, FctFlags::Pure));

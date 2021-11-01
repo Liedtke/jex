@@ -1,4 +1,4 @@
-// RUN: %jexc -f %s -l -c | FileCheck-12 %s
+// RUN: %jexc -f %s -l -c -i | FileCheck-12 %s
 // Vararg type.
 // CHECK: %_vararg_Integer = type { i64*, i64 }
 // Alloca for array with variable arguments.
@@ -10,7 +10,7 @@
 // CHECK-NEXT:   store i64 1, i64* %arrayptr, align 4
 // CHECK-NEXT:   %arrayptr1 = getelementptr [3 x i64], [3 x i64]* %argarray, i32 0, i32 1
 // CHECK-NEXT:   store i64 2, i64* %arrayptr1, align 4
-// CHECK-NEXT:   call void @_operator_add_Integer_Integer__intrinsic(i64* %res_operator_add, i64 3, i64 4)
+// CHECK-NEXT:   call void @_operator_add_Integer_Integer(i64* %res_operator_add, i64 3, i64 4)
 // CHECK-NEXT:   %0 = load i64, i64* %res_operator_add, align 4
 // CHECK-NEXT:   %arrayptr2 = getelementptr [3 x i64], [3 x i64]* %argarray, i32 0, i32 2
 // CHECK-NEXT:   store i64 %0, i64* %arrayptr2, align 4

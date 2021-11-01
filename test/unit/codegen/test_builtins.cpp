@@ -124,6 +124,12 @@ static TestEvalT evals[] = {
     {"Float = 12.3 / 0.0", std::numeric_limits<double>::infinity()},
     {"Float = -1.234", -1.234},
     {"Float = --1.234", 1.234},
+    {"Float = max(-2.0, -1.0, -3.0)", -1.0},
+    {"Float = max(0.0, 1.1, 1.1, 0.0)", 1.1},
+    {"Float = max(1.0/0.0, 2.0)", std::numeric_limits<double>::infinity()},
+    {"Float = max(-1.0/0.0, -2.0)", -2.0},
+    {"Float = max(-1.0/0.0, 2.0/0.0)", std::numeric_limits<double>::infinity()},
+    {"Float = max(-1.0/0.0, -2.0/0.0)", -std::numeric_limits<double>::infinity()},
     // Bool comparisons
     {"Bool = true == true", true},
     {"Bool = true == false", false},
