@@ -81,7 +81,7 @@ void generateMax(IntrinsicGen& gen) {
     llvm::Value* arrayBegin = builder.CreateLoad(builder.CreateGEP(varArg, {idx0, idx0}), "arrayBegin");
     llvm::Value* arrayEnd = builder.CreateGEP(arrayBegin, argc, "arrayEnd");
     // Set max to first element.
-    llvm::Value* firstVal = builder.CreateLoad(arrayBegin);
+    llvm::Value* firstVal = builder.CreateLoad(arrayBegin, "firstVal");
     llvm::Value* secondElemPtr = builder.CreateGEP(arrayBegin, idx1, "secondElemPtr");
     // Check if there is more than one element.
     llvm::Value* hasMultiElems = builder.CreateICmpNE(argc, llvm::ConstantInt::get(gen.llvmContext(), llvm::APInt(64, 1)));
@@ -101,7 +101,7 @@ void generateMax(IntrinsicGen& gen) {
     maxValPhi->addIncoming(newMax, blockLoopEntry);
     llvm::Value* nextElemPtr = builder.CreateGEP(elemPtrPhi, idx1, "nextElemPtr");
     elemPtrPhi->addIncoming(nextElemPtr, blockLoopEntry);
-    llvm::Value* hasMore = builder.CreateICmpNE(nextElemPtr, arrayEnd);
+    llvm::Value* hasMore = builder.CreateICmpNE(nextElemPtr, arrayEnd, "hasMore");
     builder.CreateCondBr(hasMore, blockLoopEntry, blockExit);
     // End of loop: Store maxVal in result.
     builder.SetInsertPoint(blockExit);

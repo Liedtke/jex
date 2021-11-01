@@ -115,6 +115,8 @@ static TestEvalT evals[] = {
     {"Integer = max(1, 2)", 2_i64},
     {"Integer = max(-1, 42, 11, 27)", 42_i64},
     {"Integer = max(-10, -10-1, -10+1)", -9_i64},
+    {"Integer = max(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)", 20_i64},
+    {"Integer = max(1, max(2, max(3, max(4), 5), 6), 7)", 7_i64},
     // Float arithmetics
     {"Float = 1.1 + 2.2", 3.3},
     {"Float = 1.1 - 2.2", -1.1},
