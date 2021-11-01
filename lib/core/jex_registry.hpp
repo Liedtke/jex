@@ -45,7 +45,7 @@ struct ArgValue : public Arg<T, _name> {
 };
 
 template <typename ArgT>
-struct ArgVarArg : public ArgValue<VarArg<typename ArgT::Type>, ArgT::name, TypeInfo::CallConv::ByPointer> {
+struct ArgVarArg : public ArgValue<VarArg<typename ArgT::ParamType>, ArgT::name, TypeInfo::CallConv::ByPointer> {
     using RetType = void; // VarArg returns are not supported.
     using InnerArg = ArgT;
 };

@@ -183,6 +183,25 @@ public:
     }
 };
 
+class AstVarArg : public IAstExpression {
+public:
+    std::vector<IAstExpression*> d_args;
+
+    AstVarArg(const Location& loc, TypeInfoId type)
+    : IAstExpression(loc, type) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+
+    void addArg(IAstExpression* arg);
+
+    bool isTemporary() const override {
+        return false;
+    }
+};
+
 class AstArgList : public IAstNode {
 public:
     std::vector<IAstExpression*> d_args;

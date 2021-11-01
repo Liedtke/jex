@@ -116,7 +116,7 @@ void ConstantFolding::visit(AstFctCall& node) {
         foldFunctionCall(node, *node.d_fctInfo, node.d_args->d_args);
     } else {
         // Move inner constants to permanent constant store if any.
-        for (IAstExpression*& arg : node.d_args->d_args) {
+        for (IAstExpression* arg : node.d_args->d_args) {
             storeIfConstant(arg);
         }
     }
@@ -147,6 +147,20 @@ void ConstantFolding::visit(AstIdentifier& node) {
 
 void ConstantFolding::visit(AstVariableDef& node) {
     tryFoldAndStore(node.d_expr);
+}
+
+void ConstantFolding::visit(AstVarArg& node) {
+    bool isConst = true;
+    for (IAstExpression*& arg : node.d_args) {
+        isConst &= tryFold(arg);
+    }
+    if (isConst) {
+        // TODO: Create constant for varArg
+    }
+    for (IAstExpression* arg : node.d_args) {
+        storeIfConstant(arg);
+    }
+
 }
 
 } // namespace jex

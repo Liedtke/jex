@@ -39,7 +39,7 @@ bool FctInfo::matches(const std::vector<TypeInfoId>& argTypes) const {
         }
         ++argIter;
         // Implement VarArg as greedy for now.
-        while (param.isVarArg && *argIter == param.type) {
+        while (param.isVarArg && argIter != argTypes.end() && *argIter == param.type) {
             ++argIter;
         }
     }

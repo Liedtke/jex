@@ -89,6 +89,26 @@ void TypeInference::visit(AstFctCall& node) {
     if (resolveArguments(node, argTypes)) {
         node.d_fctInfo = resolveFct(node, node.d_fct->d_name, argTypes);
     }
+    // Handle var args.
+    if (node.d_fctInfo != nullptr) {
+        auto argIter = node.d_args->d_args.begin();
+        for (const ParamInfo& param : node.d_fctInfo->d_params) {
+            if (param.isVarArg) {
+                auto varArgIter = argIter;
+                AstVarArg* varArg = d_env.createNode<AstVarArg>((*argIter)->d_loc, param.type);
+                while (varArgIter != node.d_args->d_args.end() && (*varArgIter)->d_resultType == param.type) {
+                    varArg->addArg(*varArgIter);
+                    ++varArgIter;
+                }
+                assert(argIter != varArgIter && "Every vararg has to have at least one element");
+                // Insert vararg into arglist (replacing the original arguments).
+                *argIter = varArg;
+                // Remove remaining original arguments from argument list that were moved to the vararg.
+                node.d_args->d_args.erase(argIter + 1, varArgIter);
+            }
+            ++argIter;
+        }
+    }
 }
 
 void TypeInference::visit(AstIf& node) {

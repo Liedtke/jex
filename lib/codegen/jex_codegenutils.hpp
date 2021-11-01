@@ -24,6 +24,7 @@ public:
     llvm::Type* getType(TypeInfoId type);
     llvm::Type* getParamType(TypeInfoId type);
     llvm::Type* getParamType(const ParamInfo& param);
+    llvm::Type* getVarArgType(TypeInfoId type);
     llvm::Type* getReturnType(TypeInfoId type);
     llvm::FunctionCallee getOrCreateFct(const FctInfo* fctInfo);
 };

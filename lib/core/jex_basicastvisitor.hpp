@@ -15,6 +15,7 @@ public:
     void visit(AstArgList& node) override;
     void visit(AstVariableDef& node) override;
     void visit(AstConstantExpr& node) override;
+    void visit(AstVarArg& node) override;
     void visit(AstRoot& node) override;
 };
 

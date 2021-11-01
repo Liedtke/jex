@@ -9,6 +9,11 @@ void AstArgList::addArg(IAstExpression* arg) {
     d_loc = Location::combine(d_loc, arg->d_loc);
 }
 
+void AstVarArg::addArg(IAstExpression* arg) {
+    d_args.push_back(arg);
+    d_loc = Location::combine(d_loc, arg->d_loc);
+}
+
 AstConstantExpr::AstConstantExpr(IAstExpression& replaced)
 : IAstExpression(replaced.d_loc, replaced.d_resultType) {
     std::stringstream name;
