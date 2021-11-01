@@ -13,6 +13,7 @@ class AstArgList;
 class AstVariableDef;
 class AstConstantExpr;
 class AstUnaryExpr;
+class AstVarArg;
 class AstRoot;
 
 class IAstVisitor {
@@ -28,6 +29,7 @@ public:
     virtual void visit(AstArgList& node) = 0;
     virtual void visit(AstConstantExpr& node) = 0;
     virtual void visit(AstVariableDef& node) = 0;
+    virtual void visit(AstVarArg& node) = 0;
     virtual void visit(AstRoot& node) = 0;
 };
 

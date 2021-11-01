@@ -12,8 +12,7 @@ FctLibrary::~FctLibrary() = default;
 void FctLibrary::registerFct(FctInfo&& fctInfo) {
     std::vector<FctInfo*>& overloads = d_fctsByName[fctInfo.d_name];
     for (const FctInfo* overload : overloads) {
-        // TODO: Adapt if implicit conversions support to check for equality.
-        if (overload->matches(fctInfo.d_paramTypes)) {
+        if (overload->equals(fctInfo.d_params)) {
             std::stringstream err;
             err << "Duplicate function '" << fctInfo << "'";
             throw InternalError(err.str());

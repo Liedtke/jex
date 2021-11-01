@@ -37,7 +37,9 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}} -DASAN=${{matrix.config.asan}}
 
     - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
+      run: |
+        threads=`nproc`
+        cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --parallel $threads
 
     - name: Test
       working-directory: ${{github.workspace}}/build
@@ -60,4 +62,6 @@ jobs:
 
     - name: Run clang-tidy
       working-directory: ${{github.workspace}}/build
-      run: run-clang-tidy-12 .
+      run:  |
+        threads=`nproc`
+        run-clang-tidy-12 -j $threads .

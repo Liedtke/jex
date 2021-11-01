@@ -10,6 +10,7 @@
 #include <type_traits>
 
 namespace jex {
+
 template<typename T, const char* _name>
 struct Arg {
     static constexpr char const* name = _name;
@@ -20,15 +21,21 @@ struct Arg {
     using ParamType = std::conditional_t<callConv == TypeInfo::CallConv::ByPointer, const T*, T>;
 };
 
-template<typename T, const char* _name>
+template <typename T, const char* _name, TypeInfo::CallConv callConv = (sizeof(T) > 8 ? TypeInfo::CallConv::ByPointer : TypeInfo::CallConv::ByValue)>
 struct ArgValue : public Arg<T, _name> {
     static constexpr TypeKind kind = TypeKind::Value;
 };
 
-template<typename T, const char* _name>
+template <typename ArgT>
+struct ArgVarArg : public ArgValue<VarArg<typename ArgT::ParamType>, ArgT::name, TypeInfo::CallConv::ByPointer> {
+    using RetType = void; // VarArg returns are not supported.
+    using InnerArg = ArgT;
+};
+
+template <typename T, const char* _name>
 struct ArgObject : public Arg<T, _name> {
     static constexpr TypeKind kind = TypeKind::Complex;
-    // Always pass by pointer as copying is non-trivial!
+    // Always pass by pointer as copying is non-trivial.
     static constexpr TypeInfo::CallConv callConv = TypeInfo::CallConv::ByPointer;
     using ParamType = const T*;
 };
@@ -93,6 +100,16 @@ struct GenericLifetimeFctsComplex : public GenericLifetimeFcts<ArgT> {
     }
 };
 
+template <typename T>
+bool isVarArgT(const ArgVarArg<T>& /*unused*/) {
+    return true;
+}
+
+template <typename T>
+bool isVarArgT(const T& /*unused*/) {
+    return false;
+}
+
 template<typename ArgRet, typename... ArgT>
 struct FctDesc {
     using FctType = void(*)(typename ArgRet::RetType, typename ArgT::ParamType...);
@@ -103,6 +120,7 @@ struct FctDesc {
     IntrinsicFct intrinsicFct;
     std::string retTypeName;
     std::vector<std::string> argTypeNames;
+    std::vector<bool> isVarArg;
     FctFlags flags;
 
     template<typename... T, size_t... I>
@@ -124,6 +142,7 @@ struct FctDesc {
     , intrinsicFct(std::move(intrinsicFct))
     , retTypeName(ArgRet::name)
     , argTypeNames{ArgT::name...}
+    , isVarArg{isVarArgT(ArgT())...}
     , flags(flags) {
     }
 };
@@ -160,13 +179,14 @@ public:
     void registerFct(FctDesc<T...>&& desc) {
         // Resolve return and parameter types.
         TypeInfoId retTypeInfo = d_types.getType(desc.retTypeName);
-        std::vector<TypeInfoId> paramTypeInfos;
-        std::transform(desc.argTypeNames.begin(), desc.argTypeNames.end(),
-            std::back_inserter(paramTypeInfos),
-            [this](const std::string& name) { return d_types.getType(name); });
+        std::vector<ParamInfo> paramInfos;
+        const auto& argTypeNames = desc.argTypeNames;
+        for (size_t i = 0; i < argTypeNames.size(); ++i) {
+            paramInfos.push_back({d_types.getType(argTypeNames[i]), desc.isVarArg[0]});
+        }
         // Add function to function library.
-        d_fcts.registerFct(FctInfo(desc.name, reinterpret_cast<void*>(desc.fctPtr),
-                           FctDesc<T...>::wrapper, retTypeInfo, paramTypeInfos, desc.intrinsicFct, desc.flags));
+        d_fcts.registerFct(FctInfo(desc.name, reinterpret_cast<void*>(desc.fctPtr), FctDesc<T...>::wrapper,
+            retTypeInfo, std::move(paramInfos), desc.intrinsicFct, desc.flags));
     }
 };
 

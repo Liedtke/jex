@@ -35,6 +35,12 @@ void BasicAstVisitor::visit(AstArgList& node) {
     }
 }
 
+void BasicAstVisitor::visit(AstVarArg& node) {
+    for (IAstExpression* expr : node.d_args) {
+        expr->accept(*this);
+    }
+}
+
 void BasicAstVisitor::visit(AstVariableDef& node) {
     node.d_name->accept(*this);
     node.d_type->accept(*this);

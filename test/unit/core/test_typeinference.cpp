@@ -4,6 +4,7 @@
 #include <jex_compileenv.hpp>
 #include <jex_errorhandling.hpp>
 #include <jex_parser.hpp>
+#include <jex_prettyprinter.hpp>
 #include <jex_registry.hpp>
 #include <jex_symboltable.hpp>
 #include <jex_typeinference.hpp>
@@ -23,6 +24,34 @@ constexpr char typeNameInteger[] = "Integer";
 using ArgInteger = ArgValue<int64_t, typeNameInteger>;
 void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
 void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
+void max(uint32_t* res, const VarArg<uint32_t>* args) {} // LCOV_EXCL_LINE
+void max(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
+
+void registerTestFcts(Environment& env) {
+    Registry registry(env);
+    registry.registerType<ArgUInt32>();
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("add", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_add", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_sub", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mul", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_div", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mod", add));
+    // For these tests, the comparison returns UInt32, although it should certainly be bool.
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_eq", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ne", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_lt", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_gt", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_le", add));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ge", add));
+    // Add unary operators.
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("operator_uminus", pass));
+    // Same function without var arg for exactly 2 arguments.
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("max", max));
+    // Function with var arg.
+    registry.registerFct(FctDesc<ArgUInt32, ArgVarArg<ArgUInt32>>("max", max));
+}
+
 } // anonymous namespace
 
 template <typename ParamT>
@@ -34,29 +63,11 @@ protected:
 public:
     TestTypeInferenceBase() {
         test::registerBuiltIns(d_env);
-        Registry registry(d_env);
-        registry.registerType<ArgUInt32>();
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("pass", pass));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("add", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_add", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_sub", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mul", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_div", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_mod", add));
-        // For these tests, the comparison returns UInt32, although it should certainly be bool.
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_eq", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ne", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_lt", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_gt", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_le", add));
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ge", add));
-        // Add unary operators.
-        registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("operator_uminus", pass));
+        registerTestFcts(d_env);
     }
 
     void SetUp() override {
         d_compileEnv = std::make_unique<CompileEnv>(d_env);
-        // TODO: Add support for proper type inference of literals.
         d_compileEnv->symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", d_env.types().getType("UInt32"));
     }
 };
@@ -103,19 +114,24 @@ static TestErrorT errorTests[] = {
         "1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'",
     }},
     {"var a: UInt32 = if(x, x, x);",
-        {"1.17-1.26: Error: 'if' function requires first argument to be of type 'Bool', 'UInt32' given"}},
+        {"1.17-1.27: Error: 'if' function requires first argument to be of type 'Bool', 'UInt32' given"}},
     {"var a: UInt32 = if(true, x, true);",
-        {"1.17-1.32: Error: 'if' function requires second and third argument to have the same type, 'UInt32' and 'Bool' given"}},
+        {"1.17-1.33: Error: 'if' function requires second and third argument to have the same type, 'UInt32' and 'Bool' given"}},
     {"var a: Bool = if(true, x, x+1);",
         // No further errors are reported as the inner call is unresolved.
         {"1.27-1.29: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
     {"var a: Integer = if(true, x, x);",
-        {"1.1-1.30: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
+        {"1.1-1.31: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
     {"var a: Integer = if(true, x, x, x);",
-        {"1.18-1.33: Error: 'if' function requires exactly 3 arguments, 4 given"}},
+        {"1.18-1.34: Error: 'if' function requires exactly 3 arguments, 4 given"}},
     {"var a: Bool = -(x+1);",
         // No further errors are reported as the inner call is unresolved.
         {"1.17-1.19: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
+    // Var Args: At minimum one argument required.
+    {"var a: UInt32 = max();",
+        {"1.17-1.21: Error: No matching candidate found for function 'max()'"}},
+    {"var a: UInt32 = max(1);",
+        {"1.17-1.22: Error: No matching candidate found for function 'max(Integer)'"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInferenceError,
@@ -143,6 +159,9 @@ static const char* successTests[] = {
     "var a: UInt32 = if(true, if(false, x*x, x+x), x);",
     "var a: UInt32 = -x;",
     "var a: UInt32 = --------x;",
+    "var a: UInt32 = max(x, x);", // special registered function
+    "var a: UInt32 = max(x, x, x);", // var arg
+    "var a: UInt32 = max(x);", // var arg
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInference,
@@ -197,5 +216,31 @@ static TestOpNameExp opNameTests[] = {
 INSTANTIATE_TEST_SUITE_P(SuiteOpName,
                          TestOpName,
                          testing::ValuesIn(opNameTests));
+
+TEST(TypeInference, varArgs) {
+    Environment env;
+    test::registerBuiltIns(env);
+    registerTestFcts(env);
+    CompileEnv compileEnv(env);
+    compileEnv.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", env.types().getType("UInt32"));
+    std::string code = std::string(R"(
+var a: UInt32 = max(x, x+x); // Exactly two args --> no vararg
+var b: UInt32 = max(x); // vararg
+var c: UInt32 = max(x, x, x, x);
+)");
+    Parser parser(compileEnv, code.c_str());
+    parser.parse();
+    TypeInference typeInference(compileEnv);
+    typeInference.run();
+    std::stringstream out;
+    PrettyPrinter printer(out);
+    compileEnv.getRoot()->accept(printer);
+    const char* expected =
+R"(var a: UInt32 = max(x, (x + x));
+var b: UInt32 = max([x]);
+var c: UInt32 = max([x, x, x, x]);
+)";
+    ASSERT_EQ(expected, out.str());
+}
 
 } // namespace jex

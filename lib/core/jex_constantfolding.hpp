@@ -47,6 +47,7 @@ private:
     void visit(AstIf& node) override;
     void visit(AstIdentifier& node) override;
     void visit(AstVariableDef& node) override;
+    void visit(AstVarArg& node) override;
 
     bool tryFold(IAstExpression*& expr);
     bool tryFoldAndStore(IAstExpression*& expr);

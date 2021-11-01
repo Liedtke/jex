@@ -5,6 +5,8 @@
 #include <jex_fctinfo.hpp>
 #include <jex_fctlibrary.hpp>
 
+#include <cstring>
+
 namespace jex {
 
 void* ConstantOrLiteral::getPtr() {
@@ -60,7 +62,6 @@ void ConstantFolding::storeIfConstant(IAstExpression* expr) {
         auto asConstExpr = dynamic_cast<AstConstantExpr*>(expr);
         assert(asConstExpr != nullptr && "expression has to be an AstConstantExpr node");
         d_env.constants().insert(asConstExpr->d_constantName, iter->second.release());
-        d_constants.erase(iter);
     }
 }
 
@@ -116,7 +117,7 @@ void ConstantFolding::visit(AstFctCall& node) {
         foldFunctionCall(node, *node.d_fctInfo, node.d_args->d_args);
     } else {
         // Move inner constants to permanent constant store if any.
-        for (IAstExpression*& arg : node.d_args->d_args) {
+        for (IAstExpression* arg : node.d_args->d_args) {
             storeIfConstant(arg);
         }
     }
@@ -147,6 +148,43 @@ void ConstantFolding::visit(AstIdentifier& node) {
 
 void ConstantFolding::visit(AstVariableDef& node) {
     tryFoldAndStore(node.d_expr);
+}
+
+void ConstantFolding::visit(AstVarArg& node) {
+    bool isConst = true;
+    for (IAstExpression*& arg : node.d_args) {
+        isConst &= tryFold(arg);
+    }
+    if (isConst) {
+        // Allocate Constant holding vararg object and array.
+        const size_t varArgStructSize = sizeof(VarArg<void>);
+        size_t align = std::max(alignof(VarArg<void>), node.d_resultType->alignment());
+        const size_t arraySize = node.d_resultType->size() * node.d_args.size();
+        size_t allocSizeForArray = align + arraySize;
+        // This could be optimized to check for the actually needed alignment gap.
+        Constant constant = Constant::allocate(varArgStructSize + allocSizeForArray); // NOLINT
+        void* ptr = static_cast<char*>(constant.getPtr()) + varArgStructSize;
+        void* arrayPtr = std::align(node.d_resultType->alignment(), arraySize, ptr, allocSizeForArray);
+        // Initialize VarArg object.
+        new (constant.getPtr()) VarArg<void>(arrayPtr, node.d_args.size());
+        // Copy arguments over.
+        auto elemPtr = static_cast<char*>(arrayPtr);
+        for (IAstExpression* arg : node.d_args) {
+            size_t elemSize = arg->d_resultType->size();
+            std::memcpy(elemPtr, getPtrFor(arg), elemSize);
+            elemPtr += elemSize;
+        }
+        // Create and store Constant ast node replacing the AstVarArg.
+        d_foldedExpr = d_env.createNode<AstConstantExpr>(node);
+        d_constants.emplace(d_foldedExpr, std::move(constant));
+    }
+    for (IAstExpression* arg : node.d_args) {
+        // As the VarArg doesn't own the memory, we have to store the constants independently
+        // of whether the vararg is constant or not.
+        // This means that these constants will also be kept alive even if the whole call gets
+        // folded. TODO: Could this be optimized easily?
+        storeIfConstant(arg);
+    }
 }
 
 } // namespace jex

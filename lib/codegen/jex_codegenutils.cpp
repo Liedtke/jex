@@ -38,6 +38,26 @@ llvm::Type* CodeGenUtils::getParamType(TypeInfoId type) {
     }
 }
 
+llvm::Type* CodeGenUtils::getParamType(const ParamInfo& param) {
+    if (param.isVarArg) {
+        return getVarArgType(param.type)->getPointerTo();
+    }
+    return getParamType(param.type);
+}
+
+llvm::Type* CodeGenUtils::getVarArgType(TypeInfoId type) {
+    std::string name("_vararg_");
+    name += type->name();
+    llvm::Type* varArgTy = llvm::StructType::getTypeByName(d_module.llvmContext(), name);
+    if (varArgTy) {
+        return varArgTy;
+    }
+    // Create type.
+    llvm::Type* elemPtrTy = getType(type)->getPointerTo();
+    llvm::Type* i64Ty = llvm::Type::getInt64Ty(d_module.llvmContext());
+    return llvm::StructType::create({elemPtrTy, i64Ty}, name);
+}
+
 llvm::Type* CodeGenUtils::getReturnType(TypeInfoId type) {
     return getType(type)->getPointerTo();
 }
@@ -47,8 +67,8 @@ llvm::FunctionCallee CodeGenUtils::getOrCreateFct(const FctInfo* fctInfo) {
     llvm::Type* voidTy = llvm::Type::getVoidTy(d_module.llvmContext());
     std::vector<llvm::Type*> params;
     params.push_back(getReturnType(fctInfo->d_retType));
-    for (TypeInfoId paramType : fctInfo->d_paramTypes) {
-        params.push_back(getParamType(paramType));
+    for (const ParamInfo& param : fctInfo->d_params) {
+        params.push_back(getParamType(param));
     }
     llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, params, false);
     if (d_env.useIntrinsics() && fctInfo->d_intrinsicFct) {

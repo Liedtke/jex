@@ -111,6 +111,10 @@ static TestEvalT evals[] = {
     {"Integer = 4 shrs 2", 1_i64},
     {"Integer = -4 shrz 62", 3_i64},
     {"Integer = 120 shl 1 shl 2", 120_i64 << 3},
+    {"Integer = max(1)", 1_i64},
+    {"Integer = max(1, 2)", 2_i64},
+    {"Integer = max(-1, 42, 11, 27)", 42_i64},
+    {"Integer = max(-10, -10-1, -10+1)", -9_i64},
     // Float arithmetics
     {"Float = 1.1 + 2.2", 3.3},
     {"Float = 1.1 - 2.2", -1.1},
@@ -120,6 +124,12 @@ static TestEvalT evals[] = {
     {"Float = 12.3 / 0.0", std::numeric_limits<double>::infinity()},
     {"Float = -1.234", -1.234},
     {"Float = --1.234", 1.234},
+    {"Float = max(-2.0, -1.0, -3.0)", -1.0},
+    {"Float = max(0.0, 1.1, 1.1, 0.0)", 1.1},
+    {"Float = max(1.0/0.0, 2.0)", std::numeric_limits<double>::infinity()},
+    {"Float = max(-1.0/0.0, -2.0)", -2.0},
+    {"Float = max(-1.0/0.0, 2.0/0.0)", std::numeric_limits<double>::infinity()},
+    {"Float = max(-1.0/0.0, -2.0/0.0)", -std::numeric_limits<double>::infinity()},
     // Bool comparisons
     {"Bool = true == true", true},
     {"Bool = true == false", false},

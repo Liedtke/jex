@@ -234,6 +234,34 @@ void CodeGenVisitor::visit(AstUnaryExpr& node) {
     d_unwind->add(node, d_result);
 }
 
+void CodeGenVisitor::visit(AstVarArg& node) {
+    // Create Array.
+    size_t argc = node.d_args.size();
+    llvm::Type* elemTy = d_utils->getParamType(node.d_resultType);
+    llvm::ArrayType* arrayTy = llvm::ArrayType::get(elemTy, argc);
+    llvm::Value* array = new llvm::AllocaInst(arrayTy, 0, "argarray", &d_currFct->getEntryBlock());
+    size_t i = 0;
+    llvm::Value* idx0 = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(32, 0));
+    for (IAstExpression* expr : node.d_args) {
+        llvm::Value* val = visitExpression(*expr);
+        llvm::Value* idxI = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(32, i));
+        llvm::Value* arrayPtr = d_builder->CreateGEP(arrayTy, array, {idx0, idxI}, "arrayptr");
+        d_builder->CreateStore(val, arrayPtr);
+        ++i;
+    }
+    // Create VarArg struct.
+    llvm::Type* varArgTy = d_utils->getVarArgType(node.d_resultType);
+    llvm::Value* varArg = new llvm::AllocaInst(varArgTy, 0, "vararg", &d_currFct->getEntryBlock());
+    llvm::Value* argArrayPtr = d_builder->CreateGEP(varArgTy, varArg, {idx0, idx0}, "varargarrayptr");
+    llvm::Value* arrayBegin = d_builder->CreateGEP(arrayTy, array, {idx0, idx0}, "arraybegin");
+    d_builder->CreateStore(arrayBegin, argArrayPtr);
+    llvm::Value* idx1 = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(32, 1));
+    llvm::Value* argcPtr = d_builder->CreateGEP(varArgTy, varArg, {idx0, idx1}, "varargargcptr");
+    llvm::Value* argcVal = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(64, argc));
+    d_builder->CreateStore(argcVal, argcPtr);
+    d_result = varArg;
+}
+
 void CodeGenVisitor::visit(AstFctCall& node) {
     // Visit arguments.
     std::vector<llvm::Value*> args({nullptr}); // First arg will be result alloca.
