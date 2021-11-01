@@ -119,12 +119,12 @@ struct GenericLifetimeFctsComplex : public GenericLifetimeFcts<ArgT> {
 };
 
 template <typename T>
-bool isVarArgT(const ArgVarArg<T>&) {
+bool isVarArgT(const ArgVarArg<T>& /*unused*/) {
     return true;
 }
 
 template <typename T>
-bool isVarArgT(const T&) {
+bool isVarArgT(const T& /*unused*/) {
     return false;
 }
 
