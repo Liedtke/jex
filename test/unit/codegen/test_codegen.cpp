@@ -645,7 +645,7 @@ TEST(Codegen, constFoldedValue) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    ConstantFolding constFolding(compileEnv);
+    ConstantFolding constFolding(compileEnv, true);
     constFolding.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();
@@ -679,7 +679,7 @@ TEST(Codegen, constFoldedStruct) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    ConstantFolding constFolding(compileEnv);
+    ConstantFolding constFolding(compileEnv, true);
     constFolding.run();
     CodeGen codeGen(compileEnv, OptLevel::O0);
     codeGen.createIR();

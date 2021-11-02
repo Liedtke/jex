@@ -38,7 +38,7 @@ TEST_P(TestParserError, test) {
 
 static TestExp errorTests[] = {
     // var def
-    {"x", "1.1-1.1: Error: Unexpected identifier 'x', expecting 'var' or end of file"},
+    {"x", "1.1-1.1: Error: Unexpected identifier 'x', expecting 'var', 'const' or end of file"},
     {"var ", "1.5-1.5: Error: Unexpected end of file, expecting identifier"},
     {"var a", "1.6-1.6: Error: Unexpected end of file, expecting ':'"},
     {"var a: 1", "1.8-1.8: Error: Unexpected integer literal '1', expecting identifier"},
@@ -46,7 +46,7 @@ static TestExp errorTests[] = {
     {"var a: Type = ", "1.15-1.15: Error: Unexpected end of file, expecting literal, identifier, '-' or '('"},
     {"var a: Type = 1", "1.16-1.16: Error: Unexpected end of file, expecting ';'"},
     {"var a: x = 1;", "1.8-1.8: Error: Invalid type: 'x' is not a type"},
-    {"var a: Type = 1;;", "1.17-1.17: Error: Unexpected ';', expecting 'var' or end of file"},
+    {"var a: Type = 1;;", "1.17-1.17: Error: Unexpected ';', expecting 'var', 'const' or end of file"},
     // TODO: Treat variables and types as different symbols without collisions?
     {"var Type: Type = 1;", "1.5-1.8: Error: Duplicate identifier 'Type'"},
     // expressions
@@ -88,6 +88,7 @@ static TestExp errorTests[] = {
     {"var a: Type = 1 === 2;", "1.19-1.19: Error: Unexpected '=', expecting literal, identifier, '-' or '('"},
     {"var a: Type = 1 <> 2;", "1.18-1.18: Error: Unexpected operator '>', expecting literal, identifier, '-' or '('"},
     {"var a: Type = !false;", "1.15-1.15: Error: Unexpected invalid token '!', expecting literal, identifier, '-' or '('"},
+    {"var const:", "1.5-1.9: Error: Unexpected 'const', expecting identifier"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserError,

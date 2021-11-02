@@ -45,6 +45,7 @@ public:
     void visit(AstIf& node) override;
     void visit(AstConstantExpr& node) override;
     void visit(AstVarArg& node) override;
+    void visit(AstIdentifier& node) override;
 
 private:
     llvm::Value* visitExpression(IAstExpression& node);

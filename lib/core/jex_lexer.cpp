@@ -71,6 +71,8 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "'='";
         case Token::Kind::Var:
             return str << "'var'";
+        case Token::Kind::Const:
+            return str << "'const'";
     }
     return str; // LCOV_EXCL_LINE unreachable
 }
@@ -245,6 +247,9 @@ Token Lexer::getNext() {
             // TODO: use unordered_map or similar for lookup of reserved keywords.
             if (text == "var") {
                 return setToken(Token::Kind::Var);
+            }
+            if (text == "const") {
+                return setToken(Token::Kind::Const);
             }
             if (text == "true" || text == "false") {
                 return setToken(Token::Kind::LiteralBool);

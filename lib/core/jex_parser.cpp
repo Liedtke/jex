@@ -107,10 +107,11 @@ AstRoot* Parser::parseRoot() {
             case Token::Kind::Eof:
                 return root;
             case Token::Kind::Var:
+            case Token::Kind::Const:
                 root->d_varDefs.push_back(parseVariableDef());
                 break;
             default:
-                throwUnexpected("'var' or end of file");
+                throwUnexpected("'var', 'const' or end of file");
         }
     }
 }
@@ -168,7 +169,7 @@ IAstExpression* Parser::parseIdentOrCall() {
     if (d_currToken.kind == Token::Kind::ParensL) {
         Symbol::Kind symKind = ident->d_symbol->kind;
         if (symKind != Symbol::Kind::Function && symKind != Symbol::Kind::Unresolved) {
-            d_env.createError(ident->d_loc, "Invalid call: '" + std::string(ident->d_name) + "' is not a function");
+            d_env.createError(ident, "Invalid call: '" + std::string(ident->d_name) + "' is not a function");
         }
         AstArgList* args = parseArgList();
         TypeInfoId unresolved = d_env.typeSystem().unresolved();
@@ -181,7 +182,7 @@ IAstExpression* Parser::parseIdentOrCall() {
     // regular identifier
     Symbol::Kind symKind = ident->d_symbol->kind;
     if (symKind != Symbol::Kind::Variable && symKind != Symbol::Kind::Unresolved) {
-        d_env.createError(ident->d_loc, "Invalid expression: '" + std::string(ident->d_name) + "' is not a variable");
+        d_env.createError(ident, "Invalid expression: '" + std::string(ident->d_name) + "' is not a variable");
     }
     return ident;
 }
@@ -299,10 +300,20 @@ AstLiteralExpr* Parser::parseLiteralBool() {
     return res;
 }
 
+static VariableKind getVariableKind(const Token& token) {
+    if (token.kind == Token::Kind::Var) {
+        return VariableKind::Var;
+    } else {
+        assert(token.kind == Token::Kind::Const);
+        return VariableKind::Const;
+    }
+}
+
 AstVariableDef* Parser::parseVariableDef() {
-    assert(d_currToken.kind == Token::Kind::Var);
+    assert(d_currToken.kind == Token::Kind::Var || d_currToken.kind == Token::Kind::Const);
     const Location beginLoc = d_currToken.location;
-    getNextToken(); // consume 'var'
+    VariableKind varKind = getVariableKind(d_currToken);
+    getNextToken(); // consume variable kind keyword.
     if (d_currToken.kind != Token::Kind::Ident) {
         throwUnexpected("identifier");
     }
@@ -318,7 +329,7 @@ AstVariableDef* Parser::parseVariableDef() {
     // Resolve type and register variable in symbol table.
     d_env.symbols().resolveSymbol(type);
     if (type->d_symbol->kind != Symbol::Kind::Type && type->d_symbol->kind != Symbol::Kind::Unresolved) {
-        d_env.createError(type->d_loc, "Invalid type: '" + std::string(type->d_name) + "' is not a type");
+        d_env.createError(type, "Invalid type: '" + std::string(type->d_name) + "' is not a type");
     }
     name->d_symbol = d_env.symbols().addSymbol(name->d_loc, Symbol::Kind::Variable, name->d_name, type->d_resultType);
     if (d_currToken.kind != Token::Kind::Assign) {
@@ -331,7 +342,7 @@ AstVariableDef* Parser::parseVariableDef() {
     }
     getNextToken();
     const Location loc = Location::combine(beginLoc, expr->d_loc);
-    AstVariableDef* varDef = d_env.createNode<AstVariableDef>(loc, name, type, expr);
+    AstVariableDef* varDef = d_env.createNode<AstVariableDef>(loc, name, type, expr, varKind);
     name->d_symbol->defNode = varDef;
     return varDef;
 }

@@ -10,8 +10,8 @@
 namespace jex {
 
 class AstIdentifier;
+class AstVariableDef;
 class CompileEnv;
-class IAstNode;
 struct Location;
 
 struct Symbol {
@@ -23,9 +23,9 @@ struct Symbol {
     } kind;
     TypeInfoId type;
     std::string_view name;
-    IAstNode* defNode;
+    AstVariableDef* defNode;
 
-    Symbol(Kind kind, std::string_view name, TypeInfoId type, IAstNode* defNode)
+    Symbol(Kind kind, std::string_view name, TypeInfoId type, AstVariableDef* defNode)
     : kind(kind)
     , type(type)
     , name(name)
@@ -42,7 +42,7 @@ public:
     SymbolTable(CompileEnv& env);
 
     bool resolveSymbol(AstIdentifier* ident) const;
-    Symbol* addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, TypeInfoId type, IAstNode* defNode = nullptr);
+    Symbol* addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, TypeInfoId type, AstVariableDef* defNode = nullptr);
 };
 
 } // namespace jex

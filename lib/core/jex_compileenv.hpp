@@ -48,6 +48,7 @@ public:
     ~CompileEnv();
 
     const MsgInfo& createError(const Location& loc, std::string msg);
+    const MsgInfo& createError(const IAstNode* node, std::string msg);
     [[noreturn]] void throwError(const Location& loc, std::string msg);
 
     template <typename T, typename... Args>

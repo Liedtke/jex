@@ -35,7 +35,7 @@ SymbolTable::SymbolTable(CompileEnv& env)
 bool SymbolTable::resolveSymbol(AstIdentifier* ident) const {
     auto iter = d_symbols.find(ident->d_name);
     if (iter == d_symbols.end()) {
-        d_env.createError(ident->d_loc, "Unknown identifier '" + std::string(ident->d_name) + "'");
+        d_env.createError(ident, "Unknown identifier '" + std::string(ident->d_name) + "'");
         ident->d_symbol = d_symbols.at(s_unresolved).get();
         return false;
     }
@@ -44,7 +44,7 @@ bool SymbolTable::resolveSymbol(AstIdentifier* ident) const {
     return true;
 }
 
-Symbol* SymbolTable::addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, TypeInfoId type, IAstNode* defNode) {
+Symbol* SymbolTable::addSymbol(const Location& loc, Symbol::Kind kind, std::string_view name, TypeInfoId type, AstVariableDef* defNode) {
     auto [iter, inserted] = d_symbols.emplace(name, std::make_unique<Symbol>(kind, name, type, defNode));
     if (!inserted) {
         const MsgInfo& msg = d_env.createError(loc, "Duplicate identifier '" + std::string(name) + "'");

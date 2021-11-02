@@ -26,10 +26,8 @@ static inline CompileResult compile(const Environment& env,
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    if (runConstFolding) {
-        ConstantFolding constFolding(compileEnv);
-        constFolding.run();
-    }
+    ConstantFolding constFolding(compileEnv, runConstFolding);
+    constFolding.run();
     CodeGen codeGen(compileEnv, op);
     codeGen.createIR();
     Backend backend(compileEnv);

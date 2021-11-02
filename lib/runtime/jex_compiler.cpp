@@ -18,10 +18,8 @@ static void parseAndCheck(CompileEnv& compileEnv, const std::string& source, boo
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    if (enableConstantFolding) {
-        ConstantFolding constFolding(compileEnv);
-        constFolding.run();
-    }
+    ConstantFolding constFolding(compileEnv, enableConstantFolding);
+    constFolding.run();
 }
 
 CompileResult Compiler::compile(const Environment& env, const std::string& source, OptLevel optLevel, bool useIntrinsics, bool enableConstantFolding) {

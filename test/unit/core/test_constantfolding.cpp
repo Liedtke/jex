@@ -4,6 +4,7 @@
 #include <jex_compileenv.hpp>
 #include <jex_constantfolding.hpp>
 #include <jex_environment.hpp>
+#include <jex_errorhandling.hpp>
 #include <jex_parser.hpp>
 #include <jex_prettyprinter.hpp>
 #include <jex_typeinference.hpp>
@@ -21,6 +22,7 @@ struct TestConstFoldingT {
     const char* sourceCode;
     const char* expDump;
     std::vector<ConstantExp> expConstants;
+    bool enableConstFolding = true;
 };
 
 class TestConstFolding : public testing::TestWithParam<TestConstFoldingT> {
@@ -34,7 +36,7 @@ TEST_P(TestConstFolding, test) {
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
-    ConstantFolding constantFolding(compileEnv);
+    ConstantFolding constantFolding(compileEnv, GetParam().enableConstFolding);
     constantFolding.run();
     // Check pretty-printed AST.
     std::stringstream str;
@@ -95,7 +97,44 @@ static TestConstFoldingT tests[] = {
         "var x: String = [const_String_l1_c17];\n",
         {{"const_String_l1_c17", "decent"}}
     },
+    {   // Test folding with variable declared as const.
+        "const x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
+        "const x: String = [const_String_l1_c19];\n",
+        {{"const_String_l1_c19", "decent"}}
+    },
+    {   // Test folding with variable declared as const and const folding disabled.
+        // As the varialbe is declared as const, it still has to be folded.
+        "const x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
+        "const x: String = [const_String_l1_c19];\n",
+        {{"const_String_l1_c19", "decent"}},
+        false
+    },
+    {   // Test folding with const folding disabled.
+        // As the varialbe is not declared as const, it may not be folded.
+        "var x: Integer = 1 + 1;",
+        "var x: Integer = (1 + 1);\n",
+        {},
+        false
+    },
 };
+
+TEST(ConstantFolding, testNonConstConst) {
+    Environment env;
+    test::registerBuiltIns(env);
+    CompileEnv compileEnv(env, false);
+    try {
+        // Multiplication not registered as pure, can't be constant folded.
+        Parser parser(compileEnv, "const x : Integer = 2 * 3;");
+        parser.parse();
+        TypeInference typeInference(compileEnv);
+        typeInference.run();
+        ConstantFolding constantFolding(compileEnv, false);
+        constantFolding.run();
+        ASSERT_TRUE(false); // LCOV_EXCL_LINE
+    } catch(const CompileError& err) {
+        ASSERT_STREQ("1.21-1.25: Error: Right hand side of constant 'x' is not a constant expression", err.what());
+    }
+}
 
 INSTANTIATE_TEST_SUITE_P(SuiteConstantFolding,
                          TestConstFolding,

@@ -2,6 +2,7 @@
 
 #include <jex_ast.hpp>
 #include <jex_compileenv.hpp>
+#include <jex_errorhandling.hpp>
 #include <jex_fctinfo.hpp>
 #include <jex_fctlibrary.hpp>
 
@@ -38,6 +39,10 @@ Constant& ConstantOrLiteral::getConstant() {
 
 void ConstantFolding::run() {
     d_env.getRoot()->accept(*this);
+    if (d_env.hasErrors()) {
+        // Throw first error in list.
+        throw CompileError::create(*d_env.messages().begin());
+    }
 }
 
 bool ConstantFolding::tryFold(IAstExpression*& expr) {
@@ -59,8 +64,7 @@ void* ConstantFolding::getPtrFor(IAstExpression* expr) {
 void ConstantFolding::storeIfConstant(IAstExpression* expr) {
     auto iter = d_constants.find(expr);
     if (iter != d_constants.end() && !iter->second.isLiteral()) {
-        auto asConstExpr = dynamic_cast<AstConstantExpr*>(expr);
-        assert(asConstExpr != nullptr && "expression has to be an AstConstantExpr node");
+        auto asConstExpr = cast_ensured<AstConstantExpr*>(expr);
         d_env.constants().insert(asConstExpr->d_constantName, iter->second.release());
     }
 }
@@ -147,7 +151,12 @@ void ConstantFolding::visit(AstIdentifier& node) {
 }
 
 void ConstantFolding::visit(AstVariableDef& node) {
-    tryFoldAndStore(node.d_expr);
+    if (d_foldAll || node.d_kind == VariableKind::Const) {
+        tryFoldAndStore(node.d_expr);
+    }
+    if (node.d_kind == VariableKind::Const && !node.d_expr->isConstant()) {
+        d_env.createError(node.d_expr, "Right hand side of constant '" + std::string(node.d_name->d_name) + "' is not a constant expression");
+    }
 }
 
 void ConstantFolding::visit(AstVarArg& node) {

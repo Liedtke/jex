@@ -125,7 +125,14 @@ void PrettyPrinter::visit(AstArgList& node) {
 }
 
 void PrettyPrinter::visit(AstVariableDef& node) {
-    d_str << "var ";
+    switch(node.d_kind) {
+        case VariableKind::Const:
+            d_str << "const ";
+            break;
+        case VariableKind::Var:
+            d_str << "var ";
+            break;
+    }
     node.d_name->accept(*this);
     d_str << ": ";
     node.d_type->accept(*this);

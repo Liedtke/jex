@@ -52,7 +52,8 @@ TEST(SymbolTable, duplicateAdd) {
     CompileEnv env(environment);
     SymbolTable& symbols = env.symbols();
     TypeInfoId unresolved = env.typeSystem().unresolved();
-    AstIdentifier defNode({{1, 1}, {1, 4}}, unresolved, "duplicate");
+    AstIdentifier ident({{1, 1}, {1, 4}}, unresolved, "duplicate");
+    AstVariableDef defNode({{1, 1}, {1, 4}}, &ident, &ident, nullptr, VariableKind::Var);
 
     symbols.addSymbol({{1, 1}, {1, 4}}, Symbol::Kind::Variable, "duplicate", unresolved, &defNode);
     Symbol* symbol = symbols.addSymbol({{2, 1}, {2, 4}}, Symbol::Kind::Function, "duplicate", unresolved);

@@ -15,6 +15,7 @@
 
 #include <set>
 #include <sstream>
+#include <string>
 
 namespace jex {
 
@@ -99,7 +100,11 @@ void CodeGenVisitor::createIR() {
     };
     std::set<const Symbol*, decltype(cmp)> vars(cmp);
     for (AstVariableDef* varDef: d_env.getRoot()->d_varDefs) {
-        vars.insert(varDef->d_name->d_symbol);
+        // Skip constants as they are stored in the constant store and don't need to be
+        // part of the context.
+        if (varDef->d_kind != VariableKind::Const) {
+            vars.insert(varDef->d_name->d_symbol);
+        }
     }
     size_t offset = 0;
     for (const Symbol* sym : vars) {
@@ -145,6 +150,9 @@ void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, Type
 void CodeGenVisitor::visit(AstVariableDef& node) {
     assert(d_currFct == nullptr);
     assert(!d_unwind);
+    if (node.d_kind == VariableKind::Const) {
+        return; // Nothing to do for constants.
+    }
     // Create function.
     llvm::Type* resultPtrType = d_utils->getReturnType(node.d_type->d_resultType);
     llvm::FunctionType* fctType = llvm::FunctionType::get(resultPtrType, {d_rctxType->getPointerTo()}, false);
@@ -193,6 +201,10 @@ void CodeGenVisitor::visit(AstLiteralExpr& node) {
         [&](std::string_view val) -> llvm::Value* {
             TypeInfoId strType = d_env.typeSystem().getType("String");
             std::string constantName = llvm::formatv("strLit_l{0}_c{1}", node.d_loc.begin.line, node.d_loc.begin.col);
+            llvm::Value* constGlobal = d_module->llvmModule().getNamedGlobal(constantName);
+            if (constGlobal != nullptr) {
+                return constGlobal;
+            }
             const FctInfo& dtor = d_env.fctLibrary().getFct("_dtor_" + strType->name(), {});
             d_env.constants().emplace<std::string>(constantName, dtor, val);
             auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
@@ -368,6 +380,12 @@ llvm::Constant* CodeGenVisitor::createConstant(TypeInfoId typeId, const std::str
 }
 
 void CodeGenVisitor::visit(AstConstantExpr& node) {
+    // Return global constant if it was already created for this constant expression.
+    llvm::Value* constGlobal = d_module->llvmModule().getNamedGlobal(node.d_constantName);
+    if (constGlobal) {
+        d_result = constGlobal;
+        return;
+    }
     // For value type with explicitly registered type, try to build llvm::Constant.
     // This will allow further optimizations on LLVM side and better IR readability.
     if (node.d_resultType->kind() == TypeKind::Value && node.d_resultType->createTypeFct()) {
@@ -389,6 +407,19 @@ void CodeGenVisitor::visit(AstConstantExpr& node) {
     if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
         d_result = d_builder->CreateLoad(d_result);
     }
+}
+
+void CodeGenVisitor::visit(AstIdentifier& node) {
+    assert(node.d_symbol != nullptr && "Symbol is unresolved");
+    assert(node.d_symbol->defNode != nullptr && "Symbol misses definition");
+    AstVariableDef* defNode = node.d_symbol->defNode;
+    if (defNode->d_kind == VariableKind::Const) {
+        defNode->d_expr->accept(*this);
+        assert(d_result != nullptr);
+        return;
+    }
+    assert(defNode->d_kind == VariableKind::Var);
+    // FIXME: Implement using a variable in another variable definition.
 }
 
 } // namespace jex

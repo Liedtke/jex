@@ -1,0 +1,24 @@
+// RUN: %jexc -f %s -l -c | FileCheck-12 %s
+
+const cInt    : Integer = 1 + 2 * 3; // 7
+const cIntLit : Integer = 1;
+
+// String literals and constants are externalized.
+// CHECK: @const_String_l9_c27 = external constant %String
+// CHECK @strLit_l10_c27 = external constant %String
+const cStr    : String  = substr("Hello World!", 6, 5); // World
+const cStrLit : String  = "Test";
+
+// cInt is replaced with "i64 7".
+// cIntLit is replaced wiht "i64 1".
+// CHECK: call void @_operator_mul_Integer_Integer__intrinsic(i64* %res_operator_mul, i64 7, i64 7)
+// CHECK: call void @_operator_mul_Integer_Integer__intrinsic(i64* %res_operator_mul1, i64 1, i64 1)
+var int : Integer = cInt * cInt + cIntLit * cIntLit;
+
+// cStr is replaced with "@const_String_l9_c27".
+// cStrLit is replaced with "@strLit_l10_c27".
+// CHECK: store %String* @const_String_l9_c27, %String** %arrayptr, align 8
+// CHECK: store %String* @const_String_l9_c27, %String** %arrayptr1, align 8
+// CHECK: store %String* @strLit_l10_c27, %String** %arrayptr2, align 8
+// CHECK: store %String* @strLit_l10_c27, %String** %arrayptr3, align 8
+var str : String = join(" ", cStr, cStr, cStrLit, cStrLit);

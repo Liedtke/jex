@@ -36,6 +36,11 @@ enum class OpType {
     UMinus,
 };
 
+enum class VariableKind {
+    Var,
+    Const,
+};
+
 class IAstNode : NoCopy {
 public:
     Location d_loc;
@@ -258,12 +263,14 @@ public:
 
 class AstVariableDef : public IAstExpression {
 public:
+    VariableKind d_kind;
     AstIdentifier* d_name;
     AstIdentifier* d_type;
     IAstExpression* d_expr;
 
-    AstVariableDef(const Location& loc, AstIdentifier* name, AstIdentifier* type, IAstExpression* expr)
+    AstVariableDef(const Location& loc, AstIdentifier* name, AstIdentifier* type, IAstExpression* expr, VariableKind kind)
     : IAstExpression(loc, type->d_resultType)
+    , d_kind(kind)
     , d_name(name)
     , d_type(type)
     , d_expr(expr) {

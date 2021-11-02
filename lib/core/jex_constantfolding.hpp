@@ -34,8 +34,11 @@ class ConstantFolding : public BasicAstVisitor, NoCopy {
     CompileEnv& d_env;
     IAstExpression* d_foldedExpr = nullptr;
     std::unordered_map<IAstExpression*, ConstantOrLiteral> d_constants;
+    // Flag whether all expressions supporting const-folding shall be folded.
+    // If false, only const variables will be folded.
+    const bool d_foldAll;
 public:
-    explicit ConstantFolding(CompileEnv& env) : d_env(env) {
+    explicit ConstantFolding(CompileEnv& env, bool foldAll) : d_env(env), d_foldAll(foldAll) {
     }
 
     void run();

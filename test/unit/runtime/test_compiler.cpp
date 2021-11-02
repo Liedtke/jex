@@ -20,7 +20,7 @@ TEST(Compiler, compileError) {
     ASSERT_FALSE(res);
     std::stringstream errMsg;
     errMsg << res;
-    ASSERT_EQ("1.1-1.1: Error: Unexpected integer literal '1', expecting 'var' or end of file", errMsg.str());
+    ASSERT_EQ("1.1-1.1: Error: Unexpected integer literal '1', expecting 'var', 'const' or end of file", errMsg.str());
 }
 
 } // namespace jex

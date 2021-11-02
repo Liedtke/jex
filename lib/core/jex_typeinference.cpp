@@ -120,16 +120,16 @@ void TypeInference::visit(AstIf& node) {
     if (argTypes.size() != 3) {
         std::stringstream errMsg;
         errMsg << "'if' function requires exactly 3 arguments, " << argTypes.size() << " given";
-        d_env.createError(node.d_loc, errMsg.str());
+        d_env.createError(&node, errMsg.str());
         return;
     }
     if (argTypes[0] != d_env.typeSystem().getType("Bool")) {
-        d_env.createError(node.d_loc,
+        d_env.createError(&node,
             "'if' function requires first argument to be of type 'Bool', '"
                 + argTypes[0]->name() + "' given");
     }
     if (argTypes[1] != argTypes[2]) {
-        d_env.createError(node.d_loc,
+        d_env.createError(&node,
             "'if' function requires second and third argument to have the same type, '"
                 + argTypes[1]->name() + "' and '" + argTypes[2]->name() + "' given");
     }
@@ -174,7 +174,7 @@ const FctInfo* TypeInference::resolveFct(IAstExpression& node, std::string_view 
         return &fctInfo;
     } catch (InternalError& err) {
         // Convert exception to non-critical error and add location information.
-        d_env.createError(node.d_loc, err.what());
+        d_env.createError(&node, err.what());
         return nullptr;
     }
 }
@@ -187,7 +187,7 @@ void TypeInference::visit(AstVariableDef& node) {
         errMsg << "Invalid type for variable '" << node.d_name->d_name
                << "': Specified as '" << node.d_resultType->name()
                << "' but expression returns '" << exprType->name() << "'";
-        d_env.createError(node.d_loc, errMsg.str());
+        d_env.createError(&node, errMsg.str());
     }
 }
 

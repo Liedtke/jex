@@ -31,6 +31,10 @@ const MsgInfo& CompileEnv::createError(const Location& loc, std::string msg) {
     return *inserted.first;
 }
 
+const MsgInfo& CompileEnv::createError(const IAstNode* node, std::string msg) {
+    return createError(node->d_loc, std::move(msg));
+}
+
 [[noreturn]] void CompileEnv::throwError(const Location& loc, std::string msg) {
     const MsgInfo& msgInfo = createError(loc, std::move(msg));
     std::stringstream error;
