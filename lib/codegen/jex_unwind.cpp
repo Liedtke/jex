@@ -82,7 +82,7 @@ void Unwind::leaveCondBranch(llvm::BranchInst* branchInst) {
     assert(d_branches.top().branchInst == branchInst && "Provided branch is not top of unwind branching");
     assert(!d_branches.top().isA && "Missing switchCondBranch call prior to leaveCondBranch");
     // Remove branch.
-    CondBranch& branch = d_branches.top();
+    CondBranch branch = d_branches.top();
     d_branches.pop();
     // Generate unwind coding if required.
     if (branch.unwindA || branch.unwindB) {
