@@ -82,7 +82,7 @@ void FctInfo::printParamTypes(std::ostream& str, const std::vector<TypeInfoId>& 
 }
 
 std::ostream& operator<<(std::ostream& str, const FctInfo& fctInfo) {
-    return str << fctInfo.d_retType->name() << ' ' << fctInfo.d_name << '(';
+    str << fctInfo.d_retType->name() << ' ' << fctInfo.d_name << '(';
     FctInfo::printParamTypes(str, fctInfo.d_params);
     return str << ')';
 }

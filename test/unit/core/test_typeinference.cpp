@@ -101,37 +101,56 @@ TEST_P(TestTypeError, test) {
 }
 
 static TestErrorT errorTests[] = {
-    {"var a: UInt32 = pass();", {"1.17-1.22: Error: No matching candidate found for function 'pass()'"}},
+    {"var a: UInt32 = pass();", {"1.17-1.22: Error: No matching candidate found for function 'pass()'. Candidates are:\n  UInt32 pass(UInt32)"}},
     {"var a: UInt32 = 1;", {"1.1-1.17: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Integer'"}},
-    {"var a: UInt32 = x + 1;", {"1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
+    {"var a: UInt32 = x + 1;", {
+R"(1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+  Integer operator_add(Integer, Integer)
+  UInt32 operator_add(UInt32, UInt32))"}},
     // Only the inner resolve errors are reported as the outer ones are only follow-up errors.
     {"var a: UInt32 = add(pass(pass()), add());", {
-        "1.26-1.31: Error: No matching candidate found for function 'pass()'",
-        "1.35-1.39: Error: No matching candidate found for function 'add()'",
+        "1.26-1.31: Error: No matching candidate found for function 'pass()'. Candidates are:\n  UInt32 pass(UInt32)",
+        "1.35-1.39: Error: No matching candidate found for function 'add()'. Candidates are:\n  UInt32 add(UInt32, UInt32)",
     }},
     {"var a: UInt32 = x + 1 + (1 + x);", {
-        "1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'",
-        "1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'",
+R"(1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+  Integer operator_add(Integer, Integer)
+  UInt32 operator_add(UInt32, UInt32))",
+R"(1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'. Candidates are:
+  Integer operator_add(Integer, Integer)
+  UInt32 operator_add(UInt32, UInt32))",
     }},
     {"var a: UInt32 = if(x, x, x);",
         {"1.17-1.27: Error: 'if' function requires first argument to be of type 'Bool', 'UInt32' given"}},
     {"var a: UInt32 = if(true, x, true);",
         {"1.17-1.33: Error: 'if' function requires second and third argument to have the same type, 'UInt32' and 'Bool' given"}},
-    {"var a: Bool = if(true, x, x+1);",
-        // No further errors are reported as the inner call is unresolved.
-        {"1.27-1.29: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
+    // No further errors are reported as the inner call is unresolved.
+    {"var a: Bool = if(true, x, x+1);", {
+R"(1.27-1.29: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+  Integer operator_add(Integer, Integer)
+  UInt32 operator_add(UInt32, UInt32))"
+    }},
     {"var a: Integer = if(true, x, x);",
         {"1.1-1.31: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
     {"var a: Integer = if(true, x, x, x);",
         {"1.18-1.34: Error: 'if' function requires exactly 3 arguments, 4 given"}},
-    {"var a: Bool = -(x+1);",
-        // No further errors are reported as the inner call is unresolved.
-        {"1.17-1.19: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'"}},
+    // No further errors are reported as the inner call is unresolved.
+    {"var a: Bool = -(x+1);", {
+R"(1.17-1.19: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+  Integer operator_add(Integer, Integer)
+  UInt32 operator_add(UInt32, UInt32))"
+    }},
     // Var Args: At minimum one argument required.
-    {"var a: UInt32 = max();",
-        {"1.17-1.21: Error: No matching candidate found for function 'max()'"}},
-    {"var a: UInt32 = max(1);",
-        {"1.17-1.22: Error: No matching candidate found for function 'max(Integer)'"}},
+    {"var a: UInt32 = max();", {
+R"(1.17-1.21: Error: No matching candidate found for function 'max()'. Candidates are:
+  UInt32 max(UInt32, UInt32)
+  UInt32 max(_VarArg<UInt32>))"
+    }},
+    {"var a: UInt32 = max(1);", {
+R"(1.17-1.22: Error: No matching candidate found for function 'max(Integer)'. Candidates are:
+  UInt32 max(UInt32, UInt32)
+  UInt32 max(_VarArg<UInt32>))"
+    }},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInferenceError,

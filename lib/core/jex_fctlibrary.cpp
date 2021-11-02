@@ -40,8 +40,11 @@ const FctInfo& FctLibrary::getFct(const std::string& name,
     std::stringstream err;
     err << "No matching candidate found for function '" + name + '(';
     FctInfo::printParamTypes(err, paramTypes);
-    err << ")'";
-    // TODO: Print candidates.
+    err << ")'. Candidates are:";
+    // Print candidates.
+    for (const FctInfo* candidate : iter->second) {
+        err << "\n  " << *candidate;
+    }
     throw InternalError(err.str());
 }
 
