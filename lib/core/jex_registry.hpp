@@ -182,7 +182,7 @@ public:
         std::vector<ParamInfo> paramInfos;
         const auto& argTypeNames = desc.argTypeNames;
         for (size_t i = 0; i < argTypeNames.size(); ++i) {
-            paramInfos.push_back({d_types.getType(argTypeNames[i]), desc.isVarArg[0]});
+            paramInfos.push_back({d_types.getType(argTypeNames[i]), desc.isVarArg[i]});
         }
         // Add function to function library.
         d_fcts.registerFct(FctInfo(desc.name, reinterpret_cast<void*>(desc.fctPtr), FctDesc<T...>::wrapper,

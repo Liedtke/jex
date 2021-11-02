@@ -1,0 +1,17 @@
+// RUN: %jexc -f %s -l -c -i | FileCheck-12 %s
+// Test var arg function with object type.
+// CHECK: %_vararg_String = type { %String**, i64 }
+// CHECK: %vararg = alloca %_vararg_String, align 8
+// CHECK:   begin:                                            ; preds = %entry
+// CHECK-NEXT:   %arrayptr = getelementptr [2 x %String*], [2 x %String*]* %argarray, i32 0, i32 0
+// CHECK-NEXT:   store %String* @strLit_l17_c27, %String** %arrayptr, align 8
+// CHECK-NEXT:   %arrayptr1 = getelementptr [2 x %String*], [2 x %String*]* %argarray, i32 0, i32 1
+// CHECK-NEXT:   store %String* @strLit_l17_c37, %String** %arrayptr1, align 8
+// CHECK-NEXT:   %varargarrayptr = getelementptr %_vararg_String, %_vararg_String* %vararg, i32 0, i32 0
+// CHECK-NEXT:   %arraybegin = getelementptr [2 x %String*], [2 x %String*]* %argarray, i32 0, i32 0
+// CHECK-NEXT:   store %String** %arraybegin, %String*** %varargarrayptr, align 8
+// CHECK-NEXT:   %varargargcptr = getelementptr %_vararg_String, %_vararg_String* %vararg, i32 0, i32 1
+// CHECK-NEXT:   store i64 2, i64* %varargargcptr, align 4
+// CHECK-NEXT:   call void @_join_String_vararg_String(%String* %res_join, %String* @strLit_l17_c22, %_vararg_String* %vararg)
+
+var b: String = join(" ", "Mostly", "harmless");

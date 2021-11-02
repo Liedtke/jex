@@ -53,7 +53,7 @@ llvm::Type* CodeGenUtils::getVarArgType(TypeInfoId type) {
         return varArgTy;
     }
     // Create type.
-    llvm::Type* elemPtrTy = getType(type)->getPointerTo();
+    llvm::Type* elemPtrTy = getParamType(type)->getPointerTo();
     llvm::Type* i64Ty = llvm::Type::getInt64Ty(d_module.llvmContext());
     return llvm::StructType::create({elemPtrTy, i64Ty}, name);
 }

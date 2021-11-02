@@ -158,20 +158,29 @@ void ConstantFolding::visit(AstVarArg& node) {
     if (isConst) {
         // Allocate Constant holding vararg object and array.
         const size_t varArgStructSize = sizeof(VarArg<void>);
-        size_t align = std::max(alignof(VarArg<void>), node.d_resultType->alignment());
-        const size_t arraySize = node.d_resultType->size() * node.d_args.size();
-        size_t allocSizeForArray = align + arraySize;
+        const TypeInfoId elemType = node.d_args[0]->d_resultType;
+        const bool byValue = elemType->callConv() == TypeInfo::CallConv::ByValue;
+        const size_t elemSize = byValue ? elemType->size() : sizeof(void*);
+        const size_t elemAlign = byValue ? elemType->alignment() : alignof(void*);
+        const size_t arraySize = elemSize * node.d_args.size();
+        size_t allocSizeForArray = elemAlign + arraySize;
         // This could be optimized to check for the actually needed alignment gap.
         Constant constant = Constant::allocate(varArgStructSize + allocSizeForArray); // NOLINT
         void* ptr = static_cast<char*>(constant.getPtr()) + varArgStructSize;
-        void* arrayPtr = std::align(node.d_resultType->alignment(), arraySize, ptr, allocSizeForArray);
+        void* arrayPtr = std::align(elemAlign, arraySize, ptr, allocSizeForArray);
         // Initialize VarArg object.
         new (constant.getPtr()) VarArg<void>(arrayPtr, node.d_args.size());
         // Copy arguments over.
         auto elemPtr = static_cast<char*>(arrayPtr);
         for (IAstExpression* arg : node.d_args) {
-            size_t elemSize = arg->d_resultType->size();
-            std::memcpy(elemPtr, getPtrFor(arg), elemSize);
+            assert(arg->d_resultType == elemType);
+            if (byValue) {
+                // Copy value into array.
+                std::memcpy(elemPtr, getPtrFor(arg), elemSize);
+            } else {
+                // Store pointer to value in array.
+                *reinterpret_cast<void**>(elemPtr) = getPtrFor(arg);
+            }
             elemPtr += elemSize;
         }
         // Create and store Constant ast node replacing the AstVarArg.

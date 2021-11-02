@@ -1,5 +1,5 @@
 // RUN: %jexc -f %s -l -c -i | FileCheck-12 %s
-// Vararg type.
+// Test vararg function with value type.
 // CHECK: %_vararg_Integer = type { i64*, i64 }
 // Alloca for array with variable arguments.
 // CHECK: %argarray = alloca [3 x i64], align 8

@@ -182,6 +182,14 @@ static TestEvalT evals[] = {
      "A long string not fitting into the std::string buffer"_s},
     {R"(String = if(true, if (false, "test", substr("A long string not fitting into the std::string buffer", 0, 100)), "test"))",
      "A long string not fitting into the std::string buffer"_s},
+    {R"(String = join(" ehm ", "This", "works", "well."))",
+     "This ehm works ehm well."_s},
+    {R"(String = join("", "First", "Second", "Third", "Fourth", "", "Sixth"))",
+     "FirstSecondThirdFourthSixth"_s},
+    {R"(String = join("", ""))",
+     ""_s},
+    {R"(String = join("concatenated", "This", "is", "a", "test"))",
+     "Thisconcatenatedisconcatenatedaconcatenatedtest"_s},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteBuiltins,

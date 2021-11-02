@@ -69,6 +69,24 @@ void max(T* res, const VarArg<T>* args) {
     *res = maxVal;
 }
 
+void join(std::string* res, const std::string* separator, const VarArg<const std::string*>* args) {
+    size_t cap = (args->size() - 1) * separator->size() + 1; // +1 for null-terminator
+    for (const std::string* str : *args) {
+        cap += str->size();
+    }
+    new(res) std::string();
+    res->reserve(cap);
+    bool first = true;
+    for (const std::string* str : *args) {
+        if (first) {
+            first = false;
+        } else {
+            *res += *separator;
+        }
+        *res += *str;
+    }
+}
+
 void generateMax(IntrinsicGen& gen) {
     llvm::Type* elemType = gen.fct().getArg(0)->getType()->getPointerElementType();
     llvm::IRBuilder<>& builder = gen.builder();
@@ -221,6 +239,7 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
 
     // === String ===
     registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgString, ArgString, ArgVarArg<ArgString>>("join", join, NO_INTRINSIC, FctFlags::Pure));
 }
 
 } // namespace jex
