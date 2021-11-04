@@ -13,6 +13,8 @@ class ExecutionContext : NoCopy {
     using LifetimeFct = void(*)(void*);
     const LifetimeFct d_dtor;
     const size_t d_size;
+    // Compiler extension: Zero-length-array. (non-standard C++)
+    // Stores the actual data of the execution context.
     alignas(std::max_align_t) char d_data[0];
 
     ExecutionContext(const CompileResult& compiled);
