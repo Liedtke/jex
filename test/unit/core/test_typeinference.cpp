@@ -233,6 +233,8 @@ static TestOpNameExp opNameTests[] = {
     {"&", "operator_bitand"},
     {"|", "operator_bitor"},
     {"^", "operator_bitxor"},
+    {"&&", "operator_and"},
+    {"||", "operator_or"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteOpName,

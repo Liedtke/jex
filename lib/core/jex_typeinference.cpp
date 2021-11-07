@@ -47,6 +47,10 @@ static const char* opTypeToString(OpType op) {
             return "operator_bitxor";
         case OpType::Not:
             return "operator_not";
+        case OpType::And:
+            return "operator_and";
+        case OpType::Or:
+            return "operator_or";
         case OpType::Shl:
             return "operator_shl";
         case OpType::Shrs:

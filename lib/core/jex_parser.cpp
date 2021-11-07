@@ -42,6 +42,10 @@ OpType getOp(const Token& op, CompileEnv& env) {
             return OpType::BitOr;
         case Token::Kind::OpBitXor:
             return OpType::BitXor;
+        case Token::Kind::OpAnd:
+            return OpType::And;
+        case Token::Kind::OpOr:
+            return OpType::Or;
         case Token::Kind::OpShl:
             return OpType::Shl;
         case Token::Kind::OpShrs:
@@ -56,6 +60,9 @@ OpType getOp(const Token& op, CompileEnv& env) {
 } // anonymous namespace
 
 void Parser::initPrecs() {
+    // logical
+    d_precs[Token::Kind::OpOr] = 1;
+    d_precs[Token::Kind::OpAnd] = 2;
     // bitwise
     d_precs[Token::Kind::OpBitOr] = 10;
     d_precs[Token::Kind::OpBitXor] = 11;
