@@ -13,7 +13,7 @@
 var a : Bool = 1 == 2 || 2 == 1;
 
 // Logical and:
-// CHECK:        br i1 true, label %rhsEval, label %next
+// CHECK:        br i1 false, label %next, label %rhsEval
 // CHECK:      rhsEval:                                          ; preds = %begin
 // CHECK-NEXT:   call void @_operator_lt_Integer_Integer(i1* %res_operator_lt, i64 5, i64 6)
 // CHECK-NEXT:   %0 = load i1, i1* %res_operator_lt, align 1
@@ -22,10 +22,23 @@ var a : Bool = 1 == 2 || 2 == 1;
 // CHECK-NEXT:   %logRes = phi i1 [ false, %begin ], [ %0, %rhsEval ]
 var b : Bool = true && 5 < 6;
 
+// Logical and with non-literal lhs:
+// CHECK:        call void @_operator_lt_Integer_Integer(i1* %res_operator_lt, i64 2, i64 3)
+// CHECK-NEXT:   %0 = load i1, i1* %res_operator_lt, align 1
+// CHECK-NEXT:   %1 = xor i1 %0, true
+// CHECK-NEXT:   br i1 %1, label %next, label %rhsEval
+// CHECK:      rhsEval:                                          ; preds = %begin
+// CHECK-NEXT:   call void @_operator_lt_Integer_Integer(i1* %res_operator_lt1, i64 5, i64 6)
+// CHECK-NEXT:   %2 = load i1, i1* %res_operator_lt1, align 1
+// CHECK-NEXT:    br label %next
+// CHECK:      next:                                             ; preds = %rhsEval, %begin
+// CHECK-NEXT:   %logRes = phi i1 [ false, %begin ], [ %2, %rhsEval ]
+var c : Bool = 2 < 3 && 5 < 6;
+
 // Logical or with trivial rhs:
 // CHECK:        br i1 false, label %next, label %rhsEval
 // CHECK:      rhsEval:                                          ; preds = %begin
 // CHECK-NEXT:   br label %next
 // CHECK:      next:                                             ; preds = %rhsEval, %begin
 // CHECK-NEXT:   %logRes = phi i1 [ true, %begin ], [ true, %rhsEval ]
-var c : Bool = false || true;
+var d : Bool = false || true;

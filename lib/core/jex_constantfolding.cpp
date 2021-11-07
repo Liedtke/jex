@@ -121,10 +121,7 @@ void ConstantFolding::visit(AstLogicalBinExpr& node) {
                 d_foldedExpr = node.d_lhs; // node.d_lhs == false!
             } else {
                 // true && ... --> ...
-                bool rhsIsConst = tryFold(node.d_rhs);
-                if (rhsIsConst) {
-                    d_constants.emplace(&node, std::move(d_constants.find(node.d_rhs)->second));
-                }
+                tryFold(node.d_rhs);
                 d_foldedExpr = node.d_rhs;
             }
         } else {
@@ -133,10 +130,7 @@ void ConstantFolding::visit(AstLogicalBinExpr& node) {
                 // true || ... --> true
                 d_foldedExpr = node.d_lhs;
             } else {
-                bool rhsIsConst = tryFold(node.d_rhs);
-                if (rhsIsConst) {
-                    d_constants.emplace(&node, std::move(d_constants.find(node.d_rhs)->second));
-                }
+                tryFold(node.d_rhs);
                 d_foldedExpr = node.d_rhs;
             }
         }

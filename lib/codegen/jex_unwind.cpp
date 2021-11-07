@@ -91,9 +91,8 @@ void Unwind::leaveCondBranch(llvm::BranchInst* branchInst) {
         llvm::Value* flag = new llvm::AllocaInst(boolTy, 0, "unw_flag", &d_fct->getEntryBlock());
         // Set flag in original branches.
         llvm::Value* trueVal = llvm::ConstantInt::get(d_module.llvmContext(), llvm::APInt(1, 1));
-        assert(!branch.branchInst->getSuccessor(0)->empty());
         assert(!branch.branchInst->getSuccessor(1)->empty());
-        new llvm::StoreInst(trueVal, flag, &branch.branchInst->getSuccessor(0)->front());
+        new llvm::StoreInst(trueVal, flag, branch.branchInst);
         llvm::Value* falseVal = llvm::ConstantInt::get(d_module.llvmContext(), llvm::APInt(1, 0));
         new llvm::StoreInst(falseVal, flag, &branch.branchInst->getSuccessor(1)->front());
         BlockSeq* outerUnwind = &d_unwind;

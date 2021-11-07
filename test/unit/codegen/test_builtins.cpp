@@ -219,6 +219,15 @@ static TestEvalT evals[] = {
      ""_s},
     {R"(String = join("concatenated", "This", "is", "a", "test"))",
      "Thisconcatenatedisconcatenatedaconcatenatedtest"_s},
+    // TODO: Move the following tests to another test file as they don't test the built-ins.
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) == "test" ||
+        substr("This is a long string not fitting into short string optimization", 0, 100) != "test")", true},
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) != "test" ||
+        substr("This is a long string not fitting into short string optimization", 0, 100) == "test")", true},
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) == "test" &&
+        substr("This is a long string not fitting into short string optimization", 0, 100) != "test")", false},
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) != "test" &&
+        substr("This is a long string not fitting into short string optimization", 0, 100) == "test")", false},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteBuiltins,
