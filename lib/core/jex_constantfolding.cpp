@@ -110,6 +110,24 @@ void ConstantFolding::visit(AstBinaryExpr& node) {
     }
 }
 
+void ConstantFolding::visit(AstLogicalBinExpr& node) {
+    bool lhsIsConst = tryFold(node.d_lhs);
+    if (lhsIsConst) {
+        auto iter = d_constants.find(node.d_lhs);
+        bool lhsValue = *reinterpret_cast<bool*>(iter->second.getPtr());
+        if ((node.d_op == OpType::Or) == lhsValue) {
+            // true  || ... --> true
+            // false && ... --> false
+            d_foldedExpr = node.d_lhs; // node.d_lhs == false!
+        } else {
+            // true  && ... --> ...
+            // false || ... --> ...
+            tryFold(node.d_rhs);
+            d_foldedExpr = node.d_rhs;
+        }
+    }
+}
+
 void ConstantFolding::visit(AstUnaryExpr& node) {
     bool isConst = tryFold(node.d_expr);
     if (isConst && node.d_fctInfo->isPure()) {

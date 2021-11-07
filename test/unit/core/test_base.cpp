@@ -22,6 +22,10 @@ void uminus(int64_t* res, int64_t a) {
     *res = -a;
 }
 
+void pass(bool* res, bool in) {
+    *res = in;
+}
+
 static void substr(std::string* res, const std::string* in, int64_t pos, int64_t count) {
     new (res) std::string(in->substr(pos, count));
 }
@@ -40,6 +44,8 @@ void TestModule::registerFcts(Registry& registry) const {
     registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr, NO_INTRINSIC, FctFlags::Pure));
     registry.registerFct(FctDesc<ArgBool, ArgBool>("operator_not", unot, NO_INTRINSIC, FctFlags::Pure));
     registry.registerFct(FctDesc<ArgInteger, ArgInteger>("operator_uminus", uminus, NO_INTRINSIC, FctFlags::None));
+    registry.registerFct(FctDesc<ArgBool, ArgBool>("getConst", pass, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgBool>("getNonConst", pass, NO_INTRINSIC, FctFlags::None));
 }
 
 }

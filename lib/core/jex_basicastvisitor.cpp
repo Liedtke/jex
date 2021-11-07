@@ -12,6 +12,11 @@ void BasicAstVisitor::visit(AstBinaryExpr& node) {
     node.d_rhs->accept(*this);
 }
 
+void BasicAstVisitor::visit(AstLogicalBinExpr& node) {
+    node.d_lhs->accept(*this);
+    node.d_rhs->accept(*this);
+}
+
 void BasicAstVisitor::visit(AstUnaryExpr& node) {
     node.d_expr->accept(*this);
 }

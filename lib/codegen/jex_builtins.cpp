@@ -20,6 +20,12 @@ void op(T* res, T a, T b) {
 }
 
 template <typename Op, typename T>
+void cmpPtr(bool* res, const T* a, const T* b) {
+    assert(res != nullptr);
+    *res = Op()(*a, *b);
+}
+
+template <typename Op, typename T>
 void cmp(bool* res, T a, T b) {
     assert(res != nullptr);
     *res = Op()(a, b);
@@ -247,6 +253,12 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     // === String ===
     registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr, NO_INTRINSIC, FctFlags::Pure));
     registry.registerFct(FctDesc<ArgString, ArgString, ArgVarArg<ArgString>>("join", join, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgString, ArgString>("operator_eq", cmpPtr<std::equal_to<>>, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgString, ArgString>("operator_ne", cmpPtr<std::not_equal_to<>>, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgString, ArgString>("operator_lt", cmpPtr<std::less<>>, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgString, ArgString>("operator_gt", cmpPtr<std::greater<>>, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgString, ArgString>("operator_le", cmpPtr<std::less_equal<>>, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgString, ArgString>("operator_ge", cmpPtr<std::greater_equal<>>, NO_INTRINSIC, FctFlags::Pure));
 }
 
 } // namespace jex

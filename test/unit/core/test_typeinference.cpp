@@ -152,6 +152,8 @@ R"(1.17-1.22: Error: No matching candidate found for function 'max(Integer)'. Ca
   UInt32 max(UInt32, UInt32)
   UInt32 max(_VarArg<UInt32>))"
     }},
+    {"var a: UInt32 = true || false;", {"1.1-1.29: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Bool'"}},
+    {"var a: UInt32 = true && false;", {"1.1-1.29: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Bool'"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInferenceError,
@@ -184,6 +186,8 @@ static const char* successTests[] = {
     "var a: UInt32 = max(x, x);", // special registered function
     "var a: UInt32 = max(x, x, x);", // var arg
     "var a: UInt32 = max(x);", // var arg
+    "var a: Bool = true || false;",
+    "var a: Bool = true && false;",
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInference,

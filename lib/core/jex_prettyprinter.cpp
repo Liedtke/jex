@@ -61,6 +61,12 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
         case OpType::BitXor:
             d_str << " ^ ";
             break;
+        case OpType::And:
+            d_str << " && ";
+            break;
+        case OpType::Or:
+            d_str << " || ";
+            break;
         case OpType::Shl:
             d_str << " shl ";
             break;
@@ -75,6 +81,10 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
     }
     node.d_rhs->accept(*this);
     d_str << ")";
+}
+
+void PrettyPrinter::visit(AstLogicalBinExpr& node) {
+    visit(static_cast<AstBinaryExpr&>(node));
 }
 
 void PrettyPrinter::visit(AstUnaryExpr& node) {

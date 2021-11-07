@@ -567,10 +567,10 @@ entry:
 begin:                                            ; preds = %entry
   call void @_operator_lt_Integer_Integer__intrinsic(i1* %res_operator_lt, i64 1, i64 2)
   %0 = load i1, i1* %res_operator_lt, align 1
+  store i1 true, i1* %unw_flag, align 1
   br i1 %0, label %if_true, label %if_false
 
 if_true:                                          ; preds = %begin
-  store i1 true, i1* %unw_flag, align 1
   call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c42, i64 6, i64 5)
   call void @_substr_String_Integer_Integer(%String* %res_substr2, %String* %res_substr, i64 0, i64 1)
   br label %if_cnt

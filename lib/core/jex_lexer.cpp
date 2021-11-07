@@ -55,6 +55,10 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "operator '^'";
         case Token::Kind::OpNot:
             return str << "operator '!'";
+        case Token::Kind::OpAnd:
+            return str << "operator '&&'";
+        case Token::Kind::OpOr:
+            return str << "operator '||'";
         case Token::Kind::OpShl:
             return str << "operator 'shl'";
         case Token::Kind::OpShrs:
@@ -215,9 +219,17 @@ Token Lexer::getNext() {
                 return setToken(Token::Kind::OpNot);
             case '&':
                 advance();
+                if (*d_cursor == '&') {
+                    advance(); // consume '&'
+                    return setToken(Token::Kind::OpAnd);
+                }
                 return setToken(Token::Kind::OpBitAnd);
             case '|':
                 advance();
+                if (*d_cursor == '|') {
+                    advance(); // consume '|'
+                    return setToken(Token::Kind::OpOr);
+                }
                 return setToken(Token::Kind::OpBitOr);
             case '^':
                 advance();

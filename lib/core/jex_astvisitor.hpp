@@ -5,6 +5,7 @@ namespace jex {
 class IAstNode;
 class IAstExpression;
 class AstBinaryExpr;
+class AstLogicalBinExpr;
 class AstLiteralExpr;
 class AstFctCall;
 class AstIf;
@@ -22,6 +23,7 @@ public:
 
     virtual void visit(AstLiteralExpr& node) = 0;
     virtual void visit(AstBinaryExpr& node) = 0;
+    virtual void visit(AstLogicalBinExpr& node) = 0;
     virtual void visit(AstUnaryExpr& node) = 0;
     virtual void visit(AstFctCall& node) = 0;
     virtual void visit(AstIf& node) = 0;

@@ -232,6 +232,12 @@ static TestExp successTests[] = {
     // Logic operators
     {"var a: Type = !true;",
      "var a: Type = !true;\n"},
+    {"var a: Type = true && false;",
+     "var a: Type = (true && false);\n"},
+    {"var a: Type = true && false || false && true;",
+     "var a: Type = ((true && false) || (false && true));\n"},
+    {"var a: Type = true && false && true;",
+     "var a: Type = ((true && false) && true);\n"},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteParserSuccess,

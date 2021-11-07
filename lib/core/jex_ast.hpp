@@ -30,6 +30,8 @@ enum class OpType {
     BitAnd,
     BitOr,
     BitXor,
+    And,
+    Or,
     Shl,
     Shrs,
     Shrz,
@@ -108,6 +110,17 @@ public:
     bool isTemporary() const override {
         // Operators are handled via function calls and every function has to return a temporary.
         return true;
+    }
+};
+
+class AstLogicalBinExpr : public AstBinaryExpr {
+public:
+    AstLogicalBinExpr(const Location& loc, TypeInfoId resultType, OpType op, IAstExpression* lhs, IAstExpression* rhs)
+    : AstBinaryExpr(loc, resultType, op, lhs, rhs) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
     }
 };
 

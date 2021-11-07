@@ -77,6 +77,14 @@ static TestEvalT evals[] = {
     {"Bool = !false", true},
     {"Bool = !!true", true},
     {"Bool = !!false", false},
+    {"Bool = true && true", true},
+    {"Bool = true && false", false},
+    {"Bool = false && true", false},
+    {"Bool = false && false", false},
+    {"Bool = true || true", true},
+    {"Bool = true || false", true},
+    {"Bool = false || true", true},
+    {"Bool = false || false", false},
     // Integer arithmetics
     {"Integer = 1 + 2", 3_i64},
     {"Integer = (10 + 6) + (7 + 3)", 26_i64},
@@ -179,6 +187,23 @@ static TestEvalT evals[] = {
     {"Bool = 1.2345 >= 1.2344", true},
     {"Bool = 1.2344 >= 1.2345", false},
     {"Bool = 1.2345 <= 1.2345", true},
+    // String comparsions
+    {R"(Bool = "test" == "test")", true},
+    {R"(Bool = "test" == "testit")", false},
+    {R"(Bool = "test" != "test")", false},
+    {R"(Bool = "test" != "testit")", true},
+    {R"(Bool = "a" < "b")", true},
+    {R"(Bool = "b" < "a")", false},
+    {R"(Bool = "a" < "a")", false},
+    {R"(Bool = "a" <= "b")", true},
+    {R"(Bool = "b" <= "a")", false},
+    {R"(Bool = "a" <= "a")", true},
+    {R"(Bool = "a" > "b")", false},
+    {R"(Bool = "b" > "a")", true},
+    {R"(Bool = "a" > "a")", false},
+    {R"(Bool = "a" >= "b")", false},
+    {R"(Bool = "b" >= "a")", true},
+    {R"(Bool = "a" >= "a")", true},
     // String operations
     {"String = \"Testing memory management for a long string\"", "Testing memory management for a long string"_s},
     {"String = substr(\"Hello World!\", 6, 5)", "World"_s},
@@ -194,6 +219,15 @@ static TestEvalT evals[] = {
      ""_s},
     {R"(String = join("concatenated", "This", "is", "a", "test"))",
      "Thisconcatenatedisconcatenatedaconcatenatedtest"_s},
+    // TODO: Move the following tests to another test file as they don't test the built-ins.
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) == "test" ||
+        substr("This is a long string not fitting into short string optimization", 0, 100) != "test")", true},
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) != "test" ||
+        substr("This is a long string not fitting into short string optimization", 0, 100) == "test")", true},
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) == "test" &&
+        substr("This is a long string not fitting into short string optimization", 0, 100) != "test")", false},
+    {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) != "test" &&
+        substr("This is a long string not fitting into short string optimization", 0, 100) == "test")", false},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteBuiltins,

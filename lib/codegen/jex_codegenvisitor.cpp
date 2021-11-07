@@ -294,6 +294,33 @@ void CodeGenVisitor::visit(AstFctCall& node) {
     d_unwind->add(node, d_result);
 }
 
+void CodeGenVisitor::visit(AstLogicalBinExpr& node) {
+    assert(node.d_op == OpType::Or || node.d_op == OpType::And);
+    bool isOr = node.d_op == OpType::Or;
+    llvm::Value* lhs = visitExpression(*node.d_lhs);
+    llvm::BasicBlock* blockStart = d_builder->GetInsertBlock();
+    llvm::BasicBlock* blockRhsEval = createBlock("rhsEval");
+    llvm::BasicBlock* blockNext = createBlock("next");
+    // Negate condition for and so that the optional branch is always the second.
+    // This is required for the unwind handler.
+    llvm::Value* cond = isOr ? lhs : d_builder->CreateNot(lhs);
+    llvm::BranchInst* branchInst = d_builder->CreateCondBr(cond, blockNext, blockRhsEval);
+    d_unwind->initCondBranch(branchInst);
+    d_unwind->switchCondBranch(branchInst);
+    // Handle optional evaluation of rhs.
+    d_builder->SetInsertPoint(blockRhsEval);
+    llvm::Value* rhs = visitExpression(*node.d_rhs);
+    d_builder->CreateBr(blockNext);
+    // Get result.
+    d_builder->SetInsertPoint(blockNext);
+    d_unwind->leaveCondBranch(branchInst);
+    llvm::PHINode* result = d_builder->CreatePHI(d_utils->getType(node.d_resultType), 2, "logRes");
+    llvm::Value* shortVal = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(1, isOr));
+    result->addIncoming(shortVal, blockStart);
+    result->addIncoming(rhs, blockRhsEval);
+    d_result = result;
+}
+
 void CodeGenVisitor::visit(AstIf& node) {
     llvm::BasicBlock* trueBranch = createBlock("if_true");
     llvm::BasicBlock* falseBranch = createBlock("if_false");
@@ -374,7 +401,9 @@ llvm::Constant* CodeGenVisitor::createConstant(llvm::Type* type, void*& valPtr, 
 
 llvm::Constant* CodeGenVisitor::createConstant(TypeInfoId typeId, const std::string& constantName) {
     // Const cast needed as std::align only works on non-const pointers.
-    void* valPtr = const_cast<void*>(d_env.constants().constantByName(constantName).getPtr());
+    const void* constantPtr = d_env.constants().constantByName(constantName).getPtr();
+    assert(constantPtr != nullptr);
+    void* valPtr = const_cast<void*>(constantPtr);
     size_t totalSize = typeId->size();
     return createConstant(d_utils->getType(typeId), valPtr, totalSize, 0);
 }
