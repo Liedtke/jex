@@ -42,3 +42,41 @@ var c : Bool = 2 < 3 && 5 < 6;
 // CHECK:      next:                                             ; preds = %rhsEval, %begin
 // CHECK-NEXT:   %logRes = phi i1 [ true, %begin ], [ true, %rhsEval ]
 var d : Bool = false || true;
+
+// Logical or with unwinding:
+// CHECK:        %unw_flag = alloca i1, align 1
+// CHECK-NEXT:   br label %begin
+// CHECK:      begin:                                            ; preds = %entry
+// CHECK-NEXT:   store i1 true, i1* %unw_flag, align 1
+// CHECK-NEXT:   br i1 false, label %next, label %rhsEval
+// CHECK:      rhsEval:                                          ; preds = %begin
+// CHECK-NEXT:   store i1 false, i1* %unw_flag, align 1
+// CHECK-NEXT:   call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l69_c31, i64 0, i64 2)
+// CHECK-NEXT:   call void @_operator_eq_String_String(i1* %res_operator_eq, %String* %res_substr, %String* @strLit_l69_c48)
+// CHECK-NEXT:   %0 = load i1, i1* %res_operator_eq, align 1
+// CHECK-NEXT:   br label %next
+// CHECK:      next:                                             ; preds = %rhsEval, %begin
+// CHECK-NEXT:   %logRes = phi i1 [ true, %begin ], [ %0, %rhsEval ]
+// CHECK:        br label %unwind2
+// CHECK:      unwind2:                                          ; preds = %next
+// CHECK-NEXT:   %flag_loaded = load i1, i1* %unw_flag, align 1
+// CHECK-NEXT:   br i1 %flag_loaded, label %unwind, label %unwind1
+// CHECK:      unwind1:                                          ; preds = %unwind2
+// CHECK-NEXT:   call void @__dtor_String(%String* %res_substr)
+// CHECK-NEXT:   br label %unwind
+// CHECK:      unwind:                                           ; preds = %unwind2, %unwind1
+// CHECK-NEXT:   ret i1* %varPtrTyped
+var e: Bool = false || substr("test", 0, 2) == "te";
+
+// Logical or with unwinding in lhs -> no unwinding branching:
+// CHECK:        %0 = load i1, i1* %res_operator_eq, align 1
+// CHECK-NEXT:   br i1 %0, label %next, label %rhsEval
+// CHECK:      rhsEval:                                          ; preds = %begin
+// CHECK-NEXT:   br label %next
+// CHECK:      next:                                             ; preds = %rhsEval, %begin
+// CHECK-NEXT:   %logRes = phi i1 [ true, %begin ], [ true, %rhsEval ]
+// CHECK:        br label %unwind
+// CHECK:      unwind:                                           ; preds = %next
+// CHECK-NEXT:   call void @__dtor_String(%String* %res_substr)
+// CHECK-NEXT:   ret i1* %varPtrTyped
+var f: Bool = substr("test", 0, 2) == "te" || true;
