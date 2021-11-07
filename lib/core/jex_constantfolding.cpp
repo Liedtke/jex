@@ -115,24 +115,15 @@ void ConstantFolding::visit(AstLogicalBinExpr& node) {
     if (lhsIsConst) {
         auto iter = d_constants.find(node.d_lhs);
         bool lhsValue = *reinterpret_cast<bool*>(iter->second.getPtr());
-        if (node.d_op == OpType::And) {
-            if (!lhsValue) {
-                // false && ... --> false
-                d_foldedExpr = node.d_lhs; // node.d_lhs == false!
-            } else {
-                // true && ... --> ...
-                tryFold(node.d_rhs);
-                d_foldedExpr = node.d_rhs;
-            }
+        if ((node.d_op == OpType::Or) == lhsValue) {
+            // true  || ... --> true
+            // false && ... --> false
+            d_foldedExpr = node.d_lhs; // node.d_lhs == false!
         } else {
-            assert(node.d_op == OpType::Or && "Logical expression has to be && or ||");
-            if (lhsValue) {
-                // true || ... --> true
-                d_foldedExpr = node.d_lhs;
-            } else {
-                tryFold(node.d_rhs);
-                d_foldedExpr = node.d_rhs;
-            }
+            // true  && ... --> ...
+            // false || ... --> ...
+            tryFold(node.d_rhs);
+            d_foldedExpr = node.d_rhs;
         }
     }
 }
