@@ -110,6 +110,16 @@ void ConstantFolding::visit(AstBinaryExpr& node) {
     }
 }
 
+void ConstantFolding::visit(AstUnaryExpr& node) {
+    bool isConst = tryFold(node.d_expr);
+    if (isConst && node.d_fctInfo->isPure()) {
+        foldFunctionCall(node, *node.d_fctInfo, {node.d_expr});
+    } else {
+        // Move inner constants to permanent constant store if any.
+        storeIfConstant(node.d_expr);
+    }
+}
+
 void ConstantFolding::visit(AstFctCall& node) {
     // Fold all arguments.
     bool isConst = true;
