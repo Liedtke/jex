@@ -23,6 +23,7 @@ public:
     void visit(AstFctCall& node) override;
     void visit(AstIf& node) override;
     void visit(AstBinaryExpr& node) override;
+    void visit(AstLogicalBinExpr& node) override;
     void visit(AstUnaryExpr& node) override;
     void visit(AstVariableDef& node) override;
 

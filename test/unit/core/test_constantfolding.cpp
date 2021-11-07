@@ -46,6 +46,7 @@ TEST_P(TestConstFolding, test) {
     // Check constants.
     for (const ConstantExp& expConst : GetParam().expConstants) {
         const void* valPtr = compileEnv.constants().constantByName(expConst.name).getPtr();
+        ASSERT_TRUE(valPtr != nullptr) << expConst.name;
         std::visit([&](auto val) {
             ASSERT_EQ(val, *reinterpret_cast<const decltype(val)*>(valPtr)) << expConst.name;
         }, expConst.value);
@@ -130,6 +131,40 @@ static TestConstFoldingT tests[] = {
         "var x: Integer = -(1 + 3);",
         "var x: Integer = -[const_Integer_l1_c20];\n",
         {{"const_Integer_l1_c20", 4_i64}},
+    },
+    {   // true && ... --> ...
+        "var x: Bool = getConst(true) && getNonConst(false);",
+        "var x: Bool = getNonConst(false);\n",
+    },
+    {   // false && ... --> false
+        "var x: Bool = false && getNonConst(true);",
+        "var x: Bool = false;\n",
+    },
+    {   // false && ... --> false
+        "var x: Bool = getConst(false) && getConst(true);",
+        "var x: Bool = [const_Bool_l1_c15];\n",
+        {{"const_Bool_l1_c15", false}},
+    },
+    {   // If && lhs can't be evaluated, rhs is not folded at all.
+        "var x: Bool = getNonConst(false) && getConst(true);",
+        "var x: Bool = (getNonConst(false) && getConst(true));\n",
+    },
+    {   // false || ... --> ...
+        "var x: Bool = getConst(false) || getNonConst(false);",
+        "var x: Bool = getNonConst(false);\n",
+    },
+    {   // true || ... --> true
+        "var x: Bool = getConst(true) || getNonConst(false);",
+        "var x: Bool = [const_Bool_l1_c15];\n",
+        {{"const_Bool_l1_c15", true}},
+    },
+    {   // true || ... --> true
+        "var x: Bool = true || getNonConst(false);",
+        "var x: Bool = true;\n",
+    },
+    {   // If || lhs can't be evaluated, rhs is not folded at all.
+        "var x: Bool = getNonConst(true) || getConst(false);",
+        "var x: Bool = (getNonConst(true) || getConst(false));\n",
     },
 };
 

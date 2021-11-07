@@ -294,6 +294,30 @@ void CodeGenVisitor::visit(AstFctCall& node) {
     d_unwind->add(node, d_result);
 }
 
+void CodeGenVisitor::visit(AstLogicalBinExpr& node) {
+    assert(node.d_op == OpType::Or || node.d_op == OpType::And);
+    bool isOr = node.d_op == OpType::Or;
+    llvm::Value* lhs = visitExpression(*node.d_lhs);
+    llvm::BasicBlock* blockStart = d_builder->GetInsertBlock();
+    llvm::BasicBlock* blockRhsEval = createBlock("rhsEval");
+    llvm::BasicBlock* blockNext = createBlock("next");
+    llvm::BranchInst* branchInst = d_builder->CreateCondBr(lhs,
+        isOr ? blockNext : blockRhsEval,
+        isOr ? blockRhsEval : blockNext);
+    (void)branchInst; // FIXME: Handle unwinding correctly!
+    // Handle optional evaluation of rhs.
+    d_builder->SetInsertPoint(blockRhsEval);
+    llvm::Value* rhs = visitExpression(*node.d_rhs);
+    d_builder->CreateBr(blockNext);
+    // Get result.
+    d_builder->SetInsertPoint(blockNext);
+    llvm::PHINode* result = d_builder->CreatePHI(d_utils->getType(node.d_resultType), 2, "logRes");
+    llvm::Value* shortVal = llvm::ConstantInt::get(d_module->llvmContext(), llvm::APInt(1, isOr));
+    result->addIncoming(shortVal, blockStart);
+    result->addIncoming(rhs, blockRhsEval);
+    d_result = result;
+}
+
 void CodeGenVisitor::visit(AstIf& node) {
     llvm::BasicBlock* trueBranch = createBlock("if_true");
     llvm::BasicBlock* falseBranch = createBlock("if_false");

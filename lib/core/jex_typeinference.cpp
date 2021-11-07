@@ -47,16 +47,15 @@ static const char* opTypeToString(OpType op) {
             return "operator_bitxor";
         case OpType::Not:
             return "operator_not";
-        case OpType::And:
-            return "operator_and";
-        case OpType::Or:
-            return "operator_or";
         case OpType::Shl:
             return "operator_shl";
         case OpType::Shrs:
             return "operator_shrs";
         case OpType::Shrz:
             return "operator_shrz";
+        case OpType::And:
+        case OpType::Or:
+            break; // logical operators not overloadable
     }
     throw InternalError("Unsupported operator in TypeInference::opTypeToString"); // LCOV_EXCL_LINE
 }
@@ -159,6 +158,10 @@ void TypeInference::visit(AstBinaryExpr& node) {
     }
     const char* fctName = opTypeToString(node.d_op);
     node.d_fctInfo = resolveFct(node, fctName, argTypes);
+}
+void TypeInference::visit(AstLogicalBinExpr& node) {
+    BasicAstVisitor::visit(node); // resolve arguments
+    node.d_resultType = d_env.typeSystem().getType("Bool");
 }
 
 void TypeInference::visit(AstUnaryExpr& node) {

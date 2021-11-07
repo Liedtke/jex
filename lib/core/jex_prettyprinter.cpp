@@ -83,6 +83,10 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
     d_str << ")";
 }
 
+void PrettyPrinter::visit(AstLogicalBinExpr& node) {
+    visit(static_cast<AstBinaryExpr&>(node));
+}
+
 void PrettyPrinter::visit(AstUnaryExpr& node) {
     if (node.d_op == OpType::UMinus) {
         d_str << '-';

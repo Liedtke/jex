@@ -259,7 +259,12 @@ IAstExpression* Parser::parseBinOpRhs(int prec, IAstExpression* lhs) {
         }
         Location loc = Location::combine(lhs->d_loc, rhs->d_loc);
         TypeInfoId unresolved = d_env.typeSystem().unresolved();
-        lhs = d_env.createNode<AstBinaryExpr>(loc, unresolved, getOp(binOp, d_env), lhs, rhs);
+        OpType op = getOp(binOp, d_env);
+        if (op == OpType::And || op == OpType::Or) {
+            lhs = d_env.createNode<AstLogicalBinExpr>(loc, unresolved, op, lhs, rhs);
+        } else {
+            lhs = d_env.createNode<AstBinaryExpr>(loc, unresolved, op, lhs, rhs);
+        }
     }
 }
 

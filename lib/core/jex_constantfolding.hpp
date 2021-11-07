@@ -21,6 +21,7 @@ public:
     }
     explicit ConstantOrLiteral(AstLiteralExpr& literal) : d_constant{}, d_literal(&literal) {
     }
+    explicit ConstantOrLiteral(ConstantOrLiteral&& other) = default;
 
     void* getPtr();
     bool isLiteral() const {
@@ -46,6 +47,7 @@ public:
 private:
     void visit(AstLiteralExpr& node) override;
     void visit(AstBinaryExpr& node) override;
+    void visit(AstLogicalBinExpr& node) override;
     void visit(AstUnaryExpr& node) override;
     void visit(AstFctCall& node) override;
     void visit(AstIf& node) override;

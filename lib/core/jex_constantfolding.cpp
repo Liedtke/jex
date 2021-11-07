@@ -110,6 +110,39 @@ void ConstantFolding::visit(AstBinaryExpr& node) {
     }
 }
 
+void ConstantFolding::visit(AstLogicalBinExpr& node) {
+    bool lhsIsConst = tryFold(node.d_lhs);
+    if (lhsIsConst) {
+        auto iter = d_constants.find(node.d_lhs);
+        bool lhsValue = *reinterpret_cast<bool*>(iter->second.getPtr());
+        if (node.d_op == OpType::And) {
+            if (!lhsValue) {
+                // false && ... --> false
+                d_foldedExpr = node.d_lhs; // node.d_lhs == false!
+            } else {
+                // true && ... --> ...
+                bool rhsIsConst = tryFold(node.d_rhs);
+                if (rhsIsConst) {
+                    d_constants.emplace(&node, std::move(d_constants.find(node.d_rhs)->second));
+                }
+                d_foldedExpr = node.d_rhs;
+            }
+        } else {
+            assert(node.d_op == OpType::Or && "Logical expression has to be && or ||");
+            if (lhsValue) {
+                // true || ... --> true
+                d_foldedExpr = node.d_lhs;
+            } else {
+                bool rhsIsConst = tryFold(node.d_rhs);
+                if (rhsIsConst) {
+                    d_constants.emplace(&node, std::move(d_constants.find(node.d_rhs)->second));
+                }
+                d_foldedExpr = node.d_rhs;
+            }
+        }
+    }
+}
+
 void ConstantFolding::visit(AstUnaryExpr& node) {
     bool isConst = tryFold(node.d_expr);
     if (isConst && node.d_fctInfo->isPure()) {

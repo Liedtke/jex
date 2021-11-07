@@ -113,6 +113,17 @@ public:
     }
 };
 
+class AstLogicalBinExpr : public AstBinaryExpr {
+public:
+    AstLogicalBinExpr(const Location& loc, TypeInfoId resultType, OpType op, IAstExpression* lhs, IAstExpression* rhs)
+    : AstBinaryExpr(loc, resultType, op, lhs, rhs) {
+    }
+
+    void accept(IAstVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+};
+
 class AstUnaryExpr : public IAstExpression {
 public:
     OpType d_op;
