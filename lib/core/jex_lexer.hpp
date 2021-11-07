@@ -38,6 +38,7 @@ public:
         OpBitAnd, // &
         OpBitOr,  // |
         OpBitXor, // ^
+        OpNot,    // !
         OpShl,    // shl
         OpShrs,   // shrs
         OpShrz,   // shrz

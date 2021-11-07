@@ -73,6 +73,10 @@ static TestEvalT evals[] = {
     {"Bool = true ^ false", true},
     {"Bool = false ^ true", true},
     {"Bool = false ^ false", false},
+    {"Bool = !true", false},
+    {"Bool = !false", true},
+    {"Bool = !!true", true},
+    {"Bool = !!false", false},
     // Integer arithmetics
     {"Integer = 1 + 2", 3_i64},
     {"Integer = (10 + 6) + (7 + 3)", 26_i64},

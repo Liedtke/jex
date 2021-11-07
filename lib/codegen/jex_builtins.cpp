@@ -160,6 +160,12 @@ void generateUnaryFNeg(IntrinsicGen& gen) {
     builder.CreateStore(result, gen.fct().getArg(0));
 }
 
+void generateUnaryNot(IntrinsicGen& gen) {
+    llvm::IRBuilder<>& builder = gen.builder();
+    llvm::Value* result = builder.CreateNot(gen.fct().getArg(1), "result");
+    builder.CreateStore(result, gen.fct().getArg(0));
+}
+
 void substr(std::string* res, const std::string* in, int64_t pos, int64_t count) {
     assert(res != nullptr);
     assert(pos >= 0); // TODO: Figure out how to support error handling in expressions.
@@ -190,6 +196,7 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(BoolCmp("operator_bitand", op<std::bit_and<>>, generateOp<llvm::BinaryOperator::And>, FctFlags::Pure));
     registry.registerFct(BoolCmp("operator_bitor", op<std::bit_or<>>, generateOp<llvm::BinaryOperator::Or>, FctFlags::Pure));
     registry.registerFct(BoolCmp("operator_bitxor", op<std::bit_xor<>>, generateOp<llvm::BinaryOperator::Xor>, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgBool, ArgBool>("operator_not", unaryOp<std::logical_not<>>, generateUnaryNot, FctFlags::Pure));
 
     // === Integer ===
     // Arithmetics

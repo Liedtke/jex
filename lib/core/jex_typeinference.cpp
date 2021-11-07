@@ -45,6 +45,8 @@ static const char* opTypeToString(OpType op) {
             return "operator_bitor";
         case OpType::BitXor:
             return "operator_bitxor";
+        case OpType::Not:
+            return "operator_not";
         case OpType::Shl:
             return "operator_shl";
         case OpType::Shrs:

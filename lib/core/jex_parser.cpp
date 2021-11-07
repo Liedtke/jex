@@ -203,6 +203,8 @@ IAstExpression* Parser::parsePrimary() {
             return parseIdentOrCall();
         case Token::Kind::OpSub:
             return parseUnaryMinus();
+        case Token::Kind::OpNot:
+            return parseUnaryNot();
         default:
             // TODO: extend expectation list
             throwUnexpected("literal, identifier, '-' or '('");
@@ -222,6 +224,16 @@ IAstExpression* Parser::parseUnaryMinus() {
     TypeInfoId unresolved = d_env.typeSystem().unresolved();
     return d_env.createNode<AstUnaryExpr>(loc, unresolved, OpType::UMinus, inner);
 }
+
+IAstExpression* Parser::parseUnaryNot() {
+    Token minus = d_currToken;
+    getNextToken(); // consume '!'
+    IAstExpression* inner = parsePrimary();;
+    Location loc = Location::combine(inner->d_loc, minus.location);
+    TypeInfoId unresolved = d_env.typeSystem().unresolved();
+    return d_env.createNode<AstUnaryExpr>(loc, unresolved, OpType::Not, inner);
+}
+
 
 IAstExpression* Parser::parseBinOpRhs(int prec, IAstExpression* lhs) {
     while (true) {

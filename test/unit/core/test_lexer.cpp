@@ -98,6 +98,7 @@ static TestSingleToken tokenTests[] = {
     {" & ", Token{Token::Kind::OpBitAnd, Location{{1, 2}, {1, 2}}, "&"}},
     {" | ", Token{Token::Kind::OpBitOr, Location{{1, 2}, {1, 2}}, "|"}},
     {" ^ ", Token{Token::Kind::OpBitXor, Location{{1, 2}, {1, 2}}, "^"}},
+    {" ! ", Token{Token::Kind::OpNot, Location{{1, 2}, {1, 2}}, "!"}},
     {" shl ", Token{Token::Kind::OpShl, Location{{1, 2}, {1, 4}}, "shl"}},
     {" shrs ", Token{Token::Kind::OpShrs, Location{{1, 2}, {1, 5}}, "shrs"}},
     {" shrz ", Token{Token::Kind::OpShrz, Location{{1, 2}, {1, 5}}, "shrz"}},

@@ -78,8 +78,12 @@ void PrettyPrinter::visit(AstBinaryExpr& node) {
 }
 
 void PrettyPrinter::visit(AstUnaryExpr& node) {
-    assert(node.d_op == OpType::UMinus);
-    d_str << '-';
+    if (node.d_op == OpType::UMinus) {
+        d_str << '-';
+    } else {
+        assert(node.d_op == OpType::Not && "Unary expression has to be '-' or '!'");
+        d_str << '!';
+    }
     node.d_expr->accept(*this);
 }
 

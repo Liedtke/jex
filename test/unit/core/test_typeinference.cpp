@@ -46,6 +46,7 @@ void registerTestFcts(Environment& env) {
     registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("operator_ge", add));
     // Add unary operators.
     registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("operator_uminus", pass));
+    registry.registerFct(FctDesc<ArgUInt32, ArgUInt32>("operator_not", pass));
     // Same function without var arg for exactly 2 arguments.
     registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("max", max));
     // Function with var arg.
@@ -178,6 +179,8 @@ static const char* successTests[] = {
     "var a: UInt32 = if(true, if(false, x*x, x+x), x);",
     "var a: UInt32 = -x;",
     "var a: UInt32 = --------x;",
+    "var a: UInt32 = !x;",
+    "var a: UInt32 = !!!!!!!!x;",
     "var a: UInt32 = max(x, x);", // special registered function
     "var a: UInt32 = max(x, x, x);", // var arg
     "var a: UInt32 = max(x);", // var arg

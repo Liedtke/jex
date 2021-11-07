@@ -34,6 +34,7 @@ enum class OpType {
     Shrs,
     Shrz,
     UMinus,
+    Not,
 };
 
 enum class VariableKind {
