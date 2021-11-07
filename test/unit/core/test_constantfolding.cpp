@@ -13,7 +13,7 @@
 
 namespace jex {
 
-using ConstantValue = std::variant<int64_t, std::string>;
+using ConstantValue = std::variant<int64_t, std::string, bool>;
 struct ConstantExp {
     const char* name;
     ConstantValue value;
@@ -90,23 +90,23 @@ static TestConstFoldingT tests[] = {
     {   // Test folding of complex type.
         "var x: String = substr(\"test\", 2, 2);",
         "var x: String = [const_String_l1_c17];\n",
-        {{"const_String_l1_c17", "st"}}
+        {{"const_String_l1_c17", std::string("st")}}
     },
     {   // Test folding of complex type nested.
         "var x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
         "var x: String = [const_String_l1_c17];\n",
-        {{"const_String_l1_c17", "decent"}}
+        {{"const_String_l1_c17", std::string("decent")}}
     },
     {   // Test folding with variable declared as const.
         "const x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
         "const x: String = [const_String_l1_c19];\n",
-        {{"const_String_l1_c19", "decent"}}
+        {{"const_String_l1_c19", std::string("decent")}}
     },
     {   // Test folding with variable declared as const and const folding disabled.
         // As the varialbe is declared as const, it still has to be folded.
         "const x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
         "const x: String = [const_String_l1_c19];\n",
-        {{"const_String_l1_c19", "decent"}},
+        {{"const_String_l1_c19", std::string("decent")}},
         false
     },
     {   // Test folding with const folding disabled.
@@ -115,6 +115,21 @@ static TestConstFoldingT tests[] = {
         "var x: Integer = (1 + 1);\n",
         {},
         false
+    },
+    {   // Unary-not is registered as foldable.
+        "var x: Bool = !true;",
+        "var x: Bool = [const_Bool_l1_c15];\n",
+        {{"const_Bool_l1_c15", false}},
+    },
+    {   // Nesting of unary not.
+        "var x: Bool = !!!!true;",
+        "var x: Bool = [const_Bool_l1_c15];\n",
+        {{"const_Bool_l1_c15", true}},
+    },
+    {   // Unary-minus is not registered as foldable.
+        "var x: Integer = -(1 + 3);",
+        "var x: Integer = -[const_Integer_l1_c20];\n",
+        {{"const_Integer_l1_c20", 4_i64}},
     },
 };
 
