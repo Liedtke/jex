@@ -448,7 +448,10 @@ void CodeGenVisitor::visit(AstIdentifier& node) {
         return;
     }
     assert(defNode->d_kind == VariableKind::Var);
-    // FIXME: Implement using a variable in another variable definition.
+    d_result = getVarPtr(node.d_symbol);
+    if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
+        d_result = d_builder->CreateLoad(d_result);
+    }
 }
 
 } // namespace jex

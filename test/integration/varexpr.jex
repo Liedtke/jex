@@ -1,0 +1,25 @@
+var a : Integer = 6;
+var b : Integer = 7;
+var c : Integer = a * b;
+
+// Not constant folded:
+// RUN: %jexc -f %s -l -c | FileCheck-12 %s -check-prefix=CHECK1
+// CHECK1: define i64* @a(%Rctx* %rctx) {
+// ...
+// CHECK1: define i64* @b(%Rctx* %rctx) {
+// ...
+// CHECK1:      define i64* @c(%Rctx* %rctx) {
+// CHECK1:        %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+// CHECK1-NEXT:   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+// CHECK1-NEXT:   %varPtrTyped = bitcast i8* %varPtr to i64*
+// CHECK1-NEXT:   %0 = load i64, i64* %varPtrTyped, align 4
+// CHECK1-NEXT:   %rctxAsBytePtr1 = bitcast %Rctx* %rctx to i8*
+// CHECK1-NEXT:   %varPtr2 = getelementptr i8, i8* %rctxAsBytePtr1, i64 8
+// CHECK1-NEXT:   %varPtrTyped3 = bitcast i8* %varPtr2 to i64*
+// CHECK1-NEXT:   %1 = load i64, i64* %varPtrTyped3, align 4
+// CHECK1-NEXT:   call void @_operator_mul_Integer_Integer__intrinsic(i64* %res_operator_mul, i64 %0, i64 %1)
+
+// Constant folded:
+// RUN: %jexc -f %s -l | FileCheck-12 %s -check-prefix=CHECK2
+// CHECK2: define i64* @c(%Rctx* %rctx) {
+// CHECK2:   store i64 42, i64* %varPtrTyped, align 4

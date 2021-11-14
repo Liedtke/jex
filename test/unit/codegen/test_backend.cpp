@@ -150,4 +150,22 @@ TEST(Backend, stringExpressionWithConditionalTemporaryNotCreated) {
     ASSERT_EQ("Another string large enough to create an allocation", *fctA(ctx->getDataPtr()));
 }
 
+TEST(Backend, varExpr) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : Integer = 6; var b : Integer = a + 1; var c : Integer = a * b;", OptLevel::O0, true, false);
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
+    // Evaluate a.
+    auto fctA = reinterpret_cast<int64_t* (*)(char*)>(compiled.getFctPtr("a"));
+    auto fctB = reinterpret_cast<int64_t* (*)(char*)>(compiled.getFctPtr("b"));
+    auto fctC = reinterpret_cast<int64_t* (*)(char*)>(compiled.getFctPtr("c"));
+    ASSERT_TRUE(fctA != nullptr);
+    ASSERT_TRUE(fctB != nullptr);
+    ASSERT_TRUE(fctC != nullptr);
+    ASSERT_EQ(6, *fctA(ctx->getDataPtr()));
+    ASSERT_EQ(7, *fctB(ctx->getDataPtr()));
+    ASSERT_EQ(42, *fctC(ctx->getDataPtr()));
+}
+
 } // namespace jex
