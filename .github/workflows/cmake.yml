@@ -65,6 +65,6 @@ jobs:
       run:  |
         threads=`nproc`
         run-clang-tidy-12 -j $threads . --export-fixes fixes.txt
-    - name: Check results:
+    - name: Check results
       working-directory: ${{github.workspace}}/build
-      run: [[ -e fixes.txt ]] && ! [[ -s fixes.txt ]]
+      run: "[[ -e fixes.txt ]] && ! [[ -s fixes.txt ]]"
