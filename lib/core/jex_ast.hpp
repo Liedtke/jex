@@ -297,6 +297,10 @@ public:
     bool isTemporary() const override {
         return false;
     }
+
+    bool isConstant() const override {
+        return d_expr->isConstant();
+    }
 };
 
 class AstRoot : public IAstNode {

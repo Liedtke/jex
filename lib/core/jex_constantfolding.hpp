@@ -27,7 +27,6 @@ public:
     bool isLiteral() const {
         return d_literal != nullptr;
     }
-    Constant release();
     Constant& getConstant();
 };
 
@@ -35,6 +34,7 @@ class ConstantFolding : public BasicAstVisitor, NoCopy {
     CompileEnv& d_env;
     IAstExpression* d_foldedExpr = nullptr;
     std::unordered_map<IAstExpression*, ConstantOrLiteral> d_constants;
+    std::unordered_map<AstConstantExpr*, Constant*> d_permanents;
     // Flag whether all expressions supporting const-folding shall be folded.
     // If false, only const variables will be folded.
     const bool d_foldAll;

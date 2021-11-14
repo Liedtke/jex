@@ -5,6 +5,7 @@
 #include <jex_errorhandling.hpp>
 #include <jex_fctinfo.hpp>
 #include <jex_fctlibrary.hpp>
+#include <jex_symboltable.hpp>
 
 #include <cstring>
 
@@ -27,11 +28,6 @@ void* ConstantOrLiteral::getPtr() {
     return d_constant.getPtr();
 }
 
-Constant ConstantOrLiteral::release() {
-    assert(!isLiteral());
-    return std::move(d_constant);
-}
-
 Constant& ConstantOrLiteral::getConstant() {
     assert(!isLiteral());
     return d_constant;
@@ -42,6 +38,9 @@ void ConstantFolding::run() {
     if (d_env.hasErrors()) {
         // Throw first error in list.
         throw CompileError::create(*d_env.messages().begin());
+    }
+    for (auto[constExpr, constant] : d_permanents) {
+        d_env.constants().insert(constExpr->d_constantName, std::move(*constant));
     }
 }
 
@@ -64,8 +63,7 @@ void* ConstantFolding::getPtrFor(IAstExpression* expr) {
 void ConstantFolding::storeIfConstant(IAstExpression* expr) {
     auto iter = d_constants.find(expr);
     if (iter != d_constants.end() && !iter->second.isLiteral()) {
-        auto asConstExpr = cast_ensured<AstConstantExpr*>(expr);
-        d_env.constants().insert(asConstExpr->d_constantName, iter->second.release());
+        d_permanents.emplace(cast_ensured<AstConstantExpr*>(expr), &iter->second.getConstant());
     }
 }
 
@@ -175,7 +173,11 @@ void ConstantFolding::visit(AstIf& node) {
 }
 
 void ConstantFolding::visit(AstIdentifier& node) {
-    // Never const currently.
+    AstVariableDef* defNode = node.d_symbol->defNode;
+    if (defNode->isConstant()) {
+        assert(defNode->d_expr->isConstant() && "expression of constant variable has to be constant as well");
+        d_foldedExpr = defNode->d_expr;
+    }
 }
 
 void ConstantFolding::visit(AstVariableDef& node) {

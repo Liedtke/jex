@@ -166,6 +166,11 @@ static TestConstFoldingT tests[] = {
         "var x: Bool = getNonConst(true) || getConst(false);",
         "var x: Bool = (getNonConst(true) || getConst(false));\n",
     },
+    {   // Constants used in other constants are also folded.
+        "const x: Integer = 1 + 1; const y: Integer = 3; const z : Integer = x + x + y;",
+        "const x: Integer = [const_Integer_l1_c20];\nconst y: Integer = 3;\nconst z: Integer = [const_Integer_l1_c69];\n",
+        {{"const_Integer_l1_c20", 2_i64}, {"const_Integer_l1_c69", 7_i64}}
+    }
 };
 
 TEST(ConstantFolding, testNonConstConst) {
