@@ -1,0 +1,23 @@
+var  a: String;
+expr b: String = a;
+
+// RUN: %jexc -f %s -l | FileCheck-12 %s
+// CHECK:      define void @a(%Rctx* %rctx, %String* %valPtr) {
+// CHECK-NEXT: entry:
+// CHECK-NEXT:   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+// CHECK-NEXT:   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+// CHECK-NEXT:   %varPtrTyped = bitcast i8* %varPtr to %String*
+// CHECK-NEXT:   call void @__assign_String(%String* %varPtrTyped, %String* %valPtr)
+// CHECK-NEXT:   ret void
+// CHECK-NEXT: }
+
+// CHECK:      define %String* @b(%Rctx* %rctx) {
+// CHECK:        %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+// CHECK-NEXT:   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+// CHECK-NEXT:   %varPtrTyped = bitcast i8* %varPtr to %String*
+// CHECK-NEXT:   %rctxAsBytePtr1 = bitcast %Rctx* %rctx to i8*
+// CHECK-NEXT:   %varPtr2 = getelementptr i8, i8* %rctxAsBytePtr1, i64 32
+// CHECK-NEXT:   %varPtrTyped3 = bitcast i8* %varPtr2 to %String*
+// CHECK-NEXT:   call void @__assign_String(%String* %varPtrTyped3, %String* %varPtrTyped)
+// CHECK-NEXT:   ret %String* %varPtrTyped3
+// CHECK-NEXT: }

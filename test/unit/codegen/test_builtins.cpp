@@ -34,19 +34,19 @@ static void testEval(const char *code, const EvalVariant& exp, bool useIntrinsic
 }
 
 TEST_P(TestEval, testIntrinsic) {
-    std::string code("var a : ");
+    std::string code("expr a : ");
     code = code + GetParam().first + ";";
     testEval(code.c_str(), GetParam().second, true, false);
 }
 
 TEST_P(TestEval, testNonIntrinsic) {
-    std::string code("var a : ");
+    std::string code("expr a : ");
     code = code + GetParam().first + ";";
     testEval(code.c_str(), GetParam().second, false, false);
 }
 
 TEST_P(TestEval, testConstFolded) {
-    std::string code("var a : ");
+    std::string code("expr a : ");
     code = code + GetParam().first + ";";
     testEval(code.c_str(), GetParam().second, true, true);
 }

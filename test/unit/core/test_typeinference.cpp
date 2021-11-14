@@ -102,58 +102,58 @@ TEST_P(TestTypeError, test) {
 }
 
 static TestErrorT errorTests[] = {
-    {"var a: UInt32 = pass();", {"1.17-1.22: Error: No matching candidate found for function 'pass()'. Candidates are:\n  UInt32 pass(UInt32)"}},
-    {"var a: UInt32 = 1;", {"1.1-1.17: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Integer'"}},
-    {"var a: UInt32 = x + 1;", {
-R"(1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+    {"expr a: UInt32 = pass();", {"1.18-1.23: Error: No matching candidate found for function 'pass()'. Candidates are:\n  UInt32 pass(UInt32)"}},
+    {"expr a: UInt32 = 1;", {"1.1-1.18: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Integer'"}},
+    {"expr a: UInt32 = x + 1;", {
+R"(1.18-1.22: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
   Integer operator_add(Integer, Integer)
   UInt32 operator_add(UInt32, UInt32))"}},
     // Only the inner resolve errors are reported as the outer ones are only follow-up errors.
-    {"var a: UInt32 = add(pass(pass()), add());", {
-        "1.26-1.31: Error: No matching candidate found for function 'pass()'. Candidates are:\n  UInt32 pass(UInt32)",
-        "1.35-1.39: Error: No matching candidate found for function 'add()'. Candidates are:\n  UInt32 add(UInt32, UInt32)",
+    {"expr a: UInt32 = add(pass(pass()), add());", {
+        "1.27-1.32: Error: No matching candidate found for function 'pass()'. Candidates are:\n  UInt32 pass(UInt32)",
+        "1.36-1.40: Error: No matching candidate found for function 'add()'. Candidates are:\n  UInt32 add(UInt32, UInt32)",
     }},
-    {"var a: UInt32 = x + 1 + (1 + x);", {
-R"(1.17-1.21: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+    {"expr a: UInt32 = x + 1 + (1 + x);", {
+R"(1.18-1.22: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
   Integer operator_add(Integer, Integer)
   UInt32 operator_add(UInt32, UInt32))",
-R"(1.26-1.30: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'. Candidates are:
+R"(1.27-1.31: Error: No matching candidate found for function 'operator_add(Integer, UInt32)'. Candidates are:
   Integer operator_add(Integer, Integer)
   UInt32 operator_add(UInt32, UInt32))",
     }},
-    {"var a: UInt32 = if(x, x, x);",
-        {"1.17-1.27: Error: 'if' function requires first argument to be of type 'Bool', 'UInt32' given"}},
-    {"var a: UInt32 = if(true, x, true);",
-        {"1.17-1.33: Error: 'if' function requires second and third argument to have the same type, 'UInt32' and 'Bool' given"}},
+    {"expr a: UInt32 = if(x, x, x);",
+        {"1.18-1.28: Error: 'if' function requires first argument to be of type 'Bool', 'UInt32' given"}},
+    {"expr a: UInt32 = if(true, x, true);",
+        {"1.18-1.34: Error: 'if' function requires second and third argument to have the same type, 'UInt32' and 'Bool' given"}},
     // No further errors are reported as the inner call is unresolved.
-    {"var a: Bool = if(true, x, x+1);", {
-R"(1.27-1.29: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+    {"expr a: Bool = if(true, x, x+1);", {
+R"(1.28-1.30: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
   Integer operator_add(Integer, Integer)
   UInt32 operator_add(UInt32, UInt32))"
     }},
-    {"var a: Integer = if(true, x, x);",
-        {"1.1-1.31: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
-    {"var a: Integer = if(true, x, x, x);",
-        {"1.18-1.34: Error: 'if' function requires exactly 3 arguments, 4 given"}},
+    {"expr a: Integer = if(true, x, x);",
+        {"1.1-1.32: Error: Invalid type for variable 'a': Specified as 'Integer' but expression returns 'UInt32'"}},
+    {"expr a: Integer = if(true, x, x, x);",
+        {"1.19-1.35: Error: 'if' function requires exactly 3 arguments, 4 given"}},
     // No further errors are reported as the inner call is unresolved.
-    {"var a: Bool = -(x+1);", {
-R"(1.17-1.19: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
+    {"expr a: Bool = -(x+1);", {
+R"(1.18-1.20: Error: No matching candidate found for function 'operator_add(UInt32, Integer)'. Candidates are:
   Integer operator_add(Integer, Integer)
   UInt32 operator_add(UInt32, UInt32))"
     }},
     // Var Args: At minimum one argument required.
-    {"var a: UInt32 = max();", {
-R"(1.17-1.21: Error: No matching candidate found for function 'max()'. Candidates are:
+    {"expr a: UInt32 = max();", {
+R"(1.18-1.22: Error: No matching candidate found for function 'max()'. Candidates are:
   UInt32 max(UInt32, UInt32)
   UInt32 max(_VarArg<UInt32>))"
     }},
-    {"var a: UInt32 = max(1);", {
-R"(1.17-1.22: Error: No matching candidate found for function 'max(Integer)'. Candidates are:
+    {"expr a: UInt32 = max(1);", {
+R"(1.18-1.23: Error: No matching candidate found for function 'max(Integer)'. Candidates are:
   UInt32 max(UInt32, UInt32)
   UInt32 max(_VarArg<UInt32>))"
     }},
-    {"var a: UInt32 = true || false;", {"1.1-1.29: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Bool'"}},
-    {"var a: UInt32 = true && false;", {"1.1-1.29: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Bool'"}},
+    {"expr a: UInt32 = true || false;", {"1.1-1.30: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Bool'"}},
+    {"expr a: UInt32 = true && false;", {"1.1-1.30: Error: Invalid type for variable 'a': Specified as 'UInt32' but expression returns 'Bool'"}},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInferenceError,
@@ -173,21 +173,22 @@ TEST_P(TestSuccess, test) {
 }
 
 static const char* successTests[] = {
-    "var a: UInt32 = pass(x);", // resolve function
-    "var a: UInt32 = x + x;", // resolve operator
-    "var a: UInt32 = x + x - x * x / x % x;", // resolve operators nested arithmetics
-    "var a: UInt32 = x == x != x < x <= x > x >= x;", // resolve operators nested comparisons
-    "var a: UInt32 = if(true, x, x+x);",
-    "var a: UInt32 = if(true, if(false, x*x, x+x), x);",
-    "var a: UInt32 = -x;",
-    "var a: UInt32 = --------x;",
-    "var a: UInt32 = !x;",
-    "var a: UInt32 = !!!!!!!!x;",
-    "var a: UInt32 = max(x, x);", // special registered function
-    "var a: UInt32 = max(x, x, x);", // var arg
-    "var a: UInt32 = max(x);", // var arg
-    "var a: Bool = true || false;",
-    "var a: Bool = true && false;",
+    "expr a: UInt32 = pass(x);", // resolve function
+    "expr a: UInt32 = x + x;", // resolve operator
+    "expr a: UInt32 = x + x - x * x / x % x;", // resolve operators nested arithmetics
+    "expr a: UInt32 = x == x != x < x <= x > x >= x;", // resolve operators nested comparisons
+    "expr a: UInt32 = if(true, x, x+x);",
+    "expr a: UInt32 = if(true, if(false, x*x, x+x), x);",
+    "expr a: UInt32 = -x;",
+    "expr a: UInt32 = --------x;",
+    "expr a: UInt32 = !x;",
+    "expr a: UInt32 = !!!!!!!!x;",
+    "expr a: UInt32 = max(x, x);", // special registered function
+    "expr a: UInt32 = max(x, x, x);", // var arg
+    "expr a: UInt32 = max(x);", // var arg
+    "expr a: Bool = true || false;",
+    "expr a: Bool = true && false;",
+    "var a: Bool;"
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteTypeInference,
@@ -204,7 +205,7 @@ TEST_P(TestOpName, test) {
     Registry registry(env);
     registry.registerType<ArgInteger>();
     CompileEnv compileEnv(env);
-    std::string code = std::string("var a: Integer = 1 ") + GetParam().first + " 1;";
+    std::string code = std::string("expr a: Integer = 1 ") + GetParam().first + " 1;";
     Parser parser(compileEnv, code.c_str());
     parser.parse();
     TypeInference typeInference(compileEnv);
@@ -215,7 +216,7 @@ TEST_P(TestOpName, test) {
         std::stringstream err;
         err << *compileEnv.messages().begin();
         std::stringstream exp;
-        exp << "1.18-1." << (21 + strlen(GetParam().first))
+        exp << "1.19-1." << (22 + strlen(GetParam().first))
             << ": Error: Invalid function name '"
             << GetParam().second << "'";
         EXPECT_EQ(exp.str(), err.str());
@@ -250,9 +251,9 @@ TEST(TypeInference, varArgs) {
     CompileEnv compileEnv(env);
     compileEnv.symbols().addSymbol(Location(), Symbol::Kind::Variable, "x", env.types().getType("UInt32"));
     std::string code = std::string(R"(
-var a: UInt32 = max(x, x+x); // Exactly two args --> no vararg
-var b: UInt32 = max(x); // vararg
-var c: UInt32 = max(x, x, x, x);
+expr a: UInt32 = max(x, x+x); // Exactly two args --> no vararg
+expr b: UInt32 = max(x); // vararg
+expr c: UInt32 = max(x, x, x, x);
 )");
     Parser parser(compileEnv, code.c_str());
     parser.parse();
@@ -262,9 +263,9 @@ var c: UInt32 = max(x, x, x, x);
     PrettyPrinter printer(out);
     compileEnv.getRoot()->accept(printer);
     const char* expected =
-R"(var a: UInt32 = max(x, (x + x));
-var b: UInt32 = max([x]);
-var c: UInt32 = max([x, x, x, x]);
+R"(expr a: UInt32 = max(x, (x + x));
+expr b: UInt32 = max([x]);
+expr c: UInt32 = max([x, x, x, x]);
 )";
     ASSERT_EQ(expected, out.str());
 }

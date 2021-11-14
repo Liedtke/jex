@@ -181,7 +181,7 @@ void ConstantFolding::visit(AstIdentifier& node) {
 }
 
 void ConstantFolding::visit(AstVariableDef& node) {
-    if (d_foldAll || node.d_kind == VariableKind::Const) {
+    if (node.d_expr != nullptr && (d_foldAll || node.d_kind == VariableKind::Const)) {
         tryFoldAndStore(node.d_expr);
     }
     if (node.d_kind == VariableKind::Const && !node.d_expr->isConstant()) {

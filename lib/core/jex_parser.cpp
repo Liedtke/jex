@@ -115,10 +115,11 @@ AstRoot* Parser::parseRoot() {
                 return root;
             case Token::Kind::Var:
             case Token::Kind::Const:
+            case Token::Kind::Expr:
                 root->d_varDefs.push_back(parseVariableDef());
                 break;
             default:
-                throwUnexpected("'var', 'const' or end of file");
+                throwUnexpected("'var', 'const', 'expr' or end of file");
         }
     }
 }
@@ -327,6 +328,8 @@ AstLiteralExpr* Parser::parseLiteralBool() {
 static VariableKind getVariableKind(const Token& token) {
     if (token.kind == Token::Kind::Var) {
         return VariableKind::Var;
+    } else if (token.kind == Token::Kind::Expr) {
+        return VariableKind::Expr;
     } else {
         assert(token.kind == Token::Kind::Const);
         return VariableKind::Const;
@@ -334,8 +337,8 @@ static VariableKind getVariableKind(const Token& token) {
 }
 
 AstVariableDef* Parser::parseVariableDef() {
-    assert(d_currToken.kind == Token::Kind::Var || d_currToken.kind == Token::Kind::Const);
-    const Location beginLoc = d_currToken.location;
+    assert(d_currToken.kind == Token::Kind::Var || d_currToken.kind == Token::Kind::Const || d_currToken.kind == Token::Kind::Expr);
+    Location loc = d_currToken.location;
     VariableKind varKind = getVariableKind(d_currToken);
     getNextToken(); // consume variable kind keyword.
     if (d_currToken.kind != Token::Kind::Ident) {
@@ -356,16 +359,17 @@ AstVariableDef* Parser::parseVariableDef() {
         d_env.createError(type, "Invalid type: '" + std::string(type->d_name) + "' is not a type");
     }
     name->d_symbol = d_env.symbols().addSymbol(name->d_loc, Symbol::Kind::Variable, name->d_name, type->d_resultType);
-    if (d_currToken.kind != Token::Kind::Assign) {
-        throwUnexpected("'='");
+    IAstExpression* expr = nullptr;
+    if (varKind != VariableKind::Var) {
+        if (d_currToken.kind != Token::Kind::Assign) {
+            throwUnexpected("'='");
+        }
+        getNextToken();
+        expr = parseExpression();
+        loc = Location::combine(loc, expr->d_loc);
     }
+    expect(Token::Kind::Semicolon, "';'");
     getNextToken();
-    IAstExpression* expr = parseExpression();
-    if (d_currToken.kind != Token::Kind::Semicolon) {
-        throwUnexpected("';'");
-    }
-    getNextToken();
-    const Location loc = Location::combine(beginLoc, expr->d_loc);
     AstVariableDef* varDef = d_env.createNode<AstVariableDef>(loc, name, type, expr, varKind);
     name->d_symbol->defNode = varDef;
     return varDef;
@@ -375,6 +379,12 @@ AstVariableDef* Parser::parseVariableDef() {
     std::stringstream msg;
     msg << "Unexpected " << d_currToken << ", expecting " << expecting;
     d_env.throwError(d_currToken.location, msg.str());
+}
+
+void Parser::expect(Token::Kind token, std::string_view expectingMsg) {
+    if (d_currToken.kind != token) {
+        throwUnexpected(expectingMsg);
+    }
 }
 
 } // namespace jex

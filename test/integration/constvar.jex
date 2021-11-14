@@ -13,7 +13,7 @@ const cStrLit : String  = "Test";
 // cIntLit is replaced wiht "i64 1".
 // CHECK: call void @_operator_mul_Integer_Integer__intrinsic(i64* %res_operator_mul, i64 7, i64 7)
 // CHECK: call void @_operator_mul_Integer_Integer__intrinsic(i64* %res_operator_mul1, i64 1, i64 1)
-var int : Integer = cInt * cInt + cIntLit * cIntLit;
+expr int : Integer = cInt * cInt + cIntLit * cIntLit;
 
 // cStr is replaced with "@const_String_l9_c27".
 // cStrLit is replaced with "@strLit_l10_c27".
@@ -21,4 +21,4 @@ var int : Integer = cInt * cInt + cIntLit * cIntLit;
 // CHECK: store %String* @const_String_l9_c27, %String** %arrayptr1, align 8
 // CHECK: store %String* @strLit_l10_c27, %String** %arrayptr2, align 8
 // CHECK: store %String* @strLit_l10_c27, %String** %arrayptr3, align 8
-var str : String = join(" ", cStr, cStr, cStrLit, cStrLit);
+expr str : String = join(" ", cStr, cStr, cStrLit, cStrLit);

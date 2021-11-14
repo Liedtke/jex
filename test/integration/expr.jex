@@ -1,6 +1,6 @@
-var a : Integer = 6;
-var b : Integer = 7;
-var c : Integer = a * b;
+expr a : Integer = 6;
+expr b : Integer = 7;
+expr c : Integer = a * b;
 
 // Not constant folded:
 // RUN: %jexc -f %s -l -c | FileCheck-12 %s -check-prefix=CHECK1

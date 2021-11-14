@@ -190,6 +190,10 @@ const FctInfo* TypeInference::resolveFct(IAstExpression& node, std::string_view 
 
 void TypeInference::visit(AstVariableDef& node) {
     BasicAstVisitor::visit(node); // resolve expression
+    if (node.d_expr == nullptr) {
+        assert(node.d_kind == VariableKind::Var);
+        return;
+    }
     TypeInfoId exprType = node.d_expr->d_resultType;
     if (d_env.typeSystem().isResolved(exprType) && node.d_resultType != exprType) {
         std::stringstream errMsg;

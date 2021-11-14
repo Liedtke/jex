@@ -25,8 +25,8 @@ TEST(Backend, simpleVarDef) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        "var a : Integer = 123;\n"
-        "var b : Float = 123.456;\n");
+        "expr a : Integer = 123;\n"
+        "expr b : Float = 123.456;\n");
     ASSERT_LE(16, compiled.getContextSize());
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     { // Evaluate a.
@@ -49,7 +49,7 @@ TEST(Backend, simpleCall) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        "var a : Integer = 123 + 5 * (2 + 1);");
+        "expr a : Integer = 123 + 5 * (2 + 1);");
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -63,7 +63,7 @@ TEST(Backend, simpleFctCall) {
     env.addModule(BuiltInsModule());
     env.addModule(TestModule());
     CompileResult compiled = compile(env,
-        "var a : Integer = max3(1+1, 4+3, 2*2);");
+        "expr a : Integer = max3(1+1, 4+3, 2*2);");
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -76,7 +76,7 @@ TEST(Backend, ifExpressionTrue) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        "var a : Integer = if(1 < 2, 12+3, 0);", OptLevel::O0);
+        "expr a : Integer = if(1 < 2, 12+3, 0);", OptLevel::O0);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -89,7 +89,7 @@ TEST(Backend, ifExpressionFalse) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        "var a : Integer = if(2 < 2, 12+3, 20-21);", OptLevel::O0);
+        "expr a : Integer = if(2 < 2, 12+3, 20-21);", OptLevel::O0);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -102,7 +102,7 @@ TEST(Backend, stringExpression) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        "var a : String = \"Hello World!\";", OptLevel::O0);
+        "expr a : String = \"Hello World!\";", OptLevel::O0);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -115,7 +115,7 @@ TEST(Backend, stringExpressionWithTemporary) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        "var a : String = substr(\"Hello World!\", 6, 5);", OptLevel::O0);
+        "expr a : String = substr(\"Hello World!\", 6, 5);", OptLevel::O0);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -128,7 +128,7 @@ TEST(Backend, stringExpressionWithConditionalTemporary) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        R"(var a : String = if(1 < 2, substr(substr("Hello World!", 6, 5), 0, 1), "Another string large enough to create an allocation");)", OptLevel::O0);
+        R"(expr a : String = if(1 < 2, substr(substr("Hello World!", 6, 5), 0, 1), "Another string large enough to create an allocation");)", OptLevel::O0);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -141,7 +141,7 @@ TEST(Backend, stringExpressionWithConditionalTemporaryNotCreated) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        R"(var a : String = if(1 > 2, substr(substr("Hello World!", 6, 5), 0, 1), "Another string large enough to create an allocation");)", OptLevel::O0);
+        R"(expr a : String = if(1 > 2, substr(substr("Hello World!", 6, 5), 0, 1), "Another string large enough to create an allocation");)", OptLevel::O0);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     const uintptr_t fctAddr = compiled.getFctPtr("a");
@@ -154,7 +154,7 @@ TEST(Backend, varExpr) {
     Environment env;
     env.addModule(BuiltInsModule());
     CompileResult compiled = compile(env,
-        "var a : Integer = 6; var b : Integer = a + 1; var c : Integer = a * b;", OptLevel::O0, true, false);
+        "expr a : Integer = 6; expr b : Integer = a + 1; expr c : Integer = a * b;", OptLevel::O0, true, false);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
     auto fctA = reinterpret_cast<int64_t* (*)(char*)>(compiled.getFctPtr("a"));
@@ -166,6 +166,46 @@ TEST(Backend, varExpr) {
     ASSERT_EQ(6, *fctA(ctx->getDataPtr()));
     ASSERT_EQ(7, *fctB(ctx->getDataPtr()));
     ASSERT_EQ(42, *fctC(ctx->getDataPtr()));
+}
+
+TEST(Backend, varDef) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : Integer; expr b : Integer = a + a; expr c : Integer = a * b;", OptLevel::O0, true, false);
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
+    // Store a.
+    auto storeA = reinterpret_cast<void(*)(char*, int64_t*)>(compiled.getFctPtr("a"));
+    int64_t value = 3;
+    storeA(ctx->getDataPtr(), &value);
+    // Evaluate b.
+    auto fctB = reinterpret_cast<int64_t* (*)(char*)>(compiled.getFctPtr("b"));
+    ASSERT_TRUE(fctB != nullptr);
+    ASSERT_EQ(6, *fctB(ctx->getDataPtr()));
+    // Evaluate c.
+    auto fctC = reinterpret_cast<int64_t* (*)(char*)>(compiled.getFctPtr("c"));
+    ASSERT_TRUE(fctC != nullptr);
+    ASSERT_EQ(18, *fctC(ctx->getDataPtr()));
+}
+
+TEST(Backend, varDefComplexType) {
+    Environment env;
+    env.addModule(BuiltInsModule());
+    CompileResult compiled = compile(env,
+        "var a : String; expr b : String = substr(a, 6, 5);", OptLevel::O0, true, false);
+    std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
+    // Store a.
+    auto storeA = reinterpret_cast<void(*)(char*, std::string*)>(compiled.getFctPtr("a"));
+    std::string str("Hello World");
+    storeA(ctx->getDataPtr(), &str);
+    // Evaluate b.
+    auto fctB = reinterpret_cast<std::string* (*)(char*)>(compiled.getFctPtr("b"));
+    ASSERT_TRUE(fctB != nullptr);
+    ASSERT_EQ("World", *fctB(ctx->getDataPtr()));
+    // Repeat.
+    str = "1234567890";
+    storeA(ctx->getDataPtr(), &str);
+    ASSERT_EQ("7890", *fctB(ctx->getDataPtr()));
 }
 
 } // namespace jex

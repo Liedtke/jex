@@ -79,6 +79,8 @@ std::ostream& operator<<(std::ostream& str, const Token& token) {
             return str << "'var'";
         case Token::Kind::Const:
             return str << "'const'";
+        case Token::Kind::Expr:
+            return str << "'expr'";
     }
     return str; // LCOV_EXCL_LINE unreachable
 }
@@ -263,6 +265,9 @@ Token Lexer::getNext() {
             }
             if (text == "const") {
                 return setToken(Token::Kind::Const);
+            }
+            if (text == "expr") {
+                return setToken(Token::Kind::Expr);
             }
             if (text == "true" || text == "false") {
                 return setToken(Token::Kind::LiteralBool);

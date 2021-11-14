@@ -58,6 +58,9 @@ private:
     llvm::Constant* createConstant(TypeInfoId typeId, const std::string& constantName);
     llvm::Constant* createConstant(llvm::Type* type, void*& valPtr, size_t& space, int level);
 
+    void createStoreVariableFct(AstVariableDef& node);
+    void createExprFct(AstVariableDef& node);
+
     template<typename Iter>
     void createInitDestructFct(Iter symBegin, Iter symEnd, const char* prefix,
                                void(CodeGenVisitor::*createCall)(const Symbol*));

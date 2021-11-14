@@ -49,6 +49,7 @@ public:
         Semicolon,
         Var,
         Const,
+        Expr,
         Assign,
     } kind = Kind::Invalid;
     Location location;

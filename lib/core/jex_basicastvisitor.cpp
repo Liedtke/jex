@@ -49,7 +49,9 @@ void BasicAstVisitor::visit(AstVarArg& node) {
 void BasicAstVisitor::visit(AstVariableDef& node) {
     node.d_name->accept(*this);
     node.d_type->accept(*this);
-    node.d_expr->accept(*this);
+    if (node.d_expr != nullptr) {
+        node.d_expr->accept(*this);
+    }
 }
 
 void BasicAstVisitor::visit(AstConstantExpr& node) {

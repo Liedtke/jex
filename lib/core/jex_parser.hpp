@@ -50,6 +50,7 @@ private:
     AstVariableDef* parseVariableDef();
     AstRoot* parseRoot();
     [[noreturn]] void throwUnexpected(std::string_view expecting);
+    void expect(Token::Kind token, std::string_view expectingMsg);
 };
 
 } // namespace jex

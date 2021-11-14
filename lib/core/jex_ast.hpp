@@ -42,6 +42,7 @@ enum class OpType {
 enum class VariableKind {
     Var,
     Const,
+    Expr,
 };
 
 class IAstNode : NoCopy {
@@ -280,7 +281,7 @@ public:
     VariableKind d_kind;
     AstIdentifier* d_name;
     AstIdentifier* d_type;
-    IAstExpression* d_expr;
+    IAstExpression* d_expr; // Is nullptr for VariableKind::Var.
 
     AstVariableDef(const Location& loc, AstIdentifier* name, AstIdentifier* type, IAstExpression* expr, VariableKind kind)
     : IAstExpression(loc, type->d_resultType)
@@ -299,7 +300,7 @@ public:
     }
 
     bool isConstant() const override {
-        return d_expr->isConstant();
+        return d_expr && d_expr->isConstant();
     }
 };
 

@@ -59,44 +59,44 @@ constexpr int64_t operator"" _i64(unsigned long long in) {
 
 static TestConstFoldingT tests[] = {
     {   // Test folding of simple expression.
-        "var x: Integer = 1 + 2 + 4 + (2 * 1) + (1 + 0);",
-        "var x: Integer = (([const_Integer_l1_c18] + (2 * 1)) + [const_Integer_l1_c41]);\n",
-        {{"const_Integer_l1_c18", 7_i64}, {"const_Integer_l1_c41", 1_i64}}
+        "expr x: Integer = 1 + 2 + 4 + (2 * 1) + (1 + 0);",
+        "expr x: Integer = (([const_Integer_l1_c19] + (2 * 1)) + [const_Integer_l1_c42]);\n",
+        {{"const_Integer_l1_c19", 7_i64}, {"const_Integer_l1_c42", 1_i64}}
     },
     {   // Test folding of if expression true branch.
-        "var x: Integer = if(true, (1+2)*3, 2+1);",
-        "var x: Integer = ([const_Integer_l1_c28] * 3);\n",
-        {{"const_Integer_l1_c28", 3_i64}}
+        "expr x: Integer = if(true, (1+2)*3, 2+1);",
+        "expr x: Integer = ([const_Integer_l1_c29] * 3);\n",
+        {{"const_Integer_l1_c29", 3_i64}}
     },
     {   // Test folding of if expression false branch, continued folding.
-        "var x: Integer = if(false, 2*3, 1+2) + 3;",
-        "var x: Integer = [const_Integer_l1_c18];\n",
-        {{"const_Integer_l1_c18", 6_i64}}
+        "expr x: Integer = if(false, 2*3, 1+2) + 3;",
+        "expr x: Integer = [const_Integer_l1_c19];\n",
+        {{"const_Integer_l1_c19", 6_i64}}
     },
     {   // Test folding of nested if.
-        "var x: Integer = if(false, 2*3, if(true, 1+2, 3+4) + 5) + 6;",
-        "var x: Integer = [const_Integer_l1_c18];\n",
-        {{"const_Integer_l1_c18", 14_i64}}
+        "expr x: Integer = if(false, 2*3, if(true, 1+2, 3+4) + 5) + 6;",
+        "expr x: Integer = [const_Integer_l1_c19];\n",
+        {{"const_Integer_l1_c19", 14_i64}}
     },
     {   // Test folding of nested if condition.
-        "var x: Integer = if(if(false, true, false), 2*3, (1+1)*2);",
-        "var x: Integer = ([const_Integer_l1_c51] * 2);\n",
-        {{"const_Integer_l1_c51", 2_i64}}
+        "expr x: Integer = if(if(false, true, false), 2*3, (1+1)*2);",
+        "expr x: Integer = ([const_Integer_l1_c52] * 2);\n",
+        {{"const_Integer_l1_c52", 2_i64}}
     },
     {   // Test folding of if branches with non-const condition.
-        "var x: Integer = if(2*2 == 3, 1+1, 2+2);",
-        "var x: Integer = if(((2 * 2) == 3), [const_Integer_l1_c31], [const_Integer_l1_c36]);\n",
-        {{"const_Integer_l1_c31", 2_i64}, {"const_Integer_l1_c36", 4_i64}}
+        "expr x: Integer = if(2*2 == 3, 1+1, 2+2);",
+        "expr x: Integer = if(((2 * 2) == 3), [const_Integer_l1_c32], [const_Integer_l1_c37]);\n",
+        {{"const_Integer_l1_c32", 2_i64}, {"const_Integer_l1_c37", 4_i64}}
     },
     {   // Test folding of complex type.
-        "var x: String = substr(\"test\", 2, 2);",
-        "var x: String = [const_String_l1_c17];\n",
-        {{"const_String_l1_c17", std::string("st")}}
+        "expr x: String = substr(\"test\", 2, 2);",
+        "expr x: String = [const_String_l1_c18];\n",
+        {{"const_String_l1_c18", std::string("st")}}
     },
     {   // Test folding of complex type nested.
-        "var x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
-        "var x: String = [const_String_l1_c17];\n",
-        {{"const_String_l1_c17", std::string("decent")}}
+        "expr x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
+        "expr x: String = [const_String_l1_c18];\n",
+        {{"const_String_l1_c18", std::string("decent")}}
     },
     {   // Test folding with variable declared as const.
         "const x: String = substr(substr(\"This is a decently sized string for allocations\", 0, 100), 10, 6);",
@@ -112,65 +112,69 @@ static TestConstFoldingT tests[] = {
     },
     {   // Test folding with const folding disabled.
         // As the varialbe is not declared as const, it may not be folded.
-        "var x: Integer = 1 + 1;",
-        "var x: Integer = (1 + 1);\n",
+        "expr x: Integer = 1 + 1;",
+        "expr x: Integer = (1 + 1);\n",
         {},
         false
     },
     {   // Unary-not is registered as foldable.
-        "var x: Bool = !true;",
-        "var x: Bool = [const_Bool_l1_c15];\n",
-        {{"const_Bool_l1_c15", false}},
+        "expr x: Bool = !true;",
+        "expr x: Bool = [const_Bool_l1_c16];\n",
+        {{"const_Bool_l1_c16", false}},
     },
     {   // Nesting of unary not.
-        "var x: Bool = !!!!true;",
-        "var x: Bool = [const_Bool_l1_c15];\n",
-        {{"const_Bool_l1_c15", true}},
+        "expr x: Bool = !!!!true;",
+        "expr x: Bool = [const_Bool_l1_c16];\n",
+        {{"const_Bool_l1_c16", true}},
     },
     {   // Unary-minus is not registered as foldable.
-        "var x: Integer = -(1 + 3);",
-        "var x: Integer = -[const_Integer_l1_c20];\n",
-        {{"const_Integer_l1_c20", 4_i64}},
+        "expr x: Integer = -(1 + 3);",
+        "expr x: Integer = -[const_Integer_l1_c21];\n",
+        {{"const_Integer_l1_c21", 4_i64}},
     },
     {   // true && ... --> ...
-        "var x: Bool = getConst(true) && getNonConst(false);",
-        "var x: Bool = getNonConst(false);\n",
+        "expr x: Bool = getConst(true) && getNonConst(false);",
+        "expr x: Bool = getNonConst(false);\n",
     },
     {   // false && ... --> false
-        "var x: Bool = false && getNonConst(true);",
-        "var x: Bool = false;\n",
+        "expr x: Bool = false && getNonConst(true);",
+        "expr x: Bool = false;\n",
     },
     {   // false && ... --> false
-        "var x: Bool = getConst(false) && getConst(true);",
-        "var x: Bool = [const_Bool_l1_c15];\n",
-        {{"const_Bool_l1_c15", false}},
+        "expr x: Bool = getConst(false) && getConst(true);",
+        "expr x: Bool = [const_Bool_l1_c16];\n",
+        {{"const_Bool_l1_c16", false}},
     },
     {   // If && lhs can't be evaluated, rhs is not folded at all.
-        "var x: Bool = getNonConst(false) && getConst(true);",
-        "var x: Bool = (getNonConst(false) && getConst(true));\n",
+        "expr x: Bool = getNonConst(false) && getConst(true);",
+        "expr x: Bool = (getNonConst(false) && getConst(true));\n",
     },
     {   // false || ... --> ...
-        "var x: Bool = getConst(false) || getNonConst(false);",
-        "var x: Bool = getNonConst(false);\n",
+        "expr x: Bool = getConst(false) || getNonConst(false);",
+        "expr x: Bool = getNonConst(false);\n",
     },
     {   // true || ... --> true
-        "var x: Bool = getConst(true) || getNonConst(false);",
-        "var x: Bool = [const_Bool_l1_c15];\n",
-        {{"const_Bool_l1_c15", true}},
+        "expr x: Bool = getConst(true) || getNonConst(false);",
+        "expr x: Bool = [const_Bool_l1_c16];\n",
+        {{"const_Bool_l1_c16", true}},
     },
     {   // true || ... --> true
-        "var x: Bool = true || getNonConst(false);",
-        "var x: Bool = true;\n",
+        "expr x: Bool = true || getNonConst(false);",
+        "expr x: Bool = true;\n",
     },
     {   // If || lhs can't be evaluated, rhs is not folded at all.
-        "var x: Bool = getNonConst(true) || getConst(false);",
-        "var x: Bool = (getNonConst(true) || getConst(false));\n",
+        "expr x: Bool = getNonConst(true) || getConst(false);",
+        "expr x: Bool = (getNonConst(true) || getConst(false));\n",
     },
     {   // Constants used in other constants are also folded.
         "const x: Integer = 1 + 1; const y: Integer = 3; const z : Integer = x + x + y;",
         "const x: Integer = [const_Integer_l1_c20];\nconst y: Integer = 3;\nconst z: Integer = [const_Integer_l1_c69];\n",
         {{"const_Integer_l1_c20", 2_i64}, {"const_Integer_l1_c69", 7_i64}}
-    }
+    },
+    {   // var defs are not constant.
+        "var a: Integer;\nexpr b: Integer = a + 1;\n",
+        "var a: Integer;\nexpr b: Integer = (a + 1);\n",
+    },
 };
 
 TEST(ConstantFolding, testNonConstConst) {

@@ -94,8 +94,8 @@ TEST(Codegen, simpleVarDef) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : Integer = 123;\n"
-    "var b : Float = 123.456;\n");
+    "expr a : Integer = 123;\n"
+    "expr b : Float = 123.456;\n");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -161,7 +161,7 @@ TEST(Codegen, operatorCall) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : Integer = 123 + 5;");
+    "expr a : Integer = 123 + 5;");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -221,7 +221,7 @@ TEST(Codegen, operatorCallNoIntrinsic) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env, /*useIntrinsics*/false);
     Parser parser(compileEnv,
-    "var a : Float = 123.2 + 5.5;");
+    "expr a : Float = 123.2 + 5.5;");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -276,7 +276,7 @@ TEST(Codegen, operatorCallOptimized) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : Integer = 123 + 5 + (3 + 8);");
+    "expr a : Integer = 123 + 5 + (3 + 8);");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -326,7 +326,7 @@ TEST(Codegen, ifExpression) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env, false);
     Parser parser(compileEnv,
-    "var a : Integer = if(1 < 1, 1+1, 2+2);");
+    "expr a : Integer = if(1 < 1, 1+1, 2+2);");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -399,7 +399,7 @@ TEST(Codegen, stringLiteral) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : String = \"Hello World!\";");
+    "expr a : String = \"Hello World!\";");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -416,7 +416,7 @@ source_filename = "test"
 %String = type { i64, i64, i64, i64 }
 %Rctx = type opaque
 
-@strLit_l1_c18 = external constant %String
+@strLit_l1_c19 = external constant %String
 
 define %String* @a(%Rctx* %rctx) {
 entry:
@@ -426,7 +426,7 @@ begin:                                            ; preds = %entry
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
-  call void @__assign_String(%String* %varPtrTyped, %String* @strLit_l1_c18)
+  call void @__assign_String(%String* %varPtrTyped, %String* @strLit_l1_c19)
   ret %String* %varPtrTyped
 }
 
@@ -462,7 +462,7 @@ TEST(Codegen, stringExpression) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : String = substr(substr(\"Hello World!\", 6, 5), 0, 1);");
+    "expr a : String = substr(substr(\"Hello World!\", 6, 5), 0, 1);");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -479,7 +479,7 @@ source_filename = "test"
 %String = type { i64, i64, i64, i64 }
 %Rctx = type opaque
 
-@strLit_l1_c32 = external constant %String
+@strLit_l1_c33 = external constant %String
 
 define %String* @a(%Rctx* %rctx) {
 entry:
@@ -488,7 +488,7 @@ entry:
   br label %begin
 
 begin:                                            ; preds = %entry
-  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c32, i64 6, i64 5)
+  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c33, i64 6, i64 5)
   call void @_substr_String_Integer_Integer(%String* %res_substr1, %String* %res_substr, i64 0, i64 1)
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
@@ -536,7 +536,7 @@ TEST(Codegen, unwindingIfExpression) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    R"(var a : String = if(1 < 2, substr(substr("Hello World!", 6, 5), 0, 1), "Another string");)");
+    R"(expr a : String = if(1 < 2, substr(substr("Hello World!", 6, 5), 0, 1), "Another string");)");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -553,8 +553,8 @@ source_filename = "test"
 %String = type { i64, i64, i64, i64 }
 %Rctx = type opaque
 
-@strLit_l1_c42 = external constant %String
-@strLit_l1_c72 = external constant %String
+@strLit_l1_c43 = external constant %String
+@strLit_l1_c73 = external constant %String
 
 define %String* @a(%Rctx* %rctx) {
 entry:
@@ -571,7 +571,7 @@ begin:                                            ; preds = %entry
   br i1 %0, label %if_true, label %if_false
 
 if_true:                                          ; preds = %begin
-  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c42, i64 6, i64 5)
+  call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l1_c43, i64 6, i64 5)
   call void @_substr_String_Integer_Integer(%String* %res_substr2, %String* %res_substr, i64 0, i64 1)
   br label %if_cnt
 
@@ -580,7 +580,7 @@ if_false:                                         ; preds = %begin
   br label %if_cnt
 
 if_cnt:                                           ; preds = %if_false, %if_true
-  %if_res = phi %String* [ %res_substr2, %if_true ], [ @strLit_l1_c72, %if_false ]
+  %if_res = phi %String* [ %res_substr2, %if_true ], [ @strLit_l1_c73, %if_false ]
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %String*
@@ -641,7 +641,7 @@ TEST(Codegen, constFoldedValue) {
     env.addModule(BuiltInsModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : Integer = 1 + 2 * (4 - 2);");
+    "expr a : Integer = 1 + 2 * (4 - 2);");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -675,7 +675,7 @@ TEST(Codegen, constFoldedStruct) {
     env.addModule(ConstStructModule());
     CompileEnv compileEnv(env);
     Parser parser(compileEnv,
-    "var a : ConstStruct = createConstStruct();");
+    "expr a : ConstStruct = createConstStruct();");
     parser.parse();
     TypeInference typeInference(compileEnv);
     typeInference.run();
@@ -690,15 +690,15 @@ TEST(Codegen, constFoldedStruct) {
     const char* expected =
 R"IR(define %ConstStruct* @a(%Rctx* %rctx) {
 entry:
-  %const_ConstStruct_l1_c23 = alloca %ConstStruct, align 8
+  %const_ConstStruct_l1_c24 = alloca %ConstStruct, align 8
   br label %begin
 
 begin:                                            ; preds = %entry
-  store %ConstStruct { i1 true, i32 -2, i8 3, i16 4, i64 -5, float 0x3FF3AE1480000000, double -4.560000e+00 }, %ConstStruct* %const_ConstStruct_l1_c23, align 8
+  store %ConstStruct { i1 true, i32 -2, i8 3, i16 4, i64 -5, float 0x3FF3AE1480000000, double -4.560000e+00 }, %ConstStruct* %const_ConstStruct_l1_c24, align 8
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %ConstStruct*
-  %0 = load %ConstStruct, %ConstStruct* %const_ConstStruct_l1_c23, align 8
+  %0 = load %ConstStruct, %ConstStruct* %const_ConstStruct_l1_c24, align 8
   store %ConstStruct %0, %ConstStruct* %varPtrTyped, align 8
   ret %ConstStruct* %varPtrTyped
 }

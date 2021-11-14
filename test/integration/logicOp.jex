@@ -10,7 +10,7 @@
 // CHECK-NEXT:   br label %next
 // CHECK:      next:                                             ; preds = %rhsEval, %begin
 // CHECK-NEXT:   %logRes = phi i1 [ true, %begin ], [ %1, %rhsEval ]
-var a : Bool = 1 == 2 || 2 == 1;
+expr a : Bool = 1 == 2 || 2 == 1;
 
 // Logical and:
 // CHECK:        br i1 false, label %next, label %rhsEval
@@ -20,7 +20,7 @@ var a : Bool = 1 == 2 || 2 == 1;
 // CHECK-NEXT:   br label %next
 // CHECK:      next:                                             ; preds = %rhsEval, %begin
 // CHECK-NEXT:   %logRes = phi i1 [ false, %begin ], [ %0, %rhsEval ]
-var b : Bool = true && 5 < 6;
+expr b : Bool = true && 5 < 6;
 
 // Logical and with non-literal lhs:
 // CHECK:        call void @_operator_lt_Integer_Integer(i1* %res_operator_lt, i64 2, i64 3)
@@ -33,7 +33,7 @@ var b : Bool = true && 5 < 6;
 // CHECK-NEXT:    br label %next
 // CHECK:      next:                                             ; preds = %rhsEval, %begin
 // CHECK-NEXT:   %logRes = phi i1 [ false, %begin ], [ %2, %rhsEval ]
-var c : Bool = 2 < 3 && 5 < 6;
+expr c : Bool = 2 < 3 && 5 < 6;
 
 // Logical or with trivial rhs:
 // CHECK:        br i1 false, label %next, label %rhsEval
@@ -41,7 +41,7 @@ var c : Bool = 2 < 3 && 5 < 6;
 // CHECK-NEXT:   br label %next
 // CHECK:      next:                                             ; preds = %rhsEval, %begin
 // CHECK-NEXT:   %logRes = phi i1 [ true, %begin ], [ true, %rhsEval ]
-var d : Bool = false || true;
+expr d : Bool = false || true;
 
 // Logical or with unwinding:
 // CHECK:        %unw_flag = alloca i1, align 1
@@ -51,8 +51,8 @@ var d : Bool = false || true;
 // CHECK-NEXT:   br i1 false, label %next, label %rhsEval
 // CHECK:      rhsEval:                                          ; preds = %begin
 // CHECK-NEXT:   store i1 false, i1* %unw_flag, align 1
-// CHECK-NEXT:   call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l69_c31, i64 0, i64 2)
-// CHECK-NEXT:   call void @_operator_eq_String_String(i1* %res_operator_eq, %String* %res_substr, %String* @strLit_l69_c48)
+// CHECK-NEXT:   call void @_substr_String_Integer_Integer(%String* %res_substr, %String* @strLit_l69_c32, i64 0, i64 2)
+// CHECK-NEXT:   call void @_operator_eq_String_String(i1* %res_operator_eq, %String* %res_substr, %String* @strLit_l69_c49)
 // CHECK-NEXT:   %0 = load i1, i1* %res_operator_eq, align 1
 // CHECK-NEXT:   br label %next
 // CHECK:      next:                                             ; preds = %rhsEval, %begin
@@ -66,7 +66,7 @@ var d : Bool = false || true;
 // CHECK-NEXT:   br label %unwind
 // CHECK:      unwind:                                           ; preds = %unwind2, %unwind1
 // CHECK-NEXT:   ret i1* %varPtrTyped
-var e: Bool = false || substr("test", 0, 2) == "te";
+expr e: Bool = false || substr("test", 0, 2) == "te";
 
 // Logical or with unwinding in lhs -> no unwinding branching:
 // CHECK:        %0 = load i1, i1* %res_operator_eq, align 1
@@ -79,4 +79,4 @@ var e: Bool = false || substr("test", 0, 2) == "te";
 // CHECK:      unwind:                                           ; preds = %next
 // CHECK-NEXT:   call void @__dtor_String(%String* %res_substr)
 // CHECK-NEXT:   ret i1* %varPtrTyped
-var f: Bool = substr("test", 0, 2) == "te" || true;
+expr f: Bool = substr("test", 0, 2) == "te" || true;

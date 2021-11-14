@@ -1,0 +1,19 @@
+var  a: Integer;
+expr b: Integer = a + 1;
+
+// RUN: %jexc -f %s -l | FileCheck-12 %s
+// CHECK:      define void @a(%Rctx* %rctx, i64* %valPtr) {
+// CHECK-NEXT: entry:
+// CHECK-NEXT:   %0 = load i64, i64* %valPtr, align 4
+// CHECK-NEXT:   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+// CHECK-NEXT:   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+// CHECK-NEXT:   %varPtrTyped = bitcast i8* %varPtr to i64*
+// CHECK-NEXT:   store i64 %0, i64* %varPtrTyped, align 4
+// CHECK-NEXT:   ret
+// CHECK-NEXT: }
+// CHECK:      define i64* @b(%Rctx* %rctx) {
+// CHECK:        %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
+// CHECK-NEXT:   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
+// CHECK-NEXT:   %varPtrTyped = bitcast i8* %varPtr to i64*
+// CHECK-NEXT:   %0 = load i64, i64* %varPtrTyped, align 4
+// CHECK-NEXT:   call void @_operator_add_Integer_Integer__intrinsic(i64* %res_operator_add, i64 %0, i64 1)

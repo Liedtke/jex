@@ -142,6 +142,8 @@ static TestSingleToken tokenTests[] = {
     {" varx ", Token{Token::Kind::Ident, Location{{1, 2}, {1, 5}}, "varx"}},
     {" const ", Token{Token::Kind::Const, Location{{1, 2}, {1, 6}}, "const"}},
     {" constx ", Token{Token::Kind::Ident, Location{{1, 2}, {1, 7}}, "constx"}},
+    {" expr ", Token{Token::Kind::Expr, Location{{1, 2}, {1, 5}}, "expr"}},
+    {" exprx ", Token{Token::Kind::Ident, Location{{1, 2}, {1, 6}}, "exprx"}},
     {" true ", Token{Token::Kind::LiteralBool, Location{{1, 2}, {1, 5}}, "true"}},
     {" false ", Token{Token::Kind::LiteralBool, Location{{1, 2}, {1, 6}}, "false"}},
 };

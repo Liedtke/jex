@@ -146,12 +146,17 @@ void PrettyPrinter::visit(AstVariableDef& node) {
         case VariableKind::Var:
             d_str << "var ";
             break;
+        case VariableKind::Expr:
+            d_str << "expr ";
+            break;
     }
     node.d_name->accept(*this);
     d_str << ": ";
     node.d_type->accept(*this);
-    d_str << " = ";
-    node.d_expr->accept(*this);
+    if (node.d_expr != nullptr) {
+        d_str << " = ";
+        node.d_expr->accept(*this);
+    }
     d_str << ";\n";
 }
 

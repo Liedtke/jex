@@ -150,9 +150,43 @@ void CodeGenVisitor::createAssign(llvm::Value* result, llvm::Value* source, Type
 void CodeGenVisitor::visit(AstVariableDef& node) {
     assert(d_currFct == nullptr);
     assert(!d_unwind);
-    if (node.d_kind == VariableKind::Const) {
-        return; // Nothing to do for constants.
+    switch(node.d_kind) {
+        case VariableKind::Const:
+            return; // Nothing to do for constants.
+        case VariableKind::Var:
+            return createStoreVariableFct(node);
+        case VariableKind::Expr:
+            return createExprFct(node);
     }
+    if (node.d_kind == VariableKind::Const) {
+
+    }
+}
+
+void CodeGenVisitor::createStoreVariableFct(AstVariableDef& node) {
+    assert(node.d_kind == VariableKind::Var);
+    llvm::Type* voidTy = llvm::Type::getVoidTy(d_module->llvmContext());
+    llvm::Type* valuePtrTy = d_utils->getType(node.d_resultType)->getPointerTo();
+    llvm::FunctionType* fctType = llvm::FunctionType::get(voidTy, {d_rctxType->getPointerTo(), valuePtrTy}, false);
+    d_currFct = llvm::Function::Create(
+        fctType, llvm::GlobalValue::LinkageTypes::ExternalLinkage, toLlvm(node.d_name->d_name), d_module->llvmModule());
+    d_currFct->getArg(0)->setName("rctx");
+    d_currFct->getArg(1)->setName("valPtr");
+    d_builder->SetInsertPoint(createBlock("entry"));
+    // Perform assignment.
+    if (node.d_resultType->kind() == TypeKind::Value) {
+        // Store value via load and store instruction.
+        llvm::Value* val = d_builder->CreateLoad(d_currFct->getArg(1));
+        d_builder->CreateStore(val, getVarPtr(node.d_name->d_symbol));
+    } else {
+        createAssign(getVarPtr(node.d_name->d_symbol), d_currFct->getArg(1), node.d_resultType);
+    }
+    d_builder->CreateRetVoid();
+    d_currFct = nullptr;
+}
+
+void CodeGenVisitor::createExprFct(AstVariableDef& node) {
+    assert(node.d_kind == VariableKind::Expr);
     // Create function.
     llvm::Type* resultPtrType = d_utils->getReturnType(node.d_type->d_resultType);
     llvm::FunctionType* fctType = llvm::FunctionType::get(resultPtrType, {d_rctxType->getPointerTo()}, false);
@@ -447,7 +481,7 @@ void CodeGenVisitor::visit(AstIdentifier& node) {
         assert(d_result != nullptr);
         return;
     }
-    assert(defNode->d_kind == VariableKind::Var);
+    assert(defNode->d_kind == VariableKind::Var || defNode->d_kind == VariableKind::Expr);
     d_result = getVarPtr(node.d_symbol);
     if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
         d_result = d_builder->CreateLoad(d_result);
