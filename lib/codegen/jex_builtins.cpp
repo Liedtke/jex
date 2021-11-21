@@ -11,6 +11,21 @@ namespace jex {
 
 namespace {
 
+template <typename T>
+void stringCtor(std::string* res, T val) {
+    new(res) std::string(std::to_string(val));
+}
+
+template <typename T>
+void integerCtor(int64_t* res, T val) {
+    *res = static_cast<int64_t>(val);
+}
+
+template <typename T>
+void floatCtor(double* res, T val) {
+    *res = static_cast<double>(val);
+}
+
 // T* return type could also be replaced with decltype(Op()(T(), T())) if desired.
 // However, T* ensures consistency between return type and type of inputs.
 template <typename Op, typename T>
@@ -172,6 +187,15 @@ void generateUnaryNot(IntrinsicGen& gen) {
     builder.CreateStore(result, gen.fct().getArg(0));
 }
 
+template <llvm::Instruction::CastOps castOp>
+void genCast(IntrinsicGen& gen) {
+    llvm::IRBuilder<>& builder = gen.builder();
+    llvm::Argument* resultPtr = gen.fct().getArg(0);
+    llvm::Type* targetTy = resultPtr->getType()->getPointerElementType();
+    llvm::Value* result = builder.CreateCast(castOp, gen.fct().getArg(1), targetTy, "result");
+    builder.CreateStore(result, resultPtr);
+}
+
 void substr(std::string* res, const std::string* in, int64_t pos, int64_t count) {
     assert(res != nullptr);
     assert(pos >= 0); // TODO: Figure out how to support error handling in expressions.
@@ -205,6 +229,9 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(FctDesc<ArgBool, ArgBool>("operator_not", unaryOp<std::logical_not<>>, generateUnaryNot, FctFlags::Pure));
 
     // === Integer ===
+    // Constructors
+    registry.registerFct(FctDesc<ArgInteger, ArgBool>(ArgInteger::name, integerCtor, genCast<llvm::Instruction::ZExt>, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgInteger, ArgFloat>(ArgInteger::name, integerCtor, genCast<llvm::Instruction::FPToSI>, FctFlags::Pure));
     // Arithmetics
     using IntegerArithm = FctDesc<ArgInteger, ArgInteger, ArgInteger>;
     registry.registerFct(IntegerArithm("operator_add", op<std::plus<>>, generateOp<llvm::BinaryOperator::Add>, FctFlags::Pure));
@@ -231,6 +258,9 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(FctDesc<ArgInteger, ArgVarArg<ArgInteger>>("max", max, generateMax, FctFlags::Pure));
 
     // === Float ===
+    // Constructors
+    registry.registerFct(FctDesc<ArgFloat, ArgBool>(ArgFloat::name, floatCtor, genCast<llvm::Instruction::UIToFP>, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgFloat, ArgInteger>(ArgFloat::name, floatCtor, genCast<llvm::Instruction::SIToFP>, FctFlags::Pure));
     // Arithmetics
     using FloatArithm = FctDesc<ArgFloat, ArgFloat, ArgFloat>;
     registry.registerFct(FloatArithm("operator_add", op<std::plus<>>, generateOp<llvm::BinaryOperator::FAdd>, FctFlags::Pure));
@@ -251,6 +281,11 @@ void BuiltInsModule::registerFcts(Registry& registry) const {
     registry.registerFct(FctDesc<ArgFloat, ArgVarArg<ArgFloat>>("max", max, NO_INTRINSIC, FctFlags::Pure));
 
     // === String ===
+    // Constructors
+    registry.registerFct(FctDesc<ArgString, ArgBool>(ArgString::name, stringCtor, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgString, ArgInteger>(ArgString::name, stringCtor, NO_INTRINSIC, FctFlags::Pure));
+    registry.registerFct(FctDesc<ArgString, ArgFloat>(ArgString::name, stringCtor, NO_INTRINSIC, FctFlags::Pure));
+
     registry.registerFct(FctDesc<ArgString, ArgString, ArgInteger, ArgInteger>("substr", substr, NO_INTRINSIC, FctFlags::Pure));
     registry.registerFct(FctDesc<ArgString, ArgString, ArgVarArg<ArgString>>("join", join, NO_INTRINSIC, FctFlags::Pure));
     registry.registerFct(FctDesc<ArgBool, ArgString, ArgString>("operator_eq", cmpPtr<std::equal_to<>>, NO_INTRINSIC, FctFlags::Pure));

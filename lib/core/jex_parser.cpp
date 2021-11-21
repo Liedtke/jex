@@ -176,7 +176,7 @@ IAstExpression* Parser::parseIdentOrCall() {
     // parse function call
     if (d_currToken.kind == Token::Kind::ParensL) {
         Symbol::Kind symKind = ident->d_symbol->kind;
-        if (symKind != Symbol::Kind::Function && symKind != Symbol::Kind::Unresolved) {
+        if (symKind != Symbol::Kind::Function && symKind != Symbol::Kind::Type && symKind != Symbol::Kind::Unresolved) {
             d_env.createError(ident, "Invalid call: '" + std::string(ident->d_name) + "' is not a function");
         }
         AstArgList* args = parseArgList();

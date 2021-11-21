@@ -60,6 +60,29 @@ std::string operator"" _s(const char *in, unsigned long len) {
 }
 
 static TestEvalT evals[] = {
+    // Integer constructors
+    {"Integer = Integer(false)", 0_i64},
+    {"Integer = Integer(true)", 1_i64},
+    {"Integer = Integer(-1.23)", -1_i64},
+    {"Integer = Integer(0.0)", 0_i64},
+    {"Integer = Integer(1e10)", 10000000000_i64},
+    // Float constructors
+    {"Float = Float(false)", 0.0},
+    {"Float = Float(true)", 1.0},
+    {"Float = Float(12345)", 12345.0},
+    {"Float = Float(-12345)", -12345.0},
+    {"Float = Float(0)", 0.0},
+    // String constructors
+    {R"(String = String(true))", "1"_s},
+    {R"(String = String(false))", "0"_s},
+    {R"(String = String(0))", "0"_s},
+    {R"(String = String(1234567))", "1234567"_s},
+    {R"(String = String(-987654321))", "-987654321"_s},
+    {R"(String = String(1e10))", "10000000000.000000"_s},
+    {R"(String = String(-123.456))", "-123.456000"_s},
+    {R"(String = String(0.0))", "0.000000"_s},
+    {R"(String = String(1.0 / 0.0))", "inf"_s},
+    {R"(String = String(-1.0 / 0.0))", "-inf"_s},
     // Bool arithmetics
     {"Bool = true & true", true},
     {"Bool = true & false", false},

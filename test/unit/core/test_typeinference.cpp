@@ -26,6 +26,7 @@ void pass(uint32_t* res, uint32_t in) {} // LCOV_EXCL_LINE
 void add(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
 void max(uint32_t* res, const VarArg<uint32_t>* args) {} // LCOV_EXCL_LINE
 void max(uint32_t* res, uint32_t a, uint32_t b) {} // LCOV_EXCL_LINE
+void defaultConstruct(uint32_t* res) {} // LCOV_EXCL_LINE
 
 void registerTestFcts(Environment& env) {
     Registry registry(env);
@@ -51,6 +52,8 @@ void registerTestFcts(Environment& env) {
     registry.registerFct(FctDesc<ArgUInt32, ArgUInt32, ArgUInt32>("max", max));
     // Function with var arg.
     registry.registerFct(FctDesc<ArgUInt32, ArgVarArg<ArgUInt32>>("max", max));
+    // Default constructor.
+    registry.registerFct(FctDesc<ArgUInt32>(ArgUInt32::name, defaultConstruct));
 }
 
 } // anonymous namespace
@@ -188,6 +191,7 @@ static const char* successTests[] = {
     "expr a: UInt32 = max(x);", // var arg
     "expr a: Bool = true || false;",
     "expr a: Bool = true && false;",
+    "expr a: UInt32 = UInt32();", // constructor: function with same name as type
     "var a: Bool;"
 };
 

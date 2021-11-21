@@ -1,4 +1,4 @@
-From 457a020d40a618d522054428bcd61678b1911ca8 Mon Sep 17 00:00:00 2001
+From 733639f4b1c7c55d69f63c49b06a84f48b9dbd20 Mon Sep 17 00:00:00 2001
 From: Matthias Liedtke <mliedtke@gmx.de>
 Date: Sun, 21 Nov 2021 14:46:11 +0100
 Subject: [PATCH] Add jex stubs to CompilerExplorer
@@ -15,11 +15,11 @@ Subject: [PATCH] Add jex stubs to CompilerExplorer
 
 diff --git a/etc/config/jex.defaults.properties b/etc/config/jex.defaults.properties
 new file mode 100644
-index 00000000..bc395132
+index 00000000..791a35fe
 --- /dev/null
 +++ b/etc/config/jex.defaults.properties
 @@ -0,0 +1,5 @@
-+compilers=/usr/bin/jexc
++compilers=jexc
 +name=jexc
 +supportsExecute=false
 +supportsBinary=false

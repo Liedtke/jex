@@ -53,7 +53,6 @@ static TestExp errorTests[] = {
     {"expr Type: Type = 1;", "1.6-1.9: Error: Duplicate identifier 'Type'"},
     // expressions
     {"expr a: Type = Type;", "1.16-1.19: Error: Invalid expression: 'Type' is not a variable"},
-    {"expr a: Type = Type();", "1.16-1.19: Error: Invalid call: 'Type' is not a function"},
     {"expr a: Type = undefined;", "1.16-1.24: Error: Unknown identifier 'undefined'"},
     {"expr a: Type = undefined();", "1.16-1.24: Error: Unknown identifier 'undefined'"},
     {"expr a: Type = 9223372036854775808;", "1.16-1.34: Error: Invalid integer literal"},

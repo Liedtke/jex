@@ -25,10 +25,8 @@ SymbolTable::SymbolTable(CompileEnv& env)
     }
     // add functions
     for (auto& fctEntry : d_env.fctLibrary()) {
-        auto inserted = d_symbols.emplace(fctEntry.first, std::make_unique<Symbol>(Symbol::Kind::Function, fctEntry.first, typeUnresolved, nullptr));
-        if (!inserted.second) {
-            throw InternalError("Invalid function '" + fctEntry.first + "': There is already a type registered with the same name");
-        }
+        // For constructors this will not overwrite the type and it is OK to have functions named as a Type.
+        d_symbols.emplace(fctEntry.first, std::make_unique<Symbol>(Symbol::Kind::Function, fctEntry.first, typeUnresolved, nullptr));
     }
 }
 
