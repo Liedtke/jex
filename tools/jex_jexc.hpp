@@ -93,6 +93,7 @@ struct JexcCmdParser {
     bool d_useIntrinsics = true;
     bool d_enableConstFolding = true;
     std::optional<std::string> d_fileName;
+    std::optional<std::string> d_outFileName;
     bool d_printIR = false;
 public:
     JexcCmdParser() {
@@ -121,6 +122,14 @@ public:
            [this](const std::string& /*in*/) {
                d_printIR = true;
            });
+        d_parser.addOption('o', "output-file", "Write the output to a file.", true,
+            [this](const std::string& in ) {
+                d_outFileName.emplace(in);
+            });
+        d_parser.addOption('g', "debug-info", "Enable debug info (currently not supported).", false,
+            [](const std::string& /*in*/ ) {});
+        d_parser.addOption('S', "compile-only", "Currently not supported.", false,
+            [](const std::string& /*in*/ ) {});
     }
     bool evaluate(char** argv, std::ostream& err) {
         bool success = d_parser.evaluate(argv, err);

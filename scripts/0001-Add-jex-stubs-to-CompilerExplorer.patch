@@ -1,0 +1,64 @@
+From 457a020d40a618d522054428bcd61678b1911ca8 Mon Sep 17 00:00:00 2001
+From: Matthias Liedtke <mliedtke@gmx.de>
+Date: Sun, 21 Nov 2021 14:46:11 +0100
+Subject: [PATCH] Add jex stubs to CompilerExplorer
+
+---
+ etc/config/jex.defaults.properties | 5 +++++
+ examples/jex/default.jex           | 1 +
+ lib/compilers/jex.js               | 5 +++++
+ lib/languages.js                   | 6 ++++++
+ 4 files changed, 17 insertions(+)
+ create mode 100644 etc/config/jex.defaults.properties
+ create mode 100644 examples/jex/default.jex
+ create mode 100644 lib/compilers/jex.js
+
+diff --git a/etc/config/jex.defaults.properties b/etc/config/jex.defaults.properties
+new file mode 100644
+index 00000000..bc395132
+--- /dev/null
++++ b/etc/config/jex.defaults.properties
+@@ -0,0 +1,5 @@
++compilers=/usr/bin/jexc
++name=jexc
++supportsExecute=false
++supportsBinary=false
++options=
+diff --git a/examples/jex/default.jex b/examples/jex/default.jex
+new file mode 100644
+index 00000000..07ef30b7
+--- /dev/null
++++ b/examples/jex/default.jex
+@@ -0,0 +1 @@
++expr a: Integer = max(1, 2, 3);
+diff --git a/lib/compilers/jex.js b/lib/compilers/jex.js
+new file mode 100644
+index 00000000..794c3051
+--- /dev/null
++++ b/lib/compilers/jex.js
+@@ -0,0 +1,5 @@
++import { BaseCompiler } from '../base-compiler';
++
++export class JexCompiler extends BaseCompiler {
++    static get key() { return 'jex'; }
++}
+diff --git a/lib/languages.js b/lib/languages.js
+index ddd22c4c..ef26b21d 100644
+--- a/lib/languages.js
++++ b/lib/languages.js
+@@ -51,6 +51,12 @@ import _ from 'underscore';
+  * @type {CELanguages}
+  */
+ export const languages = {
++    jex: {
++        name: 'Jex',
++        monaco: null,
++        extensions: ['.jex'],
++        alias: [],
++    },
+     'c++': {
+         name: 'C++',
+         monaco: 'cppp',
+-- 
+2.25.1
+

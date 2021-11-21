@@ -22,10 +22,22 @@ int main(int /*argc*/, char *argv[]) {
         std::cerr << "Error: Couldn't read " << parser.d_fileName.value() << ".\n";
         return -1;
     }
+    // Open output stream.
+    std::ostream* outStream = &std::cout;
+    std::unique_ptr<std::ofstream> outFileStream;
+    if (parser.d_outFileName) {
+        outFileStream = std::make_unique<std::ofstream>(parser.d_outFileName.value());
+        if (!outFileStream->good()) {
+            std::cerr << "Error: Couldn't write to " << parser.d_outFileName.value() << ".\n";
+            return -1;
+        }
+        outStream = outFileStream.get();
+    }
+    // Print IR.
     if (parser.d_printIR) {
         Environment env;
         env.addModule(BuiltInsModule());
-        Compiler::printIR(std::cout, env, source, parser.d_optLevel, parser.d_useIntrinsics, parser.d_enableConstFolding);
+        Compiler::printIR(*outStream, env, source, parser.d_optLevel, parser.d_useIntrinsics, parser.d_enableConstFolding);
     }
     return 0;
 }

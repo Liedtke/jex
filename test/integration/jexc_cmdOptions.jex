@@ -20,4 +20,9 @@
 // RUN: %jexc -f %s -l -c -O 2 | FileCheck-12 %s -check-prefix=CHECK-5
 // CHECK-5: store i64 3, i64* %varPtrTyped, align 4
 
+// Test 6: No constant folding, intrinsics enabled, optimization --> optimizer folds addition
+// Adding -g -S which do not have any effect.
+// RUN: %jexc -f %s -l -c -O 2 -g -S | FileCheck-12 %s -check-prefix=CHECK-5
+// CHECK-6: store i64 3, i64* %varPtrTyped, align 4
+
 expr a: Integer = 1 + 2;
