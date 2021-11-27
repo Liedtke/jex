@@ -17,4 +17,11 @@ IntrinsicGen::~IntrinsicGen() {
     }
 }
 
+llvm::Value* IntrinsicGen::getStructElemPtr(llvm::Value* structPtr, int index, const llvm::Twine& name) {
+    assert(structPtr->getType()->isPointerTy());
+    llvm::Value* idx0 = llvm::ConstantInt::get(llvmContext(), llvm::APInt(32, 0));
+    llvm::Value* idx1 = llvm::ConstantInt::get(llvmContext(), llvm::APInt(32, index));
+    return d_builder->CreateGEP(structPtr, {idx0, idx1}, name);
+}
+
 } // namespace jex

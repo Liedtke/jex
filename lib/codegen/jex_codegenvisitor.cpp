@@ -449,24 +449,21 @@ void CodeGenVisitor::visit(AstConstantExpr& node) {
         d_result = constGlobal;
         return;
     }
+    llvm::Constant* initializer = nullptr;
     // For value type with explicitly registered type, try to build llvm::Constant.
     // This will allow further optimizations on LLVM side and better IR readability.
     if (node.d_resultType->kind() == TypeKind::Value && node.d_resultType->createTypeFct()) {
-        d_result = createConstant(node.d_resultType, node.d_constantName);
-        if (d_result != nullptr) {
-            if (node.d_resultType->callConv() == TypeInfo::CallConv::ByPointer) {
-                // Store on stack to be able to pass it by pointer.
-                llvm::Value* alloca = new llvm::AllocaInst(d_result->getType(), 0,
-                    node.d_constantName, &d_currFct->getEntryBlock());
-                d_builder->CreateStore(d_result, alloca);
-                d_result = alloca;
+        initializer = createConstant(node.d_resultType, node.d_constantName);
+        if (initializer != nullptr) {
+            if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
+                d_result = initializer;
+                return;
             }
-            return;
         }
     }
-    auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
+    auto linkage = llvm::GlobalValue::LinkageTypes::InternalLinkage;
     d_result = new llvm::GlobalVariable(d_module->llvmModule(), d_utils->getType(node.d_resultType),
-        /*isConstant*/true, linkage, nullptr, node.d_constantName);
+        /*isConstant*/true, linkage, initializer, node.d_constantName);
     if (node.d_resultType->callConv() == TypeInfo::CallConv::ByValue) {
         d_result = d_builder->CreateLoad(d_result);
     }

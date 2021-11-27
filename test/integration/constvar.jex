@@ -3,9 +3,9 @@
 const cInt    : Integer = 1 + 2 * 3; // 7
 const cIntLit : Integer = 1;
 
-// String literals and constants are externalized.
-// CHECK: @const_String_l9_c27 = external constant %String
-// CHECK @strLit_l10_c27 = external constant %String
+// String literals and constants are declared symbols.
+// CHECK: @const_String_l9_c27 = internal constant %String
+// CHECK @strLit_l10_c27 = internal constant %String
 const cStr    : String  = substr("Hello World!", 6, 5); // World
 const cStrLit : String  = "Test";
 

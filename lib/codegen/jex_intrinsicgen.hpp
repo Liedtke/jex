@@ -32,6 +32,8 @@ public:
     llvm::IRBuilder<>& builder() {
         return *d_builder;
     }
+
+    llvm::Value* getStructElemPtr(llvm::Value* structPtr, int index, const llvm::Twine& name = "");
 };
 
 } // namespace jex

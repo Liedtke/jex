@@ -690,20 +690,23 @@ TEST(Codegen, constFoldedStruct) {
     const char* expected =
 R"IR(define %ConstStruct* @a(%Rctx* %rctx) {
 entry:
-  %const_ConstStruct_l1_c24 = alloca %ConstStruct, align 8
   br label %begin
 
 begin:                                            ; preds = %entry
-  store %ConstStruct { i1 true, i32 -2, i8 3, i16 4, i64 -5, float 0x3FF3AE1480000000, double -4.560000e+00 }, %ConstStruct* %const_ConstStruct_l1_c24, align 8
   %rctxAsBytePtr = bitcast %Rctx* %rctx to i8*
   %varPtr = getelementptr i8, i8* %rctxAsBytePtr, i64 0
   %varPtrTyped = bitcast i8* %varPtr to %ConstStruct*
-  %0 = load %ConstStruct, %ConstStruct* %const_ConstStruct_l1_c24, align 8
+  %0 = load %ConstStruct, %ConstStruct* @const_ConstStruct_l1_c24, align 8
   store %ConstStruct %0, %ConstStruct* %varPtrTyped, align 8
   ret %ConstStruct* %varPtrTyped
 }
 )IR";
     ASSERT_EQ(expected, result);
+    result = std::string();
+    irstream << *codeGen.getLlvmModule().getNamedValue("const_ConstStruct_l1_c24");
+    ASSERT_EQ("@const_ConstStruct_l1_c24 = internal constant %ConstStruct "
+              "{ i1 true, i32 -2, i8 3, i16 4, i64 -5, float 0x3FF3AE1480000000, double -4.560000e+00 }",
+              result);
 }
 
 } // namespace jex
