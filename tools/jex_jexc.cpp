@@ -3,6 +3,7 @@
 #include <jex_compiler.hpp>
 #include <jex_environment.hpp>
 #include <jex_builtins.hpp>
+#include <jex_math.hpp>
 
 #include <fstream>
 #include <streambuf>
@@ -37,6 +38,7 @@ int main(int /*argc*/, char *argv[]) {
     if (parser.d_printIR) {
         Environment env;
         env.addModule(BuiltInsModule());
+        env.addModule(MathModule());
         Compiler::printIR(*outStream, env, source, parser.d_optLevel, parser.d_useIntrinsics, parser.d_enableConstFolding);
     }
     return 0;

@@ -1,4 +1,5 @@
 #include <jex_builtins.hpp>
+#include <jex_math.hpp>
 #include <jex_executioncontext.hpp>
 
 #include <test_base.hpp>
@@ -10,13 +11,14 @@
 
 namespace jex {
 
-using EvalVariant = std::variant<int64_t, double, bool, std::string>;
+using EvalVariant = std::variant<int64_t, double, bool, std::string, Complex>;
 using TestEvalT = std::pair<const char*, EvalVariant>;
 class TestEval : public testing::TestWithParam<TestEvalT> {};
 
 static void testEval(const char *code, const EvalVariant& exp, bool useIntrinsics, bool runConstFolding) {
     Environment env;
     env.addModule(BuiltInsModule());
+    env.addModule(MathModule());
     CompileResult compiled = compile(env, code, OptLevel::O1, useIntrinsics, runConstFolding);
     std::unique_ptr<ExecutionContext> ctx = ExecutionContext::create(compiled);
     // Evaluate a.
@@ -251,6 +253,7 @@ static TestEvalT evals[] = {
         substr("This is a long string not fitting into short string optimization", 0, 100) != "test")", false},
     {R"(Bool = substr("This is a long string not fitting into short string optimization", 0, 100) != "test" &&
         substr("This is a long string not fitting into short string optimization", 0, 100) == "test")", false},
+    {"Complex = Complex(1.0, 2.0) + Complex(3.3, 4.4)", Complex(4.3, 6.4)},
 };
 
 INSTANTIATE_TEST_SUITE_P(SuiteBuiltins,

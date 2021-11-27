@@ -16,6 +16,7 @@ set(codegen_sources
     jex_codemodule.cpp
     jex_executioncontext.cpp
     jex_intrinsicgen.cpp
+    jex_math.cpp
     jex_unwind.cpp
 )
 
