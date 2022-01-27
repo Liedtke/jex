@@ -37,7 +37,12 @@ int main(int /*argc*/, char *argv[]) {
     if (parser.d_printIR) {
         Environment env;
         env.addModule(BuiltInsModule());
-        Compiler::printIR(*outStream, env, source, parser.d_optLevel, parser.d_useIntrinsics, parser.d_enableConstFolding);
+        try {
+            Compiler::printIR(*outStream, env, source, parser.d_optLevel, parser.d_useIntrinsics, parser.d_enableConstFolding);
+        } catch (std::runtime_error& err) {
+            std::cerr << err.what();
+            return -1;
+        }
     }
     return 0;
 }
